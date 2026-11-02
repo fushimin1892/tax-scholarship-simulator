@@ -1,0 +1,1458 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "name": "税制パラメータ（住民税・所得税・国民健康保険・JASSO奨学金）",
+    "verifiedAt": "2026-09-17",
+    "generatedBy": "node test/build-tax-parameters.js",
+    "masterFile": "assets/data.js",
+    "note": "このファイルは assets/data.js から生成した写しです。手で編集せず、data.js を直して再生成してください。",
+    "statusLegend": {
+      "final": "公表済みの確定値",
+      "provisional": "改正は成立しているが実務資料（通知・表）が未公表で要再確認",
+      "pending": "公表待ちのため値を入れていない"
+    }
+  },
+  "incomeTax": {
+    "2025": {
+      "label": "令和7年分（2025年）",
+      "status": "final",
+      "salaryDeductionMinimum": {
+        "value": 650000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1410 給与所得控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm）"
+      },
+      "salaryDeductionMinimumCap": {
+        "value": 1900000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1410 給与所得控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm）",
+        "note": "この収入までは最低保障額。超えると別表第五の4,000円刻みに入る"
+      },
+      "basicDeduction": {
+        "table": [
+          {
+            "gokeiShotokuUpTo": 1320000,
+            "deduction": 950000
+          },
+          {
+            "gokeiShotokuUpTo": 3360000,
+            "deduction": 880000
+          },
+          {
+            "gokeiShotokuUpTo": 4890000,
+            "deduction": 680000
+          },
+          {
+            "gokeiShotokuUpTo": 6550000,
+            "deduction": 630000
+          },
+          {
+            "gokeiShotokuUpTo": 23500000,
+            "deduction": 580000
+          },
+          {
+            "gokeiShotokuUpTo": 24000000,
+            "deduction": 480000
+          },
+          {
+            "gokeiShotokuUpTo": 24500000,
+            "deduction": 320000
+          },
+          {
+            "gokeiShotokuUpTo": 25000000,
+            "deduction": 160000
+          },
+          {
+            "gokeiShotokuUpTo": null,
+            "deduction": 0
+          }
+        ],
+        "source": "所得税／国税庁 No.1199 基礎控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm） ／ 所得税／国税庁 令和7年度税制改正による所得税の基礎控除の見直し等について（https://www.nta.go.jp/users/gensen/2025kiso/index.htm）"
+      },
+      "dependentIncomeLimit": {
+        "value": 580000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1180 扶養控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1180.htm）"
+      },
+      "studentIncomeLimit": {
+        "value": 850000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1175 勤労学生控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1175.htm）"
+      },
+      "studentDeduction": {
+        "value": 270000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1175 勤労学生控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1175.htm）"
+      },
+      "spouseSpecialUpper": {
+        "value": 1330000,
+        "unit": "円",
+        "source": "所得税／国税庁 令和7年度税制改正による所得税の基礎控除の見直し等について（https://www.nta.go.jp/users/gensen/2025kiso/index.htm）"
+      },
+      "tokuteiShinzokuRange": {
+        "lower": 580000,
+        "upper": 1230000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1177 特定親族特別控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1177.htm）"
+      }
+    },
+    "2026": {
+      "label": "令和8年分（2026年）",
+      "status": "final",
+      "statusNote": "令和8年度税制改正（令和7年12月26日 閣議決定・令和8年12月1日施行）を反映。ただし別表第五そのもの（年末調整資料）は例年9〜10月公表のため provisionalTables を参照",
+      "salaryDeductionMinimum": {
+        "value": 740000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "salaryDeductionMinimumCap": {
+        "value": 2200000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "basicDeduction": {
+        "table": [
+          {
+            "gokeiShotokuUpTo": 4890000,
+            "deduction": 1040000
+          },
+          {
+            "gokeiShotokuUpTo": 6550000,
+            "deduction": 670000
+          },
+          {
+            "gokeiShotokuUpTo": 23500000,
+            "deduction": 620000
+          },
+          {
+            "gokeiShotokuUpTo": 24000000,
+            "deduction": 480000
+          },
+          {
+            "gokeiShotokuUpTo": 24500000,
+            "deduction": 320000
+          },
+          {
+            "gokeiShotokuUpTo": 25000000,
+            "deduction": 160000
+          },
+          {
+            "gokeiShotokuUpTo": null,
+            "deduction": 0
+          }
+        ],
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "dependentIncomeLimit": {
+        "value": 620000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "studentIncomeLimit": {
+        "value": 890000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "studentDeduction": {
+        "value": 270000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1175 勤労学生控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1175.htm）"
+      },
+      "spouseSpecialUpper": {
+        "value": 1330000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "tokuteiShinzokuRange": {
+        "lower": 620000,
+        "upper": 1230000,
+        "unit": "円",
+        "source": "所得税／国税庁 No.1177 特定親族特別控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1177.htm） ／ 所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      }
+    },
+    "brackets": {
+      "source": "所得税／国税庁 No.2260 所得税の税率（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm）",
+      "table": [
+        {
+          "taxableUpTo": 1949000,
+          "rate": 0.05,
+          "subtraction": 0
+        },
+        {
+          "taxableUpTo": 3299000,
+          "rate": 0.1,
+          "subtraction": 97500
+        },
+        {
+          "taxableUpTo": 6949000,
+          "rate": 0.2,
+          "subtraction": 427500
+        },
+        {
+          "taxableUpTo": 8999000,
+          "rate": 0.23,
+          "subtraction": 636000
+        },
+        {
+          "taxableUpTo": 17999000,
+          "rate": 0.33,
+          "subtraction": 1536000
+        },
+        {
+          "taxableUpTo": 39999000,
+          "rate": 0.4,
+          "subtraction": 2796000
+        },
+        {
+          "taxableUpTo": null,
+          "rate": 0.45,
+          "subtraction": 4796000
+        }
+      ]
+    },
+    "reconstructionRate": {
+      "value": 0.021,
+      "source": "復興財源確保法（復興特別所得税 基準所得税額の2.1％）"
+    }
+  },
+  "residentTax": {
+    "2026": {
+      "label": "令和8年度（2026年度）",
+      "incomeYear": 2025,
+      "status": "final",
+      "basicDeduction": {
+        "table": [
+          {
+            "gokeiShotokuUpTo": 24000000,
+            "deduction": 430000
+          },
+          {
+            "gokeiShotokuUpTo": 24500000,
+            "deduction": 290000
+          },
+          {
+            "gokeiShotokuUpTo": 25000000,
+            "deduction": 150000
+          },
+          {
+            "gokeiShotokuUpTo": null,
+            "deduction": 0
+          }
+        ],
+        "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+      },
+      "dependentIncomeLimit": {
+        "value": 580000,
+        "unit": "円",
+        "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+      },
+      "studentIncomeLimit": {
+        "value": 850000,
+        "unit": "円",
+        "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+      },
+      "studentDeduction": {
+        "value": 260000,
+        "unit": "円",
+        "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+      }
+    },
+    "2027": {
+      "label": "令和9年度（2027年度）",
+      "incomeYear": 2026,
+      "status": "provisional",
+      "statusNote": "令和8年度税制改正の住民税適用分。各自治体の令和9年度課税の案内は未公表のため要再確認",
+      "basicDeduction": {
+        "table": [
+          {
+            "gokeiShotokuUpTo": 24000000,
+            "deduction": 430000
+          },
+          {
+            "gokeiShotokuUpTo": 24500000,
+            "deduction": 290000
+          },
+          {
+            "gokeiShotokuUpTo": 25000000,
+            "deduction": 150000
+          },
+          {
+            "gokeiShotokuUpTo": null,
+            "deduction": 0
+          }
+        ],
+        "source": "住民税／総務省 地方税制度 個人住民税（https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_06.html）"
+      },
+      "dependentIncomeLimit": {
+        "value": 620000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "studentIncomeLimit": {
+        "value": 890000,
+        "unit": "円",
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+      },
+      "studentDeduction": {
+        "value": 260000,
+        "unit": "円",
+        "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+      }
+    },
+    "kintouwariStandard": {
+      "city": 3000,
+      "pref": 1000,
+      "forestNationalTax": 1000,
+      "unit": "円",
+      "source": "住民税／総務省 地方税制度 個人住民税（https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/150790_06.html） ／ 住民税／総務省 森林環境税及び森林環境譲与税（https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/04000067.html）"
+    },
+    "hikazeiLimits": {
+      "source": "住民税／柏市 令和8年度以降、個人住民税がかからないかた（非課税）（https://www.city.kashiwa.lg.jp/shiminzei/kojinshiminzei/r8hikazei.html）",
+      "note": "均等割＝級地別の額×判定人数＋10万円＋（扶養等がいれば加算）。所得割は全国共通",
+      "kintouByKyuchi": {
+        "1": {
+          "perPerson": 350000,
+          "addition": 210000
+        },
+        "2": {
+          "perPerson": 315000,
+          "addition": 189000
+        },
+        "3": {
+          "perPerson": 280000,
+          "addition": 168000
+        }
+      },
+      "shotoku": {
+        "perPerson": 350000,
+        "addition": 320000
+      },
+      "flatAddition": 100000,
+      "specialExemptLimit": {
+        "value": 1350000,
+        "note": "障害者・未成年者・寡婦・ひとり親はこの合計所得金額以下で均等割・所得割とも非課税"
+      }
+    },
+    "prefectureSurtax": {
+      "source": "各都道府県の個人住民税の課税案内（47団体すべてを node test/verify-prefectures.js で突合済み）",
+      "verifiedAt": "2026-08-15",
+      "list": [
+        {
+          "pref": "北海道",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "青森県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "岩手県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "いわての森林づくり県民税"
+        },
+        {
+          "pref": "宮城県",
+          "kintouAddition": 1200,
+          "shotokuRate": 4,
+          "taxName": "みやぎ環境税"
+        },
+        {
+          "pref": "秋田県",
+          "kintouAddition": 800,
+          "shotokuRate": 4,
+          "taxName": "秋田県水と緑の森づくり税"
+        },
+        {
+          "pref": "山形県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "やまがた緑環境税"
+        },
+        {
+          "pref": "福島県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "福島県森林環境税"
+        },
+        {
+          "pref": "茨城県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "森林湖沼環境税"
+        },
+        {
+          "pref": "栃木県",
+          "kintouAddition": 700,
+          "shotokuRate": 4,
+          "taxName": "とちぎの元気な森づくり県民税"
+        },
+        {
+          "pref": "群馬県",
+          "kintouAddition": 700,
+          "shotokuRate": 4,
+          "taxName": "ぐんま緑の県民税"
+        },
+        {
+          "pref": "埼玉県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "千葉県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "東京都",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "神奈川県",
+          "kintouAddition": 300,
+          "shotokuRate": 4.025,
+          "taxName": "水源環境保全税（所得割も＋0.025％／令和8年度まで）"
+        },
+        {
+          "pref": "新潟県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "富山県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "水と緑の森づくり税"
+        },
+        {
+          "pref": "石川県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "いしかわ森林環境税"
+        },
+        {
+          "pref": "福井県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "山梨県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "山梨県森林環境税"
+        },
+        {
+          "pref": "長野県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "長野県森林づくり県民税"
+        },
+        {
+          "pref": "岐阜県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "清流の国ぎふ森林・環境税"
+        },
+        {
+          "pref": "静岡県",
+          "kintouAddition": 400,
+          "shotokuRate": 4,
+          "taxName": "森林づくり県民税"
+        },
+        {
+          "pref": "愛知県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "あいち森と緑づくり税"
+        },
+        {
+          "pref": "三重県",
+          "kintouAddition": 1000,
+          "shotokuRate": 4,
+          "taxName": "みえ森と緑の県民税"
+        },
+        {
+          "pref": "滋賀県",
+          "kintouAddition": 800,
+          "shotokuRate": 4,
+          "taxName": "琵琶湖森林づくり県民税"
+        },
+        {
+          "pref": "京都府",
+          "kintouAddition": 600,
+          "shotokuRate": 4,
+          "taxName": "豊かな森を育てる府民税"
+        },
+        {
+          "pref": "大阪府",
+          "kintouAddition": 300,
+          "shotokuRate": 4,
+          "taxName": "大阪府森林環境税"
+        },
+        {
+          "pref": "兵庫県",
+          "kintouAddition": 800,
+          "shotokuRate": 4,
+          "taxName": "県民緑税（令和12年度まで延長）"
+        },
+        {
+          "pref": "奈良県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "奈良県森林環境税"
+        },
+        {
+          "pref": "和歌山県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "紀の国森づくり税"
+        },
+        {
+          "pref": "鳥取県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "豊かな森づくり協働税（令和5年度に森林環境保全税から改組）"
+        },
+        {
+          "pref": "島根県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "水と緑の森づくり税"
+        },
+        {
+          "pref": "岡山県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "おかやま森づくり県民税"
+        },
+        {
+          "pref": "広島県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "ひろしまの森づくり県民税"
+        },
+        {
+          "pref": "山口県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "やまぐち森林づくり県民税"
+        },
+        {
+          "pref": "徳島県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "香川県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        },
+        {
+          "pref": "愛媛県",
+          "kintouAddition": 700,
+          "shotokuRate": 4,
+          "taxName": "愛媛県森林環境税"
+        },
+        {
+          "pref": "高知県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "高知県森林環境税"
+        },
+        {
+          "pref": "福岡県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "福岡県森林環境税"
+        },
+        {
+          "pref": "佐賀県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "佐賀県森林環境税"
+        },
+        {
+          "pref": "長崎県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "ながさき森林環境税"
+        },
+        {
+          "pref": "熊本県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "水とみどりの森づくり税"
+        },
+        {
+          "pref": "大分県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "おおいた森づくり税"
+        },
+        {
+          "pref": "宮崎県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "宮崎県水と緑の森林づくり税（令和8年度に森林環境税から改称・5年延長）"
+        },
+        {
+          "pref": "鹿児島県",
+          "kintouAddition": 500,
+          "shotokuRate": 4,
+          "taxName": "みんなの森づくり県民税"
+        },
+        {
+          "pref": "沖縄県",
+          "kintouAddition": 0,
+          "shotokuRate": 4,
+          "taxName": null
+        }
+      ]
+    }
+  },
+  "deductions": {
+    "spouse": {
+      "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）",
+      "normal": [
+        {
+          "selfGokeiUpTo": 9000000,
+          "incomeTax": 380000,
+          "residentTax": 330000
+        },
+        {
+          "selfGokeiUpTo": 9500000,
+          "incomeTax": 260000,
+          "residentTax": 220000
+        },
+        {
+          "selfGokeiUpTo": 10000000,
+          "incomeTax": 130000,
+          "residentTax": 110000
+        }
+      ],
+      "old": [
+        {
+          "selfGokeiUpTo": 9000000,
+          "incomeTax": 480000,
+          "residentTax": 380000
+        },
+        {
+          "selfGokeiUpTo": 9500000,
+          "incomeTax": 320000,
+          "residentTax": 260000
+        },
+        {
+          "selfGokeiUpTo": 10000000,
+          "incomeTax": 160000,
+          "residentTax": 130000
+        }
+      ]
+    },
+    "spouseSpecial": {
+      "source": "所得税／国税庁 令和7年度税制改正による所得税の基礎控除の見直し等について（https://www.nta.go.jp/users/gensen/2025kiso/index.htm）",
+      "incomeTax": [
+        {
+          "spouseGokeiUpTo": 950000,
+          "bySelfIncome": [
+            380000,
+            260000,
+            130000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1000000,
+          "bySelfIncome": [
+            360000,
+            240000,
+            120000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1050000,
+          "bySelfIncome": [
+            310000,
+            210000,
+            110000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1100000,
+          "bySelfIncome": [
+            260000,
+            180000,
+            90000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1150000,
+          "bySelfIncome": [
+            210000,
+            140000,
+            70000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1200000,
+          "bySelfIncome": [
+            160000,
+            110000,
+            60000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1250000,
+          "bySelfIncome": [
+            110000,
+            80000,
+            40000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1300000,
+          "bySelfIncome": [
+            60000,
+            40000,
+            20000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1330000,
+          "bySelfIncome": [
+            30000,
+            20000,
+            10000
+          ]
+        }
+      ],
+      "residentTax": [
+        {
+          "spouseGokeiUpTo": 950000,
+          "bySelfIncome": [
+            330000,
+            220000,
+            110000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1000000,
+          "bySelfIncome": [
+            330000,
+            220000,
+            110000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1050000,
+          "bySelfIncome": [
+            310000,
+            210000,
+            110000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1100000,
+          "bySelfIncome": [
+            260000,
+            180000,
+            90000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1150000,
+          "bySelfIncome": [
+            210000,
+            140000,
+            70000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1200000,
+          "bySelfIncome": [
+            160000,
+            110000,
+            60000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1250000,
+          "bySelfIncome": [
+            110000,
+            80000,
+            40000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1300000,
+          "bySelfIncome": [
+            60000,
+            40000,
+            20000
+          ]
+        },
+        {
+          "spouseGokeiUpTo": 1330000,
+          "bySelfIncome": [
+            30000,
+            20000,
+            10000
+          ]
+        }
+      ]
+    },
+    "dependent": {
+      "source": "所得税／国税庁 No.1180 扶養控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1180.htm）",
+      "general": {
+        "incomeTax": 380000,
+        "residentTax": 330000
+      },
+      "specific": {
+        "incomeTax": 630000,
+        "residentTax": 450000
+      },
+      "oldOther": {
+        "incomeTax": 480000,
+        "residentTax": 380000
+      },
+      "oldLiving": {
+        "incomeTax": 580000,
+        "residentTax": 450000
+      },
+      "under16": {
+        "incomeTax": 0,
+        "residentTax": 0,
+        "note": "控除はないが非課税限度額の判定人数には含める"
+      }
+    },
+    "tokuteiShinzoku": {
+      "source": "所得税／国税庁 No.1177 特定親族特別控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1177.htm）",
+      "table": [
+        {
+          "gokeiUpTo": 850000,
+          "incomeTax": 630000,
+          "residentTax": 450000
+        },
+        {
+          "gokeiUpTo": 900000,
+          "incomeTax": 610000,
+          "residentTax": 450000
+        },
+        {
+          "gokeiUpTo": 950000,
+          "incomeTax": 510000,
+          "residentTax": 450000
+        },
+        {
+          "gokeiUpTo": 1000000,
+          "incomeTax": 410000,
+          "residentTax": 410000
+        },
+        {
+          "gokeiUpTo": 1050000,
+          "incomeTax": 310000,
+          "residentTax": 310000
+        },
+        {
+          "gokeiUpTo": 1100000,
+          "incomeTax": 210000,
+          "residentTax": 210000
+        },
+        {
+          "gokeiUpTo": 1150000,
+          "incomeTax": 110000,
+          "residentTax": 110000
+        },
+        {
+          "gokeiUpTo": 1200000,
+          "incomeTax": 60000,
+          "residentTax": 60000
+        },
+        {
+          "gokeiUpTo": 1230000,
+          "incomeTax": 30000,
+          "residentTax": 30000
+        }
+      ]
+    },
+    "disability": {
+      "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）",
+      "normal": {
+        "incomeTax": 270000,
+        "residentTax": 260000
+      },
+      "special": {
+        "incomeTax": 400000,
+        "residentTax": 300000
+      },
+      "liveTogether": {
+        "incomeTax": 750000,
+        "residentTax": 530000
+      }
+    },
+    "widow": {
+      "incomeTax": 270000,
+      "residentTax": 260000,
+      "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+    },
+    "singleParent": {
+      "incomeTax": 350000,
+      "residentTax": 300000,
+      "source": "住民税／長野市 令和8年度課税の個人市民税・県民税 控除の種類（https://www.city.nagano.nagano.jp/n062000/contents/p005567.html）"
+    },
+    "insurance": {
+      "source": "国税庁 No.1140 生命保険料控除／No.1145 地震保険料控除／年末調整のしかた（端数は切上げ）",
+      "rounding": "区分ごとの控除額は1円未満切上げ",
+      "lifeNewIncomeTax": {
+        "steps": [
+          [
+            20000,
+            1,
+            0
+          ],
+          [
+            40000,
+            0.5,
+            10000
+          ],
+          [
+            80000,
+            0.25,
+            20000
+          ]
+        ],
+        "max": 40000
+      },
+      "lifeOldIncomeTax": {
+        "steps": [
+          [
+            25000,
+            1,
+            0
+          ],
+          [
+            50000,
+            0.5,
+            12500
+          ],
+          [
+            100000,
+            0.25,
+            25000
+          ]
+        ],
+        "max": 50000
+      },
+      "lifeNewResidentTax": {
+        "steps": [
+          [
+            12000,
+            1,
+            0
+          ],
+          [
+            32000,
+            0.5,
+            6000
+          ],
+          [
+            56000,
+            0.25,
+            14000
+          ]
+        ],
+        "max": 28000
+      },
+      "lifeOldResidentTax": {
+        "steps": [
+          [
+            15000,
+            1,
+            0
+          ],
+          [
+            40000,
+            0.5,
+            7500
+          ],
+          [
+            70000,
+            0.25,
+            17500
+          ]
+        ],
+        "max": 35000
+      },
+      "lifeCategoryCap": {
+        "incomeTax": 40000,
+        "residentTax": 28000
+      },
+      "lifeTotalCap": {
+        "incomeTax": 120000,
+        "residentTax": 70000
+      },
+      "quake": {
+        "incomeTaxMax": 50000,
+        "residentTaxRate": 0.5,
+        "residentTaxMax": 25000
+      },
+      "longOldIncomeTax": {
+        "steps": [
+          [
+            10000,
+            1,
+            0
+          ],
+          [
+            20000,
+            0.5,
+            5000
+          ]
+        ],
+        "max": 15000
+      },
+      "longOldResidentTax": {
+        "steps": [
+          [
+            5000,
+            1,
+            0
+          ],
+          [
+            15000,
+            0.5,
+            2500
+          ]
+        ],
+        "max": 10000
+      }
+    },
+    "medical": {
+      "threshold": {
+        "rateOfSouShotokuTou": 0.05,
+        "cap": 100000
+      },
+      "deductionCap": 2000000,
+      "source": "国税庁 No.1120 医療費を支払ったとき",
+      "note": "足切りは総所得金額等の5％と10万円の小さいほう"
+    },
+    "pension": {
+      "source": "国税庁 No.1600 公的年金等の課税関係",
+      "under65": {
+        "min": 600000,
+        "minCap": 1300000
+      },
+      "over65": {
+        "min": 1100000,
+        "minCap": 3300000
+      },
+      "steps": [
+        {
+          "revenueUpTo": 4100000,
+          "rate": 0.25,
+          "subtraction": 275000
+        },
+        {
+          "revenueUpTo": 7700000,
+          "rate": 0.15,
+          "subtraction": 685000
+        },
+        {
+          "revenueUpTo": 10000000,
+          "rate": 0.05,
+          "subtraction": 1455000
+        },
+        {
+          "revenueUpTo": null,
+          "rate": 0,
+          "subtraction": 1955000
+        }
+      ],
+      "otherIncomeAdjust": [
+        {
+          "otherGokeiUpTo": 10000000,
+          "reduction": 0
+        },
+        {
+          "otherGokeiUpTo": 20000000,
+          "reduction": 100000
+        },
+        {
+          "otherGokeiUpTo": null,
+          "reduction": 200000
+        }
+      ]
+    },
+    "jintekiSa": {
+      "source": "住民税／坂戸市 個人住民税所得割の調整措置（https://www.city.sakado.lg.jp/soshiki/13/22493.html）（地方税法37条 調整控除に用いる人的控除の差）",
+      "value": {
+        "basic": [
+          [
+            24000000,
+            50000
+          ],
+          [
+            24500000,
+            30000
+          ],
+          [
+            25000000,
+            10000
+          ],
+          [
+            null,
+            0
+          ]
+        ],
+        "spouseNormal": [
+          50000,
+          40000,
+          20000
+        ],
+        "spouseOld": [
+          100000,
+          60000,
+          30000
+        ],
+        "spouseSpecial": [
+          [
+            950000,
+            [
+              50000,
+              40000,
+              20000
+            ]
+          ],
+          [
+            1000000,
+            [
+              30000,
+              20000,
+              10000
+            ]
+          ],
+          [
+            null,
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "dependentGeneral": 50000,
+        "dependentSpecific": 180000,
+        "dependentOldOther": 100000,
+        "dependentOldLiving": 130000,
+        "disabilityNormal": 10000,
+        "disabilitySpecial": 100000,
+        "disabilityLiveTogether": 220000,
+        "widow": 10000,
+        "singleParentMother": 50000,
+        "singleParentFather": 10000,
+        "student": 10000,
+        "tokutei": [
+          [
+            850000,
+            180000
+          ],
+          [
+            900000,
+            160000
+          ],
+          [
+            950000,
+            60000
+          ],
+          [
+            null,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "separateTaxation": {
+    "source": "分離課税／国税庁 No.1440 譲渡所得（土地や建物を譲渡したとき）（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1440.htm） ／ 分離課税／国税庁 No.1474 上場株式等に係る譲渡損失の損益通算及び繰越控除（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1474.htm）",
+    "list": [
+      {
+        "key": "landShort",
+        "label": "土地建物等の短期譲渡所得",
+        "incomeTaxRate": 0.3,
+        "residentTaxRate": 0.09,
+        "deductionOrder": 1,
+        "note": "所有期間5年以下。所得税30％＋住民税9％（復興特別所得税を含め39.63％）"
+      },
+      {
+        "key": "landLong",
+        "label": "土地建物等の長期譲渡所得",
+        "incomeTaxRate": 0.15,
+        "residentTaxRate": 0.05,
+        "deductionOrder": 2,
+        "note": "所有期間5年超。所得税15％＋住民税5％（復興特別所得税を含め20.315％）"
+      },
+      {
+        "key": "stockTransfer",
+        "label": "株式等に係る譲渡所得等",
+        "incomeTaxRate": 0.15,
+        "residentTaxRate": 0.05,
+        "deductionOrder": 3,
+        "note": "上場株式等・一般株式等。所得税15％＋住民税5％（復興特別所得税を含め20.315％）"
+      },
+      {
+        "key": "stockDividend",
+        "label": "上場株式等に係る配当所得等",
+        "incomeTaxRate": 0.15,
+        "residentTaxRate": 0.05,
+        "deductionOrder": 4,
+        "note": "申告分離課税を選択したもの。譲渡損失と損益通算できる"
+      },
+      {
+        "key": "futures",
+        "label": "先物取引に係る雑所得等",
+        "incomeTaxRate": 0.15,
+        "residentTaxRate": 0.05,
+        "deductionOrder": 5,
+        "note": "先物・FX・CFDなど。所得税15％＋住民税5％"
+      }
+    ],
+    "citySharesOfResidentTax": {
+      "general": 0.6,
+      "seireiShiteiToshi": 0.8
+    }
+  },
+  "retirement": {
+    "source": "分離課税／国税庁 No.1420 退職金を受け取ったとき（退職所得）（https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1420.htm）",
+    "value": {
+      "perYearUnder20": 400000,
+      "min": 800000,
+      "base20": 8000000,
+      "perYearOver20": 700000,
+      "disabilityAdd": 1000000,
+      "shortTermThreshold": 3000000
+    },
+    "note": "住民税は退職時に分離課税で徴収済みのため、翌年度の課税標準・非課税判定・国保の軽減判定に含めない"
+  },
+  "forest": {
+    "source": "国税庁 No.1480 山林所得",
+    "value": {
+      "specialDeduction": 500000,
+      "divisor": 5
+    },
+    "note": "5分5乗方式。5分の1にした額に追加の千円未満切捨てはしない"
+  },
+  "kokuho": {
+    "year": "令和8年度（2026年度）",
+    "status": "final",
+    "source": "国保／厚生労働省 令和8年度 税制改正の概要（厚生労働省関係）（https://www.mhlw.go.jp/content/12602000/001623254.pdf） ／ 国保／新潟市 令和8年度の国民健康保険料率と軽減判定所得について（https://www.city.niigata.lg.jp/kurashi/hoken/kokuho/hokenryo/henko.html） ／ 国保／松阪市 国民健康保険税の軽減（令和8年度）（https://www.city.matsusaka.mie.jp/soshiki/23/keigen.html）",
+    "reductionThresholds": {
+      "base": {
+        "value": 430000,
+        "note": "基礎控除相当額（7割・5割・2割に共通）"
+      },
+      "per5wari": {
+        "value": 310000,
+        "note": "5割軽減：被保険者等1人あたりの加算"
+      },
+      "per2wari": {
+        "value": 570000,
+        "note": "2割軽減：被保険者等1人あたりの加算"
+      },
+      "salaryEarnerAddition": {
+        "value": 100000,
+        "note": "給与所得者等の数が2人以上のとき ×（人数−1）"
+      }
+    },
+    "pensionDeduct65": {
+      "value": 150000,
+      "note": "65歳以上の公的年金等所得からさらに控除"
+    },
+    "limits": {
+      "value": {
+        "medical": 670000,
+        "support": 260000,
+        "care": 170000,
+        "child": 30000,
+        "total": 1130000
+      },
+      "source": "国保／山口市 国民健康保険料の賦課限度額・軽減判定基準額の変更（https://www.city.yamaguchi.lg.jp/soshiki/59/102500.html）",
+      "note": "賦課限度額（子ども・子育て支援納付金分3万円は令和8年度新設）"
+    },
+    "previousYear": {
+      "value": {
+        "per5": 305000,
+        "per2": 560000,
+        "total": 1090000
+      },
+      "note": "令和7年度の値（差分確認用）"
+    },
+    "premiumRates": {
+      "status": "out-of-scope",
+      "reason": "保険料率（所得割率・均等割額・平等割額）は市区町村ごとに異なり毎年変わるため、本サイトは軽減割合の判定のみを行い保険料額は算出しない。料率を収録すると全国1,741団体分の年次更新が必要になり、誤りのまま古い値が残る危険が大きい。"
+    }
+  },
+  "jasso": {
+    "status": "final",
+    "source": "奨学金／JASSO 進学後（在学採用）の給付奨学金の家計基準（https://www.jasso.go.jp/shogakukin/about/kyufu/kakei/zaigaku.html） ／ 奨学金／JASSO 令和7年度からの多子世帯支援拡充に係る対応について（https://www.jasso.go.jp/shogakukin/about/kyufu/kakei/r7tashikakudai/）",
+    "kijunFormula": "課税標準額 × 6％ −（市町村民税の調整控除額 ＋ 調整額）×係数、100円未満切捨て",
+    "seireiFactor": 0.75,
+    "kijunScope": "学生等本人と生計維持者の支給額算定基準額の合計で判定する",
+    "kubun": [
+      {
+        "id": 1,
+        "name": "第Ⅰ区分",
+        "from": 0,
+        "to": 100,
+        "ratio": "満額（10分の10）",
+        "note": "市町村民税所得割が非課税であれば必ずこの区分になります。"
+      },
+      {
+        "id": 2,
+        "name": "第Ⅱ区分",
+        "from": 100,
+        "to": 25600,
+        "ratio": "3分の2",
+        "note": null
+      },
+      {
+        "id": 3,
+        "name": "第Ⅲ区分",
+        "from": 25600,
+        "to": 51300,
+        "ratio": "3分の1",
+        "note": null
+      },
+      {
+        "id": 4,
+        "name": "第Ⅳ区分",
+        "from": 51300,
+        "to": 154500,
+        "ratio": "4分の1",
+        "note": "多子世帯（扶養する子3人以上）または私立の理工農系学科等の学生のみが対象です。<b>私立理工農系（多子世帯でない場合）は給付奨学金は0円で、授業料等減免のみ</b>（文系との授業料の差額に着目した額）になります。"
+      }
+    ],
+    "tashiSetai": {
+      "incomeLimit": null,
+      "note": "多子世帯（扶養する子3人以上）は所得制限なく授業料等減免の対象。給付奨学金は支援区分に応じた額のため、基準額154,500円以上では0円になる",
+      "source": "奨学金／JASSO 令和7年度からの多子世帯支援拡充に係る対応について（https://www.jasso.go.jp/shogakukin/about/kyufu/kakei/r7tashikakudai/）"
+    },
+    "monthlyGrant": {
+      "value": {
+        "大学・短期大学・専修学校（専門課程）": {
+          "国公立": [
+            29200,
+            66700
+          ],
+          "私立": [
+            38300,
+            75800
+          ]
+        },
+        "高等専門学校": {
+          "国公立": [
+            17500,
+            34200
+          ],
+          "私立": [
+            26700,
+            43300
+          ]
+        }
+      },
+      "source": "奨学金／JASSO 給付奨学金の支給額（https://www.jasso.go.jp/shogakukin/about/kyufu/kingaku.html）"
+    },
+    "tuitionReduction": {
+      "value": {
+        "大学": {
+          "国公立": [
+            282000,
+            535800
+          ],
+          "私立": [
+            260000,
+            700000
+          ]
+        },
+        "短期大学": {
+          "国公立": [
+            169200,
+            390000
+          ],
+          "私立": [
+            250000,
+            620000
+          ]
+        },
+        "高等専門学校": {
+          "国公立": [
+            84600,
+            234600
+          ],
+          "私立": [
+            130000,
+            700000
+          ]
+        },
+        "専門学校": {
+          "国公立": [
+            70000,
+            170000
+          ],
+          "私立": [
+            160000,
+            590000
+          ]
+        }
+      },
+      "source": "奨学金／文部科学省 高等教育の修学支援新制度（https://www.mext.go.jp/a_menu/koutou/hutankeigen/）"
+    },
+    "assetLimit": {
+      "twoMaintainers": 50000000,
+      "oneMaintainer": 35000000,
+      "source": "奨学金／JASSO 進学後（在学採用）の給付奨学金の家計基準（https://www.jasso.go.jp/shogakukin/about/kyufu/kakei/zaigaku.html）"
+    },
+    "taiyoIchishu": {
+      "value": 189400,
+      "source": "奨学金／JASSO 大学等で受ける第一種奨学金の家計基準（在学採用）（https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/kakei/zaigaku/daigaku.html）"
+    }
+  },
+  "pending": [
+    {
+      "item": "令和8年分 給与所得控除後の給与等の金額の表（別表第五）",
+      "status": "pending",
+      "reason": "国税庁の年末調整資料に掲載され、例年9〜10月公表。現在は改正内容（最低保障74万円・適用上限220万円）から構造を再現している",
+      "impact": "構造検証（verify-calc.js §1c）で4,000円刻みの帯・境界の連続性は確認済み。公表後に実表と突合が必要",
+      "action": "公表後に test/verify-calc.js §1b に実表の値を追加する"
+    },
+    {
+      "item": "令和9年度 個人住民税の各自治体の課税案内",
+      "status": "provisional",
+      "reason": "令和8年度税制改正の住民税適用分。自治体の令和9年度課税案内は例年5〜6月公表",
+      "impact": "RESIDENT_TAX[2027] を provisional としている",
+      "action": "公表後に provisional を外し、公式計算例と突合する"
+    },
+    {
+      "item": "令和9年度 国民健康保険の軽減判定基準額",
+      "status": "pending",
+      "reason": "地方税法施行令の改正が例年3月末公表。令和9年度の5割・2割の加算額と賦課限度額は未公表",
+      "impact": "現在の収録は令和8年度の値のみ",
+      "action": "公表後に KOKUHO を年度別に分ける"
+    },
+    {
+      "item": "2027年度 JASSO 支援区分の基準額",
+      "status": "pending",
+      "reason": "JASSOの当年度案内は例年7月頃公表",
+      "impact": "現在の収録は2026年度の値",
+      "action": "公表後に JASSO.kubun を更新する"
+    }
+  ]
+}

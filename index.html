@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>住民税・所得税・国保軽減・JASSO奨学金 判定シミュレーター</title>
+<meta name="description" content="収入と控除を入力すると、所得税・住民税（均等割／所得割）の課税額、国民健康保険料の軽減割合、JASSO給付奨学金・授業料等減免の支援区分を判定します。全国1,719市区町村の級地に対応。入力内容は保存も送信もされません。">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<!-- 外部への通信を一切許可しない。万一スクリプトが混入しても、入力された年収や
+     家族構成を外に出せないようにする。通信先は自分自身（'self'）だけで、
+     GitHub Pages は静的配信しか行わないので、送っても受け取る先がない。
+     'unsafe-inline' を style-src に入れているのは、結果表示で要素の style 属性
+     （ゲージの幅など）を組み立てているため。script は self のみ。
+     connect-src 'self' は、このサイト自身は一切通信しないので本来は不要だが、
+     Lighthouse が robots.txt をページの中から fetch して確認するため入れている。
+     frame-ancestors は <meta> では無視される（HTTPヘッダー専用）ため入れていない。
+     GitHub Pages はヘッダーを設定できないので、自前サーバに載せる際は
+     Content-Security-Policy: frame-ancestors 'none' をヘッダーで付けること。 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
+<!-- ファビコンは外部ファイルにせずSVGを直接埋め込む（404を出さず、追加の通信もしない） -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314568b'/%3E%3Ctext x='16' y='23' font-size='19' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23fff'%3E%C2%A5%3C/text%3E%3C/svg%3E">
+<!-- SNSで共有されたときの表示（画像は用意していないので文字情報のみ） -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="住民税・所得税・国民健康保険・JASSO奨学金 判定シミュレーター">
+<meta property="og:title" content="住民税・所得税・国保軽減・JASSO奨学金 判定シミュレーター">
+<meta property="og:description" content="収入と控除を入力すると、所得税・住民税（均等割／所得割）の課税額、国民健康保険料の軽減割合、JASSO給付奨学金・授業料等減免の支援区分を判定します。入力内容は保存も送信もされません。">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="住民税・所得税・国保軽減・JASSO奨学金 判定シミュレーター">
+<meta name="twitter:description" content="収入と控除を入力すると、所得税・住民税・国保の軽減・JASSOの支援区分が判定できます。入力内容は保存も送信もされません。">
+<!-- 検索結果で「何をするページか」が伝わるようにする。
+     使うのに料金も登録もいらないので offers を 0 円で明示している。 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "住民税・所得税・国保軽減・JASSO奨学金 判定シミュレーター",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "ブラウザ（インストール不要）",
+  "inLanguage": "ja",
+  "description": "収入と控除を入力すると、所得税・住民税（均等割／所得割）の課税額、国民健康保険料の軽減割合、JASSO給付奨学金・授業料等減免の支援区分を判定します。全国1,719市区町村の級地に対応。計算はすべてブラウザ内で行い、入力内容は保存も送信もされません。",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+  "isAccessibleForFree": true,
+  "featureList": [
+    "所得税額の計算（総合課税・分離課税・復興特別所得税）",
+    "住民税額の計算（均等割・所得割・非課税限度額・調整控除）",
+    "国民健康保険料の軽減判定（7割・5割・2割）",
+    "JASSO給付奨学金と授業料等減免の支援区分の判定",
+    "全国1,719市区町村の級地・47都道府県の税率に対応"
+  ]
+}
+</script>
+<link rel="stylesheet" href="assets/style.css">
+<!-- 配色は最初の描画より前に決める（ダーク設定の人に白い画面が一瞬出るのを防ぐ） -->
+<script src="assets/theme.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="headtop">
+      <h1>住民税・所得税・国民健康保険・JASSO奨学金 判定シミュレーター</h1>
+      <div class="themeswitch no-print" role="group" aria-label="画面の配色">
+        <button type="button" id="themeAuto"  data-theme-set="auto"  aria-pressed="true">端末に合わせる</button>
+        <button type="button" id="themeLight" data-theme-set="light" aria-pressed="false">ライト</button>
+        <button type="button" id="themeDark"  data-theme-set="dark"  aria-pressed="false">ダーク</button>
+      </div>
+    </div>
+    <p class="lead">
+      上から順に入力していくと、<strong>所得税</strong>と<strong>住民税（均等割・所得割）</strong>の課税額、
+      <strong>国民健康保険料の軽減割合</strong>、<strong>JASSO給付奨学金・授業料等減免の支援区分</strong>が判定できます。
+      結果はそのままPDFに保存できます。
+    </p>
+    <p class="version">
+      <span class="chip">令和7年分／令和8年分 所得税</span>
+      <span class="chip">令和8年度／令和9年度 個人住民税</span>
+      <span class="chip">令和8年度 国民健康保険</span>
+      <span class="chip">分離課税・繰越控除 対応</span>
+      <!-- 数字は JS も入れ直すが、最初から実数を書いておく。「—」のままだとチップが1行に収まり、
+           あとで数字が入った瞬間に2行に増えて、下の内容が全部ずれる。
+           HTML の数と実データの数が食い違わないよう、test/audit.js が突き合わせている。 -->
+      <span class="chip">全国 <b id="cityCount">1,719</b> 市区町村の級地に対応</span>
+      <span>最終更新：2026年8月</span>
+    </p>
+    <p id="freshness" class="hint"></p>
+  </div>
+</header>
+
+<nav class="stepnav no-print">
+  <div class="wrap" id="stepNav"></div>
+</nav>
+
+<main class="wrap">
+
+<!-- ===================== STEP 1 ===================== -->
+<section class="card step" id="step1">
+  <h2><span class="stepno">1</span>どの立場で使いますか</h2>
+  <p class="hint">
+    まず<b>「収入を入力する人が何人か」</b>で選んでください。入力欄の呼び名（「お父さん」「あなた」など）が切り替わります。
+    奨学金を調べるかどうかは、この下のチェックで別に選べます。
+  </p>
+  <div class="choices" id="modeChoices">
+    <label class="choice">
+      <input type="radio" name="mode" value="student" checked>
+      <span class="ct">学生本人が使う</span>
+      <span class="cd">親と同居している学生・専門学校生など。<b>お父さん・お母さんの収入</b>を入力して、
+        自分の<b>奨学金の支援区分</b>を調べたい方。<br>
+        <b>ひとり親の方はこちら</b>（お父さん／お母さんを選べます）。</span>
+    </label>
+    <label class="choice">
+      <input type="radio" name="mode" value="couple">
+      <span class="ct">夫婦（2人）で使う</span>
+      <span class="cd"><b>あなたと配偶者</b>の収入を入力します。子どもの有無は問いません。
+        世帯の税金・国保の軽減を調べたい<b>夫婦だけの世帯</b>も、子の奨学金も調べたい保護者も、こちらです。</span>
+    </label>
+    <label class="choice">
+      <input type="radio" name="mode" value="single">
+      <span class="ct">ひとりで使う</span>
+      <span class="cd"><b>あなた1人分</b>の収入だけを入力します。独身・アルバイト・ひとり親の方など、
+        配偶者の収入を入れる必要がない場合はこちら。</span>
+    </label>
+  </div>
+
+  <div class="note">
+    <h3>「学生本人が使う」と「夫婦（2人）で使う」は、計算結果が同じです</h3>
+    <p>
+      この2つは<b>入力欄の呼び名が違うだけ</b>で、税額・国保の軽減・奨学金の判定は<b>まったく同じ計算</b>をします。
+      同じ内容を入れれば1円も変わりません。<b>途中で切り替えても入力内容は消えません</b>ので、
+      呼び名がしっくりくるほうを選んでください。
+    </p>
+    <div class="tablewrap">
+    <table class="compare narrow">
+      <thead><tr><th>　</th><th>学生本人が使う</th><th>夫婦（2人）で使う</th></tr></thead>
+      <tbody>
+        <tr><th>収入を入力する人</th><td>2人（生計維持者A・B）</td><td>2人（生計維持者A・B）</td></tr>
+        <tr><th>入力欄の呼び名</th><td><b>お父さん・お母さん</b></td><td><b>あなた・配偶者</b></td></tr>
+        <tr><th>父か母かを選べるか</th><td class="good"><b>選べる</b>（お父さん／お母さん／その他）</td>
+          <td>選べない（「あなた」「配偶者」で固定）</td></tr>
+        <tr><th>計算のしかた</th><td class="good" colspan="2"><b>まったく同じ</b>（結果は1円も変わりません）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+      学生本人モードだけ父か母かを選べるのは、<b>ひとり親の世帯で必要になるから</b>です。
+      STEP 3 で生計維持者Bを［削除］してひとり親にしたとき、残った1人が母か父かを指定する必要があります。
+      <b>ひとり親控除の額は母・父とも同じ</b>（所得税35万円／住民税30万円）ですが、
+      住民税の<b>調整控除</b>に使う人的控除の差が<b>母5万円・父1万円</b>と違うため、住民税額が変わります。
+    </p>
+    <p class="hint">
+      <b>「ひとりで使う」だけは中身が違います。</b>配偶者の欄（STEP 5）がなくなり、
+      1人分だけを計算します。奨学金の判定も既定で外れます。
+    </p>
+  </div>
+  <label class="field checkline big jassotoggle">
+    <input type="checkbox" id="useJasso" checked>
+    <span>JASSO奨学金の支援区分も判定する
+      <small class="hint">外すと STEP 8（奨学金）が消え、税金と国保だけの結果になります。夫婦だけの世帯・単身の方は外してお使いください。</small>
+    </span>
+  </label>
+</section>
+
+<!-- ===================== STEP 2 ===================== -->
+<section class="card step" id="step2">
+  <h2><span class="stepno">2</span>お住まいと対象の年分</h2>
+  <div class="note" style="margin-top:0">
+    <h3>「年分」と「年度」は1年ずれます</h3>
+    <p>
+      所得は<b>年分</b>（1月〜12月の暦年）で数え、住民税・国保は<b>年度</b>で数えます。
+      <b>ある年に稼いだ分の住民税は、その翌年に納めます。</b>
+    </p>
+    <div class="tablewrap">
+    <table class="compare narrow">
+      <thead><tr><th>稼いだ年（年分）</th><th>所得税を納める時期</th><th>住民税・国保・JASSO（年度）</th><th>住民税を納める時期</th></tr></thead>
+      <tbody>
+        <tr><th>令和7年分（2025年1〜12月）</th><td>2025年の年末調整／2026年2〜3月の確定申告</td>
+          <td>令和8年度（2026年度）</td><td>2026年6月〜2027年5月</td></tr>
+        <tr class="hl"><th>令和8年分（2026年1〜12月）</th><td>2026年の年末調整／2027年2〜3月の確定申告</td>
+          <td>令和9年度（2027年度）</td><td>2027年6月〜2028年5月</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="hint">
+      つまり<b>いま給与から引かれている住民税は「去年の所得」で決まったもの</b>です。
+      今年の収入を入れて出るのは、<b>来年から納める住民税</b>になります。
+      国民健康保険料とJASSOの支援区分も同じずれ方をします。
+    </p>
+  </div>
+  <div class="grid rows">
+    <label class="field">
+      <span>対象とする所得の年分</span>
+      <select id="year">
+        <option value="2025">令和7年分（2025年）の所得</option>
+        <option value="2026">令和8年分（2026年）の所得</option>
+      </select>
+      <small id="yearNote" class="hint"></small>
+      <small class="hint"><b>どちらを選ぶか</b>：いま納めている住民税を確かめたいなら
+        <b>去年の所得</b>、これから決まる分を先に知りたいなら<b>今年の所得</b>を選んでください。</small>
+    </label>
+    <label class="field">
+      <span>都道府県</span>
+      <select id="pref"></select>
+      <small id="prefNote" class="hint"></small>
+    </label>
+    <label class="field">
+      <span>市区町村</span>
+      <select id="city"></select>
+      <small id="cityNote" class="hint"></small>
+    </label>
+    <label class="field">
+      <span>級地区分（自動判定・変更可）</span>
+      <select id="kyuchi">
+        <option value="1">1級地</option>
+        <option value="2">2級地</option>
+        <option value="3">3級地</option>
+      </select>
+      <small id="kyuchiNote" class="hint"></small>
+    </label>
+  </div>
+
+  <details class="sub">
+    <summary>税率・均等割額を手動で調整する（自動で入るので、ふつうは開かなくて大丈夫です）</summary>
+    <div class="grid rows">
+      <label class="field"><span>市町村民税 均等割（円）</span>
+        <input type="text" class="money" inputmode="numeric" autocomplete="off" id="cityKin"></label>
+      <label class="field"><span>道府県民税 均等割（円）</span>
+        <input type="text" class="money" inputmode="numeric" autocomplete="off" id="prefKin"></label>
+      <label class="field"><span>市町村民税 所得割 税率（％）</span><input type="number" id="cityRate" step="0.001"></label>
+      <label class="field"><span>道府県民税 所得割 税率（％）</span><input type="number" id="prefRate" step="0.001"></label>
+      <label class="field checkline"><input type="checkbox" id="seirei"><span>政令指定都市（市民税所得割8％・調整控除の按分が異なる）</span></label>
+    </div>
+    <p class="warn">
+      ⚠ 都道府県・市町村の超過課税（森林環境税等）には課税期間があり、延長・廃止されることがあります。
+      森林環境税（国税・年1,000円）は別建てで加算されます。
+      <strong>最終的な税額は必ずお住まいの自治体の広報・課税明細でご確認ください。</strong>
+    </p>
+  </details>
+</section>
+
+<!-- ===================== STEP 3 ===================== -->
+<section class="card step" id="step3">
+  <h2><span class="stepno">3</span>同じ世帯にいる人を登録する</h2>
+  <p class="hint">
+    ここに登録した人から、<b>扶養親族の人数・住民税の非課税限度額の判定人数・国保の被保険者数</b>を自動で数えます。
+    人数を自分で数える必要はありません。
+  </p>
+  <div id="roster"></div>
+  <div class="rosteradd no-print">
+    <button type="button" class="ghost small" data-add="child">＋ 子どもを追加</button>
+    <button type="button" class="ghost small" data-add="parent">＋ 親（祖父母）を追加</button>
+    <button type="button" class="ghost small" data-add="other">＋ その他の親族を追加</button>
+  </div>
+  <div id="rosterSummary"></div>
+</section>
+
+<!-- ===================== STEP 4 ===================== -->
+<section class="card step" id="step4">
+  <h2><span class="stepno">4</span><span id="titleA">あなたの収入と控除</span></h2>
+  <p class="hint" id="leadA"></p>
+  <div id="formA"></div>
+</section>
+
+<!-- ===================== STEP 5 ===================== -->
+<section class="card step" id="step5">
+  <h2><span class="stepno">5</span><span id="titleB">配偶者（生計維持者B）の収入と控除</span></h2>
+  <p class="hint" id="leadB"></p>
+  <div id="formB"></div>
+</section>
+
+<!-- ===================== STEP 6 ===================== -->
+<section class="card step hidden" id="step6">
+  <h2><span class="stepno">6</span>詳しく計算する家族の収入と控除</h2>
+  <p class="hint">
+    STEP 3 で「この人の税金も詳しく計算する」にチェックした人の欄です。
+    <b>学生本人のアルバイト代・株の譲渡益・勤労学生控除</b>などを入力すると、その人自身の所得税・住民税も判定します。
+  </p>
+  <div id="formsDetail"></div>
+</section>
+
+<!-- ===================== STEP 7 ===================== -->
+<section class="card step" id="step7">
+  <h2><span class="stepno">7</span>国民健康保険</h2>
+  <div class="note" style="margin-top:0">
+    <h3>国保には「被扶養者」がありません。加入者は一人ひとりが被保険者です</h3>
+    <p>
+      会社の健康保険（協会けんぽ・組合健保・共済）には「被扶養者」という枠があり、
+      家族が何人いても保険料は本人の分だけです。しかし<b>国民健康保険にはその仕組みがありません。</b>
+      国保は世帯単位で加入し、<b>加入する人は赤ちゃんでも学生でも一人ひとりが「被保険者」</b>になって、
+      その人数分の均等割がかかります。
+    </p>
+    <p>
+      <b>だから、世帯が国保なら学生本人も子どもも「加入」にチェックが必要です。</b>
+      チェックを外すと被保険者数が少なく数えられ、5割・2割軽減の基準額が1人あたり31万円・57万円も下がって、
+      本来受けられる軽減が出なくなります。
+    </p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>その人が入っている健康保険</th><th>「国民健康保険に加入」のチェック</th></tr></thead>
+      <tbody>
+        <tr><th>国民健康保険（自営業・無職・年金生活・退職後など）</th>
+          <td class="good"><b>入れる</b>（本人・配偶者・子ども・同居の親、全員それぞれ）</td></tr>
+        <tr><th>会社の健康保険の本人（協会けんぽ・組合健保・共済）</th><td class="bad"><b>外す</b></td></tr>
+        <tr><th>会社の健康保険の<b>被扶養者</b>（親や配偶者の扶養に入っている）</th><td class="bad"><b>外す</b></td></tr>
+        <tr><th>後期高齢者医療制度（75歳以上）</th>
+          <td class="bad"><b>外す</b>（国保から移った方は「特定同一世帯所属者」として別に数えます）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+      判断の基準は<b>その人自身が入っている健康保険の種類</b>です。
+      保険証（マイナ保険証の資格情報）に「国民健康保険」と書かれていればチェックを入れてください。
+    </p>
+    <div class="warn">
+      <b>よくある勘違い：「世帯主が国保なら世帯全員が国保」ではありません。</b>
+      世帯分離をしているかどうかも関係ありません。国保に入るかどうかは<b>一人ひとり別に決まります</b>。
+      たとえば<b>自営業の親が国保でも、同居している会社員の子は勤め先の健康保険</b>なので外します。
+      逆に<b>世帯主が会社員でも、配偶者と子は国保という世帯もあります</b>。
+      <br>
+      「全員」になるのは<b>その世帯に勤め先の健康保険に入っている人が誰もいないとき</b>で、
+      このときは赤ちゃんから同居のご両親まで全員が一人ひとり被保険者になります。
+    </div>
+    <p>
+      なお、<b>世帯主が会社の健康保険でも、世帯の誰かが国保なら世帯主の所得は軽減判定に含めます</b>
+      （これを擬制世帯主といいます）。ただし均等割の人数には入りません。下の「世帯主」で指定してください。
+    </p>
+    <p class="hint">
+      出典：<a href="https://www.city.yokohama.lg.jp/kurashi/koseki-zei-hoken/kokuho/hokensho/hihokensha.html" target="_blank" rel="noopener">横浜市「被保険者について」</a>
+      —「職場の健康保険に加入している方とその扶養家族、および生活保護を受けている方などを除いて、市内に住んでいる方はすべて…加入しなければなりません」／
+      <a href="https://www.mhlw.go.jp/content/000951286.pdf" target="_blank" rel="noopener">厚生労働省「国民健康保険制度の概要」</a>
+      —「原則として被用者保険等の適用者以外の国民すべてを被保険者とし」
+    </p>
+  </div>
+  <div class="grid rows">
+    <label class="field">
+      <span>世帯主はだれですか</span>
+      <select id="k_head"></select>
+      <small class="hint">保険料は世帯主にまとめて課されます。世帯主が国保に加入していなくても、その所得は軽減判定に含まれます。</small>
+    </label>
+    <label class="field">
+      <span>特定同一世帯所属者の数</span>
+      <input type="number" id="k_tokutei" min="0" value="0">
+      <small class="hint">
+        国保から<b>後期高齢者医療制度へ移った後も、同じ世帯にいる方</b>の人数。
+        STEP 3 では判別できないため、ここで直接入力してください（いなければ0のまま）。
+        5割・2割軽減の基準額は、この人数も含めて1人あたり31万円・57万円ずつ上がります。
+      </small>
+    </label>
+  </div>
+  <div id="kokuhoAuto"></div>
+  <fieldset class="group">
+    <legend>軽減判定所得の調整（該当する場合だけ入力してください）</legend>
+    <p class="hint">
+      国保の軽減判定に使う所得は、住民税の所得と少しだけ扱いが違います。次に当てはまる場合だけ入力してください。
+      該当がなければ0円のままで大丈夫です。
+    </p>
+    <div class="grid rows">
+      <label class="field"><span>分離譲渡所得の特別控除額の合計（円）</span>
+        <input type="text" class="money" inputmode="numeric" autocomplete="off" id="k_landSpecial" value="0">
+        <small class="hint">土地建物等の譲渡で3,000万円特別控除などを使った場合、<b>軽減判定では特別控除前</b>の額で見るため、控除額を足し戻します。</small></label>
+      <label class="field"><span>事業専従者控除額・青色事業専従者給与（円）</span>
+        <input type="text" class="money" inputmode="numeric" autocomplete="off" id="k_senjusha" value="0">
+        <small class="hint">軽減判定では<b>事業主の所得に戻して</b>判定します。専従者給与を受けている国保加入者の給与所得は0とみなすため、その分は「そのほかの世帯員の所得」から除いてください。</small></label>
+    </div>
+  </fieldset>
+  <details class="sub">
+    <summary>自動で数えた人数・所得を手動で上書きする（ふつうは開かなくて大丈夫です）</summary>
+    <p class="hint">
+      下の3つは、ふだんは <b>STEP 3 の「国民健康保険の被保険者」チェックから自動計算</b>していて、
+      入力しても上書きされます。課税証明書などの数値をそのまま使いたいときだけ、
+      いちばん下のチェックを入れてください。<b>チェックを入れている間は STEP 3 の加入チェックは使われません</b>
+      （まぎらわしいので、そちらは操作できないようにします）。
+    </p>
+    <div class="grid rows">
+      <label class="field"><span>国保の被保険者数（世帯内）</span><input type="number" id="k_insured" min="0" value="1">
+        <small class="lockmsg" id="k_insured_lock"></small></label>
+      <label class="field"><span>給与所得者等の数（世帯内）</span><input type="number" id="k_salary" min="0" value="1">
+        <small class="hint">給与収入55万円超の方＋公的年金収入60万円超（65歳未満）／125万円超（65歳以上）の方の合計人数</small>
+        <small class="lockmsg" id="k_salary_lock"></small></label>
+      <label class="field"><span>そのほかの世帯員の総所得金額等の合計（円）</span>
+        <input type="text" class="money" inputmode="numeric" autocomplete="off" id="k_other" value="0">
+        <small class="lockmsg" id="k_other_lock"></small></label>
+      <label class="field checkline"><input type="checkbox" id="k_manual">
+        <span class="ctext"><span class="lbl">上の3つを手入力した値で計算する</span>
+        <small class="hint">チェックを外すと STEP 3 から自動計算します（既定）。</small></span></label>
+    </div>
+  </details>
+</section>
+
+<!-- ===================== STEP 8 ===================== -->
+<section class="card step" id="step8">
+  <h2><span class="stepno">8</span>JASSO（日本学生支援機構）奨学金</h2>
+  <p class="hint">
+    収入基準<strong>以外</strong>の要件（学力・在学・国籍／在留資格・資産基準など）はすべて満たしている前提で判定します。
+  </p>
+  <div class="grid rows">
+    <label class="field">
+      <span>確認したい支援区分</span>
+      <select id="j_target">
+        <option value="0">すべての区分について判定する</option>
+        <option value="1">第Ⅰ区分（満額）に入るか</option>
+        <option value="2">第Ⅱ区分（3分の2）に入るか</option>
+        <option value="3">第Ⅲ区分（3分の1）に入るか</option>
+        <option value="4">第Ⅳ区分（4分の1）に入るか</option>
+      </select>
+      <small class="hint">選んだ区分は判定表で ★ を付けて強調します。</small>
+    </label>
+    <label class="field">
+      <span>奨学金を申し込む学生本人はだれですか</span>
+      <select id="j_student"></select>
+      <small class="hint">
+        給付奨学金の収入基準は、<b>学生本人と生計維持者の支給額算定基準額の合計</b>で判定します。
+        本人の分も計算に入れるため、STEP 3 に登録した人から選んでください。
+        本人の税額を計算するには、STEP 3 でその人の「この人の税金も詳しく計算する」をONにしてください。
+      </small>
+    </label>
+    <label class="field"><span>学校の種別</span>
+      <select id="j_school"><option>大学</option><option>短期大学</option><option>専門学校</option><option>高等専門学校</option></select></label>
+    <label class="field"><span>設置者</span>
+      <select id="j_founder"><option>国公立</option><option>私立</option></select></label>
+    <label class="field"><span>通学形態</span>
+      <select id="j_home"><option value="0">自宅から通学</option><option value="1">自宅外から通学</option></select></label>
+    <label class="field checkline"><input type="checkbox" id="j_tashi"><span>多子世帯（生計維持者が扶養する子が3人以上）</span>
+      <small class="hint" id="j_tashiNote"></small></label>
+    <label class="field checkline"><input type="checkbox" id="j_riko"><span>私立の理工農系学部に在学（第Ⅳ区分の対象）</span></label>
+    <label class="field">
+      <span>生計維持者Bの支給額算定基準額を直接入力する場合（円）</span>
+      <input type="text" class="money" inputmode="numeric" autocomplete="off" id="j_manualB"
+             placeholder="空欄ならSTEP 5の入力から自動計算">
+      <small class="hint">課税証明書の数値から自分で計算済みの場合はここに入力してください。</small>
+    </label>
+  </div>
+</section>
+
+<!-- ===================== 判定 ===================== -->
+<div class="actions no-print" id="runBar">
+  <button id="calcBtn" class="primary big">下に判定結果を表示する</button>
+  <button id="resetBtn" class="ghost">入力をリセット</button>
+</div>
+
+<!-- ===================== 結果 ===================== -->
+<section class="step" id="stepResult">
+  <div class="actions no-print" id="printBar" style="display:none">
+    <button id="printBtn" class="primary">PDFで保存／印刷する</button>
+    <label class="field inline">
+      <span>PDFに入れる内容</span>
+      <select id="printScope">
+        <option value="result">判定結果のみ</option>
+        <option value="all" selected>判定結果 ＋ 制度の解説 ＋ 出典（推奨）</option>
+      </select>
+    </label>
+    <span class="hint">印刷ダイアログの「送信先／プリンター」で <strong>「PDFに保存」</strong> を選んでください。</span>
+  </div>
+  <div id="results"><p class="empty">上の入力を終えたら、<strong>［下に判定結果を表示する］</strong>を押してください。</p></div>
+</section>
+
+<!-- ===================== 解説 ===================== -->
+<section id="tab-guide" class="reference">
+  <h2 class="refhead">制度のしくみ（読みもの）</h2>
+
+  <details class="card guide">
+    <summary><b>住民税の「均等割」と「所得割」は何が違うのか</b></summary>
+    <p>
+      個人住民税は性格の異なる<strong>2つの税</strong>の合計です。<b>片方だけが課税される</b>ことがよくあり、
+      奨学金・国保・各種給付の判定では「どちらが非課税か」が決定的に効いてきます。
+    </p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th></th><th class="c1">均等割</th><th class="c2">所得割</th></tr></thead>
+      <tbody>
+        <tr><th>課税の考え方</th>
+          <td>地域社会の会費として、一定以上の所得がある人に<strong>定額</strong>で課税</td>
+          <td>前年の<strong>所得の大きさに応じて</strong>課税</td></tr>
+        <tr><th>税額の決まり方</th>
+          <td>市町村民税 3,000円＋道府県民税 1,000円＝<strong>4,000円</strong>（標準税率）<br>＋都道府県・市町村の超過課税<br>＋森林環境税（国税）1,000円</td>
+          <td><strong>課税標準額 × 10％</strong>（市町村民税6％＋道府県民税4％）<br>−調整控除 −税額控除<br>※政令市は市8％＋道府県2％<br>※分離課税分は5％（短期譲渡は9％）</td></tr>
+        <tr><th>所得控除の影響</th>
+          <td class="bad">受けない。<br>社会保険料控除や扶養控除をいくら積んでも均等割は1円も減らない</td>
+          <td class="good">受ける。<br>所得控除が増えれば所得割は減り、0円にもなる</td></tr>
+        <tr><th>繰越控除の影響</th>
+          <td class="bad">受けない。<br>判定は<strong>繰越控除前</strong>の合計所得金額</td>
+          <td class="good">受ける。<br>判定・課税標準とも<strong>繰越控除後</strong>の総所得金額等</td></tr>
+        <tr><th>非課税かどうかの判定式<br>（扶養等がいない単身の場合）</th>
+          <td><strong>合計所得金額</strong> ≦ 35万円＋10万円＝<strong>45万円</strong><br><span class="muted">※1級地。2級地41.5万円／3級地38万円</span></td>
+          <td><strong>総所得金額等</strong> ≦ 35万円＋10万円＝<strong>45万円</strong><br><span class="muted">※全国共通</span></td></tr>
+        <tr><th>扶養親族等がいる場合</th>
+          <td>35万円×（本人＋同一生計配偶者＋扶養親族の数）＋10万円<span class="plus">＋21万円</span><br><span class="muted">※1級地。2級地は31.5万円/18.9万円、3級地は28万円/16.8万円</span></td>
+          <td>35万円×（本人＋同一生計配偶者＋扶養親族の数）＋10万円<span class="plus">＋32万円</span><br><span class="muted">※加算額が均等割と違う（21万円 vs 32万円）</span></td></tr>
+        <tr><th>自治体による差</th>
+          <td>大きい。級地区分で非課税ラインが変わり、超過課税の額も異なる</td>
+          <td>非課税ラインは全国共通。税率は一部自治体のみ異なる（名古屋市7.7％、豊岡市6.1％、夕張市6.5％など）</td></tr>
+        <tr><th>森林環境税との関係</th>
+          <td>均等割と併せて徴収され、<strong>均等割が非課税なら森林環境税も非課税</strong></td>
+          <td>関係しない</td></tr>
+        <tr class="hl"><th>奨学金・給付との関係</th>
+          <td>「住民税非課税世帯」向けの給付金などはこちらで判定されることが多い</td>
+          <td class="good"><strong>JASSO給付奨学金・授業料等減免はこちらで決まる。</strong><br>所得割が非課税なら支給額算定基準額は0円＝必ず第Ⅰ区分</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note">
+      <h3>「均等割だけ課税される」というケースがよくある理由</h3>
+      <p>
+        単身なら均等割・所得割の非課税限度額はどちらも45万円（1級地）で同じですが、
+        扶養親族がいると加算額が<strong>21万円（均等割）</strong>と<strong>32万円（所得割）</strong>で異なります。
+        そのため<strong>扶養親族がいる世帯では「均等割は課税・所得割は非課税」という状態が生まれます。</strong>
+        奨学金の判定ではこの状態でも<strong>第Ⅰ区分</strong>です。
+      </p>
+      <p>
+        また、所得割は所得控除を差し引いた課税標準額に税率を掛けるため
+        <strong>所得控除を増やせば所得割だけを0円にできる</strong>のに対し、
+        均等割は非課税限度額を下回らない限り必ず課税されます。
+      </p>
+    </div>
+    <div class="note">
+      <h3>所得割の調整措置</h3>
+      <p>
+        所得割の非課税限度額をわずかに超えた人が、税を引いた後の手取りで非課税の人を下回らないよう、
+        <em>非課税限度額 −（総所得金額等 − 算出所得割額）</em> の額を所得割額から減額する仕組みがあります。
+        本サイトはこの調整も計算に含めています。
+      </p>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>控除には所得の条件があります（条件を超えると選べなくなります）</b></summary>
+    <p>本サイトでは、収入を入力した時点で条件を満たさなくなった控除は<b>自動的にロック</b>され、理由が表示されます。</p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>控除</th><th>本人の所得の条件</th><th>相手側の所得の条件</th><th>控除額（所得税／住民税）</th></tr></thead>
+      <tbody>
+        <tr><th>勤労学生控除</th>
+          <td>合計所得金額 <b>85万円以下</b>（令和7年分）<br><b>89万円以下</b>（令和8年分）<br>＋ 勤労によらない所得が10万円以下</td>
+          <td>—</td><td>27万円／26万円</td></tr>
+        <tr><th>ひとり親控除</th><td>合計所得金額 <b>500万円以下</b></td>
+          <td>生計を一にする子の総所得金額等が58万円以下（令和8年分は62万円以下）</td><td>35万円／30万円</td></tr>
+        <tr><th>寡婦控除</th><td>合計所得金額 <b>500万円以下</b></td><td>—</td><td>27万円／26万円</td></tr>
+        <tr><th>配偶者控除</th><td>合計所得金額 <b>1,000万円以下</b></td>
+          <td>配偶者の合計所得金額が58万円以下（令和8年分は62万円以下）</td><td>最高38万円／33万円</td></tr>
+        <tr><th>配偶者特別控除</th><td>合計所得金額 <b>1,000万円以下</b></td>
+          <td>配偶者の合計所得金額が58万円超133万円以下</td><td>最高38万円／33万円</td></tr>
+        <tr><th>扶養控除</th><td>—</td>
+          <td>扶養親族の合計所得金額が58万円以下（令和8年分は62万円以下）</td>
+          <td>38万〜63万円／33万〜45万円</td></tr>
+        <tr><th>特定親族特別控除</th><td>—</td>
+          <td>19歳以上23歳未満の親族の合計所得金額が58万円超123万円以下</td><td>最高63万円／45万円</td></tr>
+        <tr><th>基礎控除</th><td>合計所得金額 <b>2,500万円超で0円</b></td><td>—</td><td>年分により変動</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>「合計所得金額」と「総所得金額等」— 繰越控除があると結果が変わる</b></summary>
+    <p>
+      株式の譲渡損失や純損失・雑損失を<strong>繰越控除</strong>している場合、同じ人でも判定に使う所得が2種類あります。
+      ここを取り違えると「所得割は0円なのに扶養から外れた」「均等割だけ課税された」といったことが起こります。
+    </p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th></th><th>合計所得金額</th><th>総所得金額等</th></tr></thead>
+      <tbody>
+        <tr><th>繰越控除</th><td class="bad"><strong>適用する前</strong>の金額</td><td class="good"><strong>適用した後</strong>の金額</td></tr>
+        <tr><th>含まれる所得</th><td colspan="2">総合課税の所得（給与・年金・事業・不動産・雑など）＋ 分離課税の所得（土地建物等の譲渡・株式等の譲渡／配当・先物）＋ 山林所得 ＋ 退職所得</td></tr>
+        <tr><th>使われる場面</th>
+          <td>・住民税<strong>均等割</strong>の非課税判定<br>・扶養親族／同一生計配偶者の判定<br>・配偶者控除・配偶者特別控除の判定<br>・基礎控除・ひとり親控除・勤労学生控除の所得要件</td>
+          <td>・住民税<strong>所得割</strong>の非課税判定<br>・所得割の課税標準額<br>・医療費控除の足切り（5％）<br>・国民健康保険料の軽減判定</td></tr>
+        <tr><th>奨学金への影響</th><td>—</td>
+          <td class="good">こちらが課税標準額を通じて<strong>支給額算定基準額</strong>を決める</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note">
+      <h3>繰越控除の種類（本サイトで対応しているもの）</h3>
+      <ul>
+        <li><strong>上場株式等に係る譲渡損失の繰越控除</strong>（翌年以後3年間）…「株式等に係る譲渡所得等」→「上場株式等に係る配当所得等」の順に控除します。譲渡がなかった年も連続して確定申告書を提出する必要があります。</li>
+        <li><strong>純損失の繰越控除</strong>（青色申告・3年間）</li>
+        <li><strong>雑損失の繰越控除</strong>（3年間）</li>
+      </ul>
+      <p class="muted">※源泉徴収ありの特定口座で申告しない譲渡益・配当は、住民税の課税所得にも合計所得金額にも入りません（そのため扶養や非課税判定にも影響しません）。逆に、繰越控除を使うために確定申告すると所得に算入されます。</p>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>分離課税の所得と税率</b></summary>
+    <p>次の所得は他の所得と分けて税率をかけます（申告分離課税）。所得控除は、まず総所得金額から差し引き、引ききれない分を下の順に控除します。</p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>所得の種類</th><th>所得税</th><th>復興特別所得税を含む</th><th>住民税</th><th>合計</th></tr></thead>
+      <tbody>
+        <tr><th>土地建物等の短期譲渡所得<br><span class="muted">所有期間5年以下</span></th><td>30％</td><td>30.63％</td><td>9％</td><td><strong>39.63％</strong></td></tr>
+        <tr><th>土地建物等の長期譲渡所得<br><span class="muted">所有期間5年超</span></th><td>15％</td><td>15.315％</td><td>5％</td><td><strong>20.315％</strong></td></tr>
+        <tr><th>株式等に係る譲渡所得等</th><td>15％</td><td>15.315％</td><td>5％</td><td><strong>20.315％</strong></td></tr>
+        <tr><th>上場株式等に係る配当所得等<br><span class="muted">申告分離課税を選択</span></th><td>15％</td><td>15.315％</td><td>5％</td><td><strong>20.315％</strong></td></tr>
+        <tr><th>先物取引に係る雑所得等<br><span class="muted">先物・FX・CFDなど</span></th><td>15％</td><td>15.315％</td><td>5％</td><td><strong>20.315％</strong></td></tr>
+        <tr><th>山林所得</th><td colspan="2">5分5乗方式（課税山林所得金額×1/5に税率→×5）</td><td>10％</td><td>—</td></tr>
+        <tr><th>退職所得</th><td colspan="2">（収入 − 退職所得控除）× 1/2 に超過累進税率</td><td>10％<br><span class="muted">退職時に徴収</span></td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note">
+      <h3>退職所得の住民税は「現年分離課税」</h3>
+      <p>
+        退職所得に対する住民税は退職金の支払時に分離課税で天引きされます。そのため
+        <strong>翌年度の住民税額・非課税判定・奨学金の支給額算定基準額には影響しません</strong>。
+      </p>
+    </div>
+    <div class="note">
+      <h3>退職所得控除額</h3>
+      <ul>
+        <li>勤続20年以下：<strong>40万円 × 勤続年数</strong>（最低80万円）</li>
+        <li>勤続20年超：<strong>800万円 ＋ 70万円 ×（勤続年数 − 20年）</strong></li>
+        <li>障害者となったことによる退職：上記に<strong>100万円</strong>を加算</li>
+        <li>勤続5年以下の役員等（特定役員退職手当等）は2分の1課税なし。勤続5年以下の一般社員（短期退職手当等）は、控除後の額のうち300万円を超える部分に2分の1課税を適用しません。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>JASSO 給付奨学金・授業料等減免の支援区分</b></summary>
+    <p>支援区分は年収そのものではなく、住民税の課税資料から計算する<strong>「支給額算定基準額」</strong>で決まります。</p>
+    <div class="formula">
+      支給額算定基準額 ＝ <b>課税標準額 × 6％</b> −（市町村民税の<b>調整控除額</b> ＋ <b>調整額</b>）　<span class="muted">（100円未満切捨て）</span><br>
+      <span class="muted">※政令指定都市に市民税を納めている場合は（調整控除額＋調整額）に <b>4分の3</b> を乗じます</span><br>
+      <span class="muted">※生計維持者が2人いる場合は<strong>2人分を合計</strong>して判定します</span>
+    </div>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>支援区分</th><th>支給額算定基準額</th><th>給付奨学金・授業料等減免</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr><th>第Ⅰ区分</th><td>100円未満（0〜99円）</td><td>満額（10分の10）</td><td class="good">市町村民税<strong>所得割が非課税</strong>なら必ずこの区分</td></tr>
+        <tr><th>第Ⅱ区分</th><td>100円以上 25,600円未満</td><td>3分の2</td><td></td></tr>
+        <tr><th>第Ⅲ区分</th><td>25,600円以上 51,300円未満</td><td>3分の1</td><td></td></tr>
+        <tr><th>第Ⅳ区分<br><span class="muted">多子世帯</span></th><td>51,300円以上 154,500円未満</td>
+          <td>給付奨学金 4分の1<br>授業料等減免 4分の1</td><td>生計維持者が扶養する子が3人以上</td></tr>
+        <tr><th>第Ⅳ区分<br><span class="muted">私立理工農系</span></th><td>51,300円以上 154,500円未満</td>
+          <td class="bad"><strong>給付奨学金は0円（支給なし）</strong><br>授業料等減免のみ</td>
+          <td>減免額は<strong>文系との授業料の差額に着目した額</strong>。多子世帯にも当てはまる場合は上の行が適用されます</td></tr>
+        <tr><th>多子世帯<br><span class="muted">所得制限なし</span></th><td>154,500円以上でも可</td>
+          <td>授業料等減免は上限額まで</td><td>生計維持者が扶養する子が3人以上（令和7年度〜）。給付奨学金の額は支援区分に応じます</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note">
+      <h3>「住民税所得割が非課税か」がなぜ決定的なのか</h3>
+      <p>
+        市町村民税の所得割が<strong>非課税限度額以下で非課税</strong>であれば課税標準額は0円になり、
+        支給額算定基準額も<strong>0円</strong>になります。
+        0円は「100円未満」なので<strong>自動的に第Ⅰ区分</strong>となり、給付奨学金も授業料等減免も<strong>満額</strong>が受けられます。
+        均等割だけが課税されていて所得割が非課税、というケースも第Ⅰ区分です。
+      </p>
+      <div class="warn">
+        <b>ただし「所得割額が0円」＝「基準額0円」ではありません。</b>
+        <strong>ふるさと納税（寄附金税額控除）・住宅ローン控除・定額減税・市町村民税の減免</strong>などで
+        所得割の<strong>税額</strong>が0円になっているだけの場合は、課税標準額そのものは残っているため、
+        支給額算定基準額は0円になりません。課税証明書の「所得割額」が0円でも、
+        <strong>課税標準額</strong>が0円でなければ第Ⅰ区分にはならない点にご注意ください。
+        <br>本サイトは非課税限度額で判定し、税額控除で0円になった場合は課税標準額から基準額を計算します。
+      </div>
+    </div>
+    <div class="note">
+      <h3>本サイトの前提</h3>
+      <ul>
+        <li>収入基準（家計基準）<strong>以外</strong>の要件（学力・在学・国籍／在留資格など）は<strong>すべて満たしている</strong>ものとします。</li>
+        <li>資産基準（生計維持者2人で合計5,000万円未満、1人で3,500万円未満）も満たしているものとします。</li>
+        <li>実際の区分はマイナンバーで取得した課税情報に基づきJASSOが決定します。本サイトの結果は目安です。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>国民健康保険料（税）の軽減</b></summary>
+    <p>
+      世帯の所得が一定以下の場合、保険料のうち<strong>均等割額と平等割額</strong>が
+      <strong>7割・5割・2割</strong>軽減されます（所得割額は軽減の対象外です）。申請は不要です。
+    </p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>軽減割合</th><th>令和8年度の軽減判定所得（世帯の合計）</th></tr></thead>
+      <tbody>
+        <tr><th class="l7">7割軽減</th><td>43万円 ＋ 10万円 ×（給与所得者等の数 − 1）以下</td></tr>
+        <tr><th class="l5">5割軽減</th><td>43万円 ＋ <strong>31万円</strong> ×（被保険者数＋特定同一世帯所属者数）＋ 10万円 ×（給与所得者等の数 − 1）以下</td></tr>
+        <tr><th class="l2">2割軽減</th><td>43万円 ＋ <strong>57万円</strong> ×（被保険者数＋特定同一世帯所属者数）＋ 10万円 ×（給与所得者等の数 − 1）以下</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note">
+      <h3>だれが「被保険者」か（同じ世帯でも全員とは限りません）</h3>
+      <p>
+        国保は<strong>世帯単位</strong>で、保険料は世帯主にまとめて課されます。ただし
+        <strong>均等割は国保に加入している人数分</strong>かかり、軽減の基準額（5割・2割）も
+        <strong>被保険者数</strong>に比例するため、加入者を正しく数えることが結果を大きく左右します。
+      </p>
+      <ul>
+        <li>会社の健康保険（協会けんぽ・組合健保・共済）に入っている人と、その<strong>被扶養者は国保ではありません</strong>。
+          親が会社員でその扶養に入っている子どもは、同じ世帯でも被保険者に数えません。</li>
+        <li>世帯全体が国保（自営業など）なら、<strong>子どもも一人ひとりが被保険者</strong>です。0歳でも均等割がかかります。</li>
+        <li>判断の基準は<strong>世帯分離をしているかどうかではなく、加入している健康保険の種類</strong>です。</li>
+        <li><strong>擬制世帯主</strong>：世帯主が会社の健康保険に入っていても、世帯内に国保加入者がいれば
+          <strong>世帯主の所得は軽減判定に含めます</strong>（均等割の人数には入りません）。</li>
+        <li><strong>特定同一世帯所属者</strong>：国保から後期高齢者医療制度へ移った後も同じ世帯にいる方。
+          軽減判定では被保険者と同じように数えます。</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>軽減判定所得の作り方（住民税の所得とは少し違います）</h3>
+      <ul>
+        <li>世帯主（擬制世帯主を含む）・被保険者・特定同一世帯所属者<strong>全員</strong>の前年の総所得金額等を合計します。</li>
+        <li>基礎控除・社会保険料控除などの<strong>所得控除は差し引きません</strong>。</li>
+        <li>退職金を一時金で受け取った<strong>退職所得は含めません</strong>。</li>
+        <li>純損失・雑損失の<strong>繰越控除は適用した後</strong>の額で判定します。</li>
+        <li>65歳以上の方の公的年金等に係る所得からは、さらに<strong>15万円</strong>を控除します。</li>
+        <li>土地建物等の分離譲渡所得は<strong>特別控除前</strong>の額で判定します（住民税の所得割は特別控除後なので逆です）。</li>
+        <li>事業専従者控除・青色事業専従者給与は<strong>事業主の所得に戻して</strong>判定し、専従者給与を受けている加入者の所得は0とみなします。</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>7割・5割・2割以外の軽減・減免</h3>
+      <ul>
+        <li><strong>未就学児の均等割5割軽減</strong>：上記の軽減適用後の均等割額をさらに5割軽減。</li>
+        <li><strong>産前産後期間の免除</strong>：出産予定月の前月から4か月分（多胎妊娠は6か月分）の所得割・均等割を免除。</li>
+        <li><strong>非自発的失業者の軽減</strong>：倒産・解雇等による離職の場合、給与所得を<strong>100分の30</strong>とみなして算定。</li>
+        <li><strong>災害・所得の激減等による減免</strong>：自治体ごとの条例で定められています。</li>
+      </ul>
+      <p class="warn">⚠ 保険料率・賦課限度額は市区町村ごとに異なります。本サイトは<strong>軽減判定のみ</strong>を行い、保険料額そのものは算出しません。</p>
+    </div>
+    <div class="note">
+      <h3>令和8年度の賦課限度額</h3>
+      <p>
+        医療分 <strong>67万円</strong>（令和7年度は66万円）＋ 後期高齢者支援金分 26万円 ＋ 介護納付金分 17万円
+        ＋ <strong>子ども・子育て支援納付金分 3万円（令和8年度に新設）</strong>＝ <strong>合計113万円</strong>（令和7年度は109万円）。
+      </p>
+      <p>
+        子ども・子育て支援納付金分は年齢を問わず全加入者が対象ですが、
+        <strong>18歳到達年度末までの子どもは均等割が10割軽減</strong>されるため、子どものいる世帯の実質負担は増えない設計です。
+      </p>
+    </div>
+  </details>
+
+  <details class="card guide">
+    <summary><b>級地区分について</b></summary>
+    <p>
+      住民税の<strong>均等割</strong>の非課税限度額は、生活保護法の規定による<strong>級地区分</strong>に応じて変わります。
+      本サイトは全国 <b id="cityCount2">1,719</b> 市区町村の級地を収録しており、市区町村を選ぶと自動で切り替わります。
+    </p>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th>級地</th><th>1人あたりの額</th><th>扶養親族等がいる場合の加算</th><th>単身の非課税限度額</th><th>該当する主な自治体</th></tr></thead>
+      <tbody>
+        <tr><th>1級地</th><td>35万円</td><td>＋21万円</td><td><strong>45万円</strong></td><td>東京23区、横浜市、大阪市、名古屋市、京都市、神戸市、札幌市、仙台市、福岡市など（107団体）</td></tr>
+        <tr><th>2級地</th><td>31万5千円</td><td>＋18万9千円</td><td><strong>41万5千円</strong></td><td>県庁所在地級の市、中核市など（200団体）</td></tr>
+        <tr><th>3級地</th><td>28万円</td><td>＋16万8千円</td><td><strong>38万円</strong></td><td>上記以外の市町村（1,412団体）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="hint">
+      いずれの級地でも一律に＋10万円が加算されます。
+      <strong>所得割</strong>の非課税限度額は級地に関係なく全国共通（35万円×人数＋10万円＋32万円）です。
+    </p>
+  </details>
+
+  <details class="card guide">
+    <summary><b>令和7年分・令和8年分の税制改正のポイント</b></summary>
+    <div class="tablewrap">
+    <table class="compare">
+      <thead><tr><th></th><th>令和6年分まで</th><th>令和7年分（2025年）</th><th>令和8年分（2026年）</th></tr></thead>
+      <tbody>
+        <tr><th>基礎控除（所得税）</th><td>48万円</td>
+          <td>95万円／88万円／68万円／63万円／58万円<br><span class="muted">（合計所得132万・336万・489万・655万で区分）</span></td>
+          <td>104万円（合計所得489万円以下）<br>67万円（489万超655万以下）<br>62万円（655万超2,350万以下）</td></tr>
+        <tr><th>給与所得控除の最低保障額</th><td>55万円</td><td>65万円（給与収入190万円以下）</td><td>74万円（給与収入220万円以下）</td></tr>
+        <tr><th>所得税がかからない給与収入</th><td>103万円</td><td>160万円</td><td>178万円</td></tr>
+        <tr><th>扶養親族等の所得要件</th><td>48万円以下</td><td>58万円以下（給与123万円）</td><td>62万円以下（給与136万円）</td></tr>
+        <tr><th>勤労学生控除の所得要件</th><td>75万円以下</td><td>85万円以下（給与150万円）</td><td>89万円以下（給与163万円）</td></tr>
+        <tr><th>特定親族特別控除</th><td>—</td><td colspan="2">創設。19歳以上23歳未満の親族の所得が要件を超えても、63万円から段階的に逓減して控除</td></tr>
+        <tr><th>基礎控除（住民税）</th><td colspan="3"><strong>43万円で据置き（改正なし）</strong>。ただし給与所得控除の引上げは住民税にも適用される</td></tr>
+        <tr><th>調整控除の人的控除差</th><td colspan="3">基礎控除分は<strong>5万円で据置き</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="warn">
+      ⚠ 令和8年分の所得税は年末調整・確定申告がこれからです。令和9年度の個人住民税は令和8年度税制改正の内容が適用されますが、
+      自治体からの正式な通知はこれから出るものもあります。令和8年分・令和9年度の判定結果は<strong>見込み</strong>としてお使いください。
+    </p>
+  </details>
+</section>
+
+<!-- ===================== 出典 ===================== -->
+<section id="tab-sources" class="reference">
+  <h2 class="refhead">出典と免責</h2>
+  <details class="card guide">
+    <summary><b>参照した公的資料</b></summary>
+    <p class="hint">本サイトの数値は次の資料に基づいています（2026年8月時点）。</p>
+    <div id="sourceList"></div>
+  </details>
+  <details class="card guide">
+    <summary><b>免責事項</b></summary>
+    <ul>
+      <li>本サイトは公表資料に基づく<strong>概算・目安</strong>を示すものであり、実際の税額・保険料・奨学金の採否を保証するものではありません。</li>
+      <li>住民税の均等割の超過課税、国民健康保険の保険料率、生活保護の級地区分は<strong>市区町村ごとに異なり、年度ごとに変わります</strong>。必ずお住まいの自治体でご確認ください。</li>
+      <li>分離課税分の住民税は標準税率（合計5％、短期譲渡は9％）で計算しています。自治体独自の超過課税・減税は総合課税分にのみ反映しています。</li>
+      <li>ふるさと納税を含む寄附金控除、住宅ローン控除の限度額計算、居住用財産の3,000万円特別控除などの各種特例には対応していません（特別控除後の金額を入力してください）。</li>
+      <li>正式な判定は、税は税務署・市区町村、国保は市区町村、奨学金はJASSOおよび在学校が行います。</li>
+      <li><strong>入力した収入・控除などの内容は保存も送信もされません。</strong>ページを閉じるか再読み込みすると消えます。
+        ブラウザに保存しているのは<strong>画面の配色の設定（ライト／ダーク）だけ</strong>です。</li>
+    </ul>
+  </details>
+</section>
+
+</main>
+
+<footer class="site-footer no-print">
+  <div class="wrap"><p>ローカルで動作します。外部にデータは送信されません。入力内容は保存されません（配色の設定のみ保存します）。</p></div>
+</footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/cities.js"></script>
+<script src="assets/calc.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
