@@ -122,6 +122,13 @@ function oracleJasso(sum, tashi, riko) {
 function oracleSalaryIncome(rev, minAmt, minCap) {
   rev = Math.floor(rev);
   if (rev <= 0) return 0;
+  /* 令和8・9年分（最低保障74万円）は219万1千円〜220万円未満が固定額の3段。
+   * 実装の data.js を参照せず、国税庁の実表（年末調整のしかた 47ページ）の値を直書きする */
+  if (minAmt === 740000) {
+    if (rev >= 2196000 && rev < 2200000) return 1456000;
+    if (rev >= 2193000 && rev < 2196000) return 1453000;
+    if (rev >= 2191000 && rev < 2193000) return 1451000;
+  }
   if (rev < minCap) return Math.max(0, rev - minAmt);
   const A = Math.floor(rev / 4000) * 1000;      // ÷4して千円未満切捨て＝÷4000して千円単位
   if (rev < 3600000) return A * 2.8 - 80000;

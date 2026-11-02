@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "meta": {
     "name": "税制パラメータ（住民税・所得税・国民健康保険・JASSO奨学金）",
-    "verifiedAt": "2026-09-17",
+    "verifiedAt": "2026-11-02",
     "generatedBy": "node test/build-tax-parameters.js",
     "masterFile": "assets/data.js",
     "note": "このファイルは assets/data.js から生成した写しです。手で編集せず、data.js を直して再生成してください。",
@@ -98,11 +98,57 @@
     "2026": {
       "label": "令和8年分（2026年）",
       "status": "final",
-      "statusNote": "令和8年度税制改正（令和7年12月26日 閣議決定・令和8年12月1日施行）を反映。ただし別表第五そのもの（年末調整資料）は例年9〜10月公表のため provisionalTables を参照",
+      "statusNote": "令和8年度税制改正（令和7年12月26日 閣議決定・令和8年12月1日施行）を反映。別表第五（令和8年分）は国税庁「令和8年分 年末調整のしかた」の実表と突合済み（2026-11-02）",
       "salaryDeductionMinimum": {
         "value": 740000,
         "unit": "円",
-        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html）"
+        "source": "所得税／財務省 令和8年度 税制改正（国税）等について（https://www.mof.go.jp/public_relations/finance/202604/202604c.html） ／ 所得税／国税庁 令和8年分 年末調整のしかた（給与所得控除後の給与等の金額の表・生命保険料控除の特例）（https://www.nta.go.jp/publication/pamph/gensen/nencho2026/01.htm）"
+      },
+      "salaryStairs": {
+        "table": [
+          {
+            "revenueFrom": 2191000,
+            "revenueBelow": 2193000,
+            "salaryIncome": 1451000
+          },
+          {
+            "revenueFrom": 2193000,
+            "revenueBelow": 2196000,
+            "salaryIncome": 1453000
+          },
+          {
+            "revenueFrom": 2196000,
+            "revenueBelow": 2200000,
+            "salaryIncome": 1456000
+          }
+        ],
+        "unit": "円",
+        "source": "所得税／国税庁 令和8年分 年末調整のしかた（給与所得控除後の給与等の金額の表・生命保険料控除の特例）（https://www.nta.go.jp/publication/pamph/gensen/nencho2026/01.htm）",
+        "note": "219万1千円以上220万円未満は固定額（租税特別措置法29条の4・令和8・9年分）"
+      },
+      "lifeInsuranceU23": {
+        "generalNewTable": [
+          {
+            "paidUpTo": 30000,
+            "rate": 1,
+            "add": 0
+          },
+          {
+            "paidUpTo": 60000,
+            "rate": 0.5,
+            "add": 15000
+          },
+          {
+            "paidUpTo": 120000,
+            "rate": 0.25,
+            "add": 30000
+          }
+        ],
+        "generalMax": 60000,
+        "generalCapWithOld": 60000,
+        "unit": "円",
+        "source": "所得税／国税庁 令和8年分 年末調整のしかた（給与所得控除後の給与等の金額の表・生命保険料控除の特例）（https://www.nta.go.jp/publication/pamph/gensen/nencho2026/01.htm）",
+        "note": "23歳未満の扶養親族がいる場合の一般生命保険料控除（令和8・9年分の所得税のみ。住民税は対象外）"
       },
       "salaryDeductionMinimumCap": {
         "value": 2200000,
@@ -259,8 +305,29 @@
     "2027": {
       "label": "令和9年度（2027年度）",
       "incomeYear": 2026,
-      "status": "provisional",
-      "statusNote": "令和8年度税制改正の住民税適用分。各自治体の令和9年度課税の案内は未公表のため要再確認",
+      "status": "final",
+      "statusNote": "令和8年度税制改正の住民税適用分。自治体の令和9年度改正の案内（さいたま市・渋谷区・生駒市・浦添市）と突合済み（2026-11-02）",
+      "salaryStairs": {
+        "table": [
+          {
+            "revenueFrom": 2191000,
+            "revenueBelow": 2193000,
+            "salaryIncome": 1451000
+          },
+          {
+            "revenueFrom": 2193000,
+            "revenueBelow": 2196000,
+            "salaryIncome": 1453000
+          },
+          {
+            "revenueFrom": 2196000,
+            "revenueBelow": 2200000,
+            "salaryIncome": 1456000
+          }
+        ],
+        "unit": "円",
+        "source": "住民税／さいたま市 令和9年度から適用される個人市民税・県民税の主な改正（https://www.city.saitama.lg.jp/001/153/004/002/001/003/p131989.html） ／ 住民税／生駒市 令和9年度から適用される個人住民税の主な改正点（https://www.city.ikoma.lg.jp/0000042812.html）"
+      },
       "basicDeduction": {
         "table": [
           {
@@ -334,7 +401,7 @@
     },
     "prefectureSurtax": {
       "source": "各都道府県の個人住民税の課税案内（47団体すべてを node test/verify-prefectures.js で突合済み）",
-      "verifiedAt": "2026-08-15",
+      "verifiedAt": "2026-11-02",
       "list": [
         {
           "pref": "北海道",
@@ -382,7 +449,12 @@
           "pref": "茨城県",
           "kintouAddition": 1000,
           "shotokuRate": 4,
-          "taxName": "森林湖沼環境税"
+          "taxName": "森林湖沼環境税",
+          "byResidentYear": {
+            "2027": {
+              "tax": "森林湖沼環境税（令和9年度からの5年延長は県議会で審議中。同額の案で計算）"
+            }
+          }
         },
         {
           "pref": "栃木県",
@@ -418,7 +490,13 @@
           "pref": "神奈川県",
           "kintouAddition": 300,
           "shotokuRate": 4.025,
-          "taxName": "水源環境保全税（所得割も＋0.025％／令和8年度まで）"
+          "taxName": "水源環境保全税（所得割も＋0.025％／令和8年度まで）",
+          "byResidentYear": {
+            "2027": {
+              "rate": 4.018,
+              "tax": "水源環境保全税（所得割も＋0.018％／令和9〜13年度）"
+            }
+          }
         },
         {
           "pref": "新潟県",
@@ -460,7 +538,12 @@
           "pref": "岐阜県",
           "kintouAddition": 1000,
           "shotokuRate": 4,
-          "taxName": "清流の国ぎふ森林・環境税"
+          "taxName": "清流の国ぎふ森林・環境税",
+          "byResidentYear": {
+            "2027": {
+              "tax": "清流の国ぎふ森林・環境税（令和9年度からの延長は制度案の段階。同額の案で計算）"
+            }
+          }
         },
         {
           "pref": "静岡県",
@@ -514,7 +597,12 @@
           "pref": "和歌山県",
           "kintouAddition": 500,
           "shotokuRate": 4,
-          "taxName": "紀の国森づくり税"
+          "taxName": "紀の国森づくり税",
+          "byResidentYear": {
+            "2027": {
+              "tax": "紀の国森づくり税（課税期間は令和8年度まで。令和9年度以降の延長は未公表のため従来額で計算）"
+            }
+          }
         },
         {
           "pref": "鳥取県",
@@ -1427,18 +1515,11 @@
   },
   "pending": [
     {
-      "item": "令和8年分 給与所得控除後の給与等の金額の表（別表第五）",
-      "status": "pending",
-      "reason": "国税庁の年末調整資料に掲載され、例年9〜10月公表。現在は改正内容（最低保障74万円・適用上限220万円）から構造を再現している",
-      "impact": "構造検証（verify-calc.js §1c）で4,000円刻みの帯・境界の連続性は確認済み。公表後に実表と突合が必要",
-      "action": "公表後に test/verify-calc.js §1b に実表の値を追加する"
-    },
-    {
-      "item": "令和9年度 個人住民税の各自治体の課税案内",
+      "item": "令和9年度以降の道府県民税均等割の超過課税（茨城県・岐阜県・和歌山県）",
       "status": "provisional",
-      "reason": "令和8年度税制改正の住民税適用分。自治体の令和9年度課税案内は例年5〜6月公表",
-      "impact": "RESIDENT_TAX[2027] を provisional としている",
-      "action": "公表後に provisional を外し、公式計算例と突合する"
+      "reason": "課税期間が令和8年度まで。茨城は5年延長（同額）の条例改正案を令和8年11月議会に提出、岐阜は令和9〜13年度の制度案（同額）を意見募集中、和歌山は未公表（2026-11-02 時点）",
+      "impact": "令和9年度も従来額で計算し、画面にその旨を表示している（PREFECTURES[].byYear）",
+      "action": "議決・公表後に byYear の注記を外す（廃止・増減額なら add を年度別に上書きする）"
     },
     {
       "item": "令和9年度 国民健康保険の軽減判定基準額",
@@ -1448,10 +1529,10 @@
       "action": "公表後に KOKUHO を年度別に分ける"
     },
     {
-      "item": "2027年度 JASSO 支援区分の基準額",
+      "item": "2028年度 JASSO 支援区分の基準額",
       "status": "pending",
-      "reason": "JASSOの当年度案内は例年7月頃公表",
-      "impact": "現在の収録は2026年度の値",
+      "reason": "2027年度進学（予約採用）の基準額は2026年度と同じ（25,600円・51,300円・154,500円）と確認済み（2026-11-02）。次は2028年度分",
+      "impact": "現在の収録は2026・2027年度共通の値",
       "action": "公表後に JASSO.kubun を更新する"
     }
   ]

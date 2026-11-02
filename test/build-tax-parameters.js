@@ -59,8 +59,13 @@ const J = {
       label: D.INCOME_TAX[2026].label,
       status: 'final',
       statusNote: '令和8年度税制改正（令和7年12月26日 閣議決定・令和8年12月1日施行）を反映。' +
-        'ただし別表第五そのもの（年末調整資料）は例年9〜10月公表のため provisionalTables を参照',
-      salaryDeductionMinimum: { value: D.INCOME_TAX[2026].salaryMin, unit: '円', source: src(7) },
+        '別表第五（令和8年分）は国税庁「令和8年分 年末調整のしかた」の実表と突合済み（2026-11-02）',
+      salaryDeductionMinimum: { value: D.INCOME_TAX[2026].salaryMin, unit: '円', source: src(7) + ' ／ ' + src(39) },
+      salaryStairs: { table: D.INCOME_TAX[2026].salaryStairs.map(([lo, hi, v]) => ({ revenueFrom: lo, revenueBelow: hi, salaryIncome: v })),
+        unit: '円', source: src(39), note: '219万1千円以上220万円未満は固定額（租税特別措置法29条の4・令和8・9年分）' },
+      lifeInsuranceU23: { generalNewTable: D.INSURANCE.lifeNewIncomeU23.steps.map(([upTo, rate, add]) => ({ paidUpTo: upTo, rate, add })),
+        generalMax: D.INSURANCE.lifeNewIncomeU23.max, generalCapWithOld: D.INSURANCE.lifeCategoryCapIncomeU23, unit: '円', source: src(39),
+        note: '23歳未満の扶養親族がいる場合の一般生命保険料控除（令和8・9年分の所得税のみ。住民税は対象外）' },
       salaryDeductionMinimumCap: { value: D.INCOME_TAX[2026].salaryMinCap, unit: '円', source: src(7) },
       basicDeduction: { table: D.INCOME_TAX[2026].basic.map(([upTo, v]) => ({
         gokeiShotokuUpTo: upTo === Infinity ? null : upTo, deduction: v })), source: src(7) },
@@ -93,7 +98,9 @@ const J = {
       label: D.RESIDENT_TAX[2027].label,
       incomeYear: D.RESIDENT_TAX[2027].incomeYear,
       status: D.RESIDENT_TAX[2027].provisional ? 'provisional' : 'final',
-      statusNote: '令和8年度税制改正の住民税適用分。各自治体の令和9年度課税の案内は未公表のため要再確認',
+      statusNote: '令和8年度税制改正の住民税適用分。自治体の令和9年度改正の案内（さいたま市・渋谷区・生駒市・浦添市）と突合済み（2026-11-02）',
+      salaryStairs: { table: D.RESIDENT_TAX[2027].salaryStairs.map(([lo, hi, v]) => ({ revenueFrom: lo, revenueBelow: hi, salaryIncome: v })),
+        unit: '円', source: src(40) + ' ／ ' + src(41) },
       basicDeduction: { table: D.RESIDENT_TAX[2027].basic.map(([upTo, v]) => ({
         gokeiShotokuUpTo: upTo === Infinity ? null : upTo, deduction: v })), source: src(9) },
       dependentIncomeLimit: { value: D.RESIDENT_TAX[2027].dependentLimit, unit: '円', source: src(7) },
@@ -115,9 +122,9 @@ const J = {
     },
     prefectureSurtax: {
       source: '各都道府県の個人住民税の課税案内（47団体すべてを node test/verify-prefectures.js で突合済み）',
-      verifiedAt: '2026-08-15',
-      list: D.PREFECTURES.map(p => ({ pref: p.n, kintouAddition: p.add,
-        shotokuRate: p.rate, taxName: p.tax || null }))
+      verifiedAt: '2026-11-02',
+      list: D.PREFECTURES.map(p => Object.assign({ pref: p.n, kintouAddition: p.add,
+        shotokuRate: p.rate, taxName: p.tax || null }, p.byYear ? { byResidentYear: p.byYear } : {}))
     }
   },
 
@@ -216,25 +223,20 @@ const J = {
 
   /* ---------------- 公表待ち ---------------- */
   pending: [
-    { item: '令和8年分 給与所得控除後の給与等の金額の表（別表第五）',
-      status: 'pending',
-      reason: '国税庁の年末調整資料に掲載され、例年9〜10月公表。現在は改正内容（最低保障74万円・適用上限220万円）から構造を再現している',
-      impact: '構造検証（verify-calc.js §1c）で4,000円刻みの帯・境界の連続性は確認済み。公表後に実表と突合が必要',
-      action: '公表後に test/verify-calc.js §1b に実表の値を追加する' },
-    { item: '令和9年度 個人住民税の各自治体の課税案内',
+    { item: '令和9年度以降の道府県民税均等割の超過課税（茨城県・岐阜県・和歌山県）',
       status: 'provisional',
-      reason: '令和8年度税制改正の住民税適用分。自治体の令和9年度課税案内は例年5〜6月公表',
-      impact: 'RESIDENT_TAX[2027] を provisional としている',
-      action: '公表後に provisional を外し、公式計算例と突合する' },
+      reason: '課税期間が令和8年度まで。茨城は5年延長（同額）の条例改正案を令和8年11月議会に提出、岐阜は令和9〜13年度の制度案（同額）を意見募集中、和歌山は未公表（2026-11-02 時点）',
+      impact: '令和9年度も従来額で計算し、画面にその旨を表示している（PREFECTURES[].byYear）',
+      action: '議決・公表後に byYear の注記を外す（廃止・増減額なら add を年度別に上書きする）' },
     { item: '令和9年度 国民健康保険の軽減判定基準額',
       status: 'pending',
       reason: '地方税法施行令の改正が例年3月末公表。令和9年度の5割・2割の加算額と賦課限度額は未公表',
       impact: '現在の収録は令和8年度の値のみ',
       action: '公表後に KOKUHO を年度別に分ける' },
-    { item: '2027年度 JASSO 支援区分の基準額',
+    { item: '2028年度 JASSO 支援区分の基準額',
       status: 'pending',
-      reason: 'JASSOの当年度案内は例年7月頃公表',
-      impact: '現在の収録は2026年度の値',
+      reason: '2027年度進学（予約採用）の基準額は2026年度と同じ（25,600円・51,300円・154,500円）と確認済み（2026-11-02）。次は2028年度分',
+      impact: '現在の収録は2026・2027年度共通の値',
       action: '公表後に JASSO.kubun を更新する' }
   ]
 };

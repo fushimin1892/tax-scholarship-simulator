@@ -29,10 +29,19 @@
    * として A×2.8−80,000 / A×3.2−440,000 で求める。単純に率を掛けると
    * 最大で数百円ずれるため、この丸めを省略してはいけない。
    * （検証：名古屋市の公式計算例 給与収入5,505,000円 → 給与所得3,963,200円）
+   *
+   * 令和8・9年分（住民税は令和9・10年度）は、最低保障の区間の終わり
+   * 219万1千円〜220万円未満が「収入−74万円」ではなく固定額の3段になる
+   * （租税特別措置法29条の4、国税庁「令和8年分 年末調整のしかた」3ページ）。
+   * この区間は p.salaryStairs に [以上, 未満, 給与所得] で持つ。
    */
   function salaryIncomeAmount(revenue, p) {
     var r = Math.floor(n(revenue));
     if (r <= 0) return 0;
+    var st = p.salaryStairs || [];
+    for (var i = 0; i < st.length; i++) {
+      if (r >= st[i][0] && r < st[i][1]) return st[i][2];
+    }
     if (r < p.salaryMinCap) return Math.max(0, r - p.salaryMin);
     var A = Math.floor(r / 4 / 1000) * 1000;              // 4で除して千円未満切捨て
     if (r < 3600000) return A * 2.8 - 80000;
@@ -225,21 +234,27 @@
     }
     return tbl.max;
   }
-  function lifeCategory(newAmt, oldAmt, mode) {
+  /* u23 … 令和8・9年分の所得税で23歳未満の扶養親族がいる場合の一般生命保険料の特例。
+   *        新契約の表と、新旧併用時の上限（4万→6万円）が変わる。 */
+  function lifeCategory(newAmt, oldAmt, mode, u23) {
     var I = D.INSURANCE;
-    var nv = steps(newAmt, mode === 'income' ? I.lifeNewIncome : I.lifeNewResident);
+    var nv = steps(newAmt, mode === 'income' ? (u23 ? I.lifeNewIncomeU23 : I.lifeNewIncome) : I.lifeNewResident);
     var ov = steps(oldAmt, mode === 'income' ? I.lifeOldIncome : I.lifeOldResident);
-    var cap = mode === 'income' ? I.lifeCategoryCapIncome : I.lifeCategoryCapResident;
+    var cap = mode === 'income' ? (u23 ? I.lifeCategoryCapIncomeU23 : I.lifeCategoryCapIncome) : I.lifeCategoryCapResident;
     if (n(newAmt) > 0 && n(oldAmt) > 0) return Math.max(ov, Math.min(nv + ov, cap));
     if (n(oldAmt) > 0) return ov;
     return nv;
   }
-  function lifeInsurance(ded, mode) {
+  function lifeInsurance(ded, mode, u23) {
     var I = D.INSURANCE;
-    var total = lifeCategory(ded.lifeNewGeneral, ded.lifeOldGeneral, mode)
+    var total = lifeCategory(ded.lifeNewGeneral, ded.lifeOldGeneral, mode, u23)
       + lifeCategory(ded.lifeNewCare, 0, mode)
       + lifeCategory(ded.lifeNewPension, ded.lifeOldPension, mode);
     return Math.min(total, mode === 'income' ? I.lifeTotalCapIncome : I.lifeTotalCapResident);
+  }
+  /* 23歳未満の扶養親族（年少扶養親族を含む）がいるか。特定親族は扶養親族ではないので数えない */
+  function hasU23Dependent(f) {
+    return !!f.under23Dependent || pos(f.depUnder16) + pos(f.dep16_18) + pos(f.dep19_22) > 0;
   }
   function quakeInsurance(ded, mode) {
     var I = D.INSURANCE;
@@ -267,7 +282,9 @@
 
     push('社会保険料控除', pos(d.social));
     push('小規模企業共済等掛金控除', pos(d.kyosai));
-    push('生命保険料控除', lifeInsurance(d, mode));
+    var u23 = mode === 'income' && !!p.lifeU23 && hasU23Dependent(f);
+    push('生命保険料控除', lifeInsurance(d, mode, u23),
+      u23 && pos(d.lifeNewGeneral) > 0 ? '23歳未満の扶養親族がいるため一般生命保険料の上限6万円（令和8・9年分の特例）' : '');
     push('地震保険料控除', quakeInsurance(d, mode));
 
     var med = pos(d.medical) - pos(d.medicalComp) - Math.min(inc.souShotokuTou * 0.05, 100000);

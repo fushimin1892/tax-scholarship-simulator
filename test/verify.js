@@ -581,7 +581,14 @@ section('給与所得の表の丸め（4,000円単位）');
   eq('R7 収入6,600,000円（区分の境目・連続）', Calc.salaryIncomeAmount(6600000, p7), 4840000);
   eq('R7 収入8,500,000円（上限）', Calc.salaryIncomeAmount(8500000, p7), 6550000);
   eq('R8 収入2,200,000円（最低保障の境目・連続）', Calc.salaryIncomeAmount(2200000, p8), 1460000);
-  eq('R8 収入2,199,999円', Calc.salaryIncomeAmount(2199999, p8), 1459999);
+  /* 219万1千円〜220万円未満は固定額の3段（国税庁「令和8年分 年末調整のしかた」3・47ページ） */
+  eq('R8 収入2,190,999円（収入−74万円の最後）', Calc.salaryIncomeAmount(2190999, p8), 1450999);
+  eq('R8 収入2,191,000円（固定額1段目）', Calc.salaryIncomeAmount(2191000, p8), 1451000);
+  eq('R8 収入2,192,999円（固定額1段目）', Calc.salaryIncomeAmount(2192999, p8), 1451000);
+  eq('R8 収入2,193,000円（固定額2段目）', Calc.salaryIncomeAmount(2193000, p8), 1453000);
+  eq('R8 収入2,196,000円（固定額3段目）', Calc.salaryIncomeAmount(2196000, p8), 1456000);
+  eq('R8 収入2,199,999円（固定額3段目）', Calc.salaryIncomeAmount(2199999, p8), 1456000);
+  eq('R9年度住民税 収入2,199,999円（所得税と同じ3段）', Calc.salaryIncomeAmount(2199999, D.RESIDENT_TAX[2027]), 1456000);
   eq('R8 収入2,203,000円（丸めで2,200,000円扱い）', Calc.salaryIncomeAmount(2203000, p8), 1460000);
 }
 

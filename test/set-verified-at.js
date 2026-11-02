@@ -25,7 +25,9 @@ const fs = require('fs');
 const path = require('path');
 
 const FILE = path.join(__dirname, '..', 'assets', 'data.js');
-const LINE = /^(\s*var VERIFIED_AT = ')(\d{4}-\d{2}-\d{2})(';.*)$/;
+/* Windows の git（core.autocrlf=true）では作業ツリーが CRLF になる。
+ * 正規表現の . は \r に一致しないので、行末の \r も許して残す */
+const LINE = /^(\s*var VERIFIED_AT = ')(\d{4}-\d{2}-\d{2})(';.*\r?)$/;
 
 /* 日本時間の今日。UTCで動く CI から呼ばれても日付がずれないようにする。 */
 function todayJST() {

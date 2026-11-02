@@ -115,22 +115,33 @@ section('1c. 給与所得：別表第五の構造そのものを検証する');
    *
    * 旧制度（令和6年分以前・最低保障55万）は境目が1,625,000円で
    * 4,000の倍数でなかったため、国税庁の表に固定額の特例行が必要だった。
-   * 令和7年分（1,900,000円）・令和8年分（2,200,000円）はどちらも
-   * 4,000で割り切れるので、その特例行は生じない。 */
+   * 令和8年分も境目（2,200,000円）は4,000の倍数だが、措法29条の4で
+   * 219万1千円〜220万円未満に固定額の3段が置かれた（salaryStairs）。
+   * 「4,000の倍数なら特例行は生じない」と決めつけていたため、当初この3段を
+   * 見落としていた（2026-11-02 に実表と突合して修正）。 */
   [[2025, D.INCOME_TAX[2025]], [2026, D.INCOME_TAX[2026]]].forEach(function (x) {
     var year = x[0], p = x[1], cap = p.salaryMinCap, tag = 'R' + (year - 2018);
-    eq(`${tag} 境目が4,000円の倍数（特例行が不要）`, cap % 4000, 0);
+    eq(`${tag} 境目が4,000円の倍数`, cap % 4000, 0);
+    var stairs = p.salaryStairs || [];
+    var contEnd = stairs.length ? stairs[0][0] : cap;
 
-    // ① 最低保障の区間は1円刻みで連続
+    // ① 最低保障の区間（固定額の段より前）は1円刻みで連続
     var contOK = true;
-    for (var r = cap - 10; r < cap; r++) {
+    for (var r = contEnd - 10; r < contEnd; r++) {
       if (Calc.salaryIncomeAmount(r, p) !== r - p.salaryMin) contOK = false;
     }
     eq(`${tag} 最低保障の区間は 収入−最低保障額 のまま`, contOK, true);
 
-    // ② 境目で段差がない
-    eq(`${tag} 境目の直前と境目の差が1円`,
-      Calc.salaryIncomeAmount(cap, p) - Calc.salaryIncomeAmount(cap - 1, p), 1);
+    // ①' 固定額の段の中では一定、段は単調に増える
+    stairs.forEach(function (st) {
+      eq(`${tag} 固定額の段 ${st[0].toLocaleString()}〜 は ${st[2].toLocaleString()}円で一定`,
+        Calc.salaryIncomeAmount(st[0], p) === st[2] && Calc.salaryIncomeAmount(st[1] - 1, p) === st[2], true);
+    });
+
+    // ② 境目で段差がない（固定額の段があるときは段の最後から境目へ単調に増える）
+    var jump = Calc.salaryIncomeAmount(cap, p) - Calc.salaryIncomeAmount(cap - 1, p);
+    if (stairs.length) eq(`${tag} 固定額の段から境目へ単調に増える`, jump > 0 && jump <= 4000, true);
+    else eq(`${tag} 境目の直前と境目の差が1円`, jump, 1);
 
     // ③ 境目から上は4,000円ごとの階段（帯の中では一定、帯をまたぐと増える）
     var bandOK = true, stepOK = true;
@@ -159,7 +170,20 @@ section('1b. 給与所得（令和8年分・最低保障74万円）');
   const inc = function (r) { return Calc.salaryIncomeAmount(r, p); };
   eq('収入740,000円', inc(740000), 0);
   eq('収入1,780,000円（178万円の壁）', inc(1780000), 1040000);
-  eq('収入2,199,999円', inc(2199999), 1459999);
+  /* 219万1千円以上220万円未満は「収入−74万円」ではなく固定額の3段
+   * （措法29条の4、国税庁「令和8年分 年末調整のしかた」3ページ・47ページの実表） */
+  eq('収入741,000円', inc(741000), 1000);
+  eq('収入2,190,999円（収入−74万円の最後）', inc(2190999), 1450999);
+  eq('収入2,191,000円（実表 1,451,000円）', inc(2191000), 1451000);
+  eq('収入2,192,999円（実表 1,451,000円）', inc(2192999), 1451000);
+  eq('収入2,193,000円（実表 1,453,000円）', inc(2193000), 1453000);
+  eq('収入2,195,999円（実表 1,453,000円）', inc(2195999), 1453000);
+  eq('収入2,196,000円（実表 1,456,000円）', inc(2196000), 1456000);
+  eq('収入2,199,999円（実表 1,456,000円）', inc(2199999), 1456000);
+  /* 実表47〜48ページから抜き出した値 */
+  eq('収入2,384,000円（実表 1,588,800円）', inc(2384000), 1588800);
+  eq('収入2,584,000円（実表 1,728,800円）', inc(2584000), 1728800);
+  eq('収入3,183,999円（実表 2,146,000円）', inc(3183999), 2146000);
   eq('収入2,200,000円（表の起点・連続）', inc(2200000), 1460000);
   eq('収入2,203,000円（4,000円刻みで据置き）', inc(2203000), 1460000);
   eq('収入2,204,000円', inc(2204000), 1462800);
@@ -271,6 +295,30 @@ section('4b. 生命保険料控除（旧契約・新旧併用・住民税）');
     res({ lifeNewGeneral: 56000, lifeOldGeneral: 70000 }), 35000);
   eq('3区分合計の上限70,000円（住民税）',
     res({ lifeNewGeneral: 56000, lifeNewCare: 56000, lifeNewPension: 56000 }), 70000);
+}
+section('4b2. 生命保険料控除（令和8年分・23歳未満の扶養親族がいる場合の特例）');
+{
+  /* 国税庁「令和8年分 年末調整のしかた」4ページ。所得税だけの特例で住民税は従来どおり */
+  const b8 = function (ded, fam) { return base({ incomeYear: 2026, residentYear: 2027, ded: ded, family: fam }); };
+  const kid = { depUnder16: 1 }, student = { dep19_22: 1 }, adult = { dep23_69: 1 };
+  const inc = function (d, f) { return dedOf(b8(d, f), '生命保険料控除'); };
+  const res = function (d, f) { return dedOf(b8(d, f), '生命保険料控除', 'resident'); };
+  eq('新30,000円（全額）', inc({ lifeNewGeneral: 30000 }, kid), 30000);
+  eq('新30,001円（×1/2＋15,000円・切上げ）', inc({ lifeNewGeneral: 30001 }, kid), 30001);
+  eq('新60,000円', inc({ lifeNewGeneral: 60000 }, kid), 45000);
+  eq('新100,000円（×1/4＋30,000円）', inc({ lifeNewGeneral: 100000 }, kid), 55000);
+  eq('新120,000円（上限60,000円に到達）', inc({ lifeNewGeneral: 120000 }, kid), 60000);
+  eq('新200,000円（60,000円で頭打ち）', inc({ lifeNewGeneral: 200000 }, kid), 60000);
+  eq('特定扶養親族（19〜22歳）でも特例', inc({ lifeNewGeneral: 200000 }, student), 60000);
+  eq('23歳以上の扶養親族だけなら従来の40,000円', inc({ lifeNewGeneral: 200000 }, adult), 40000);
+  eq('扶養親族なしなら従来の40,000円', inc({ lifeNewGeneral: 200000 }, {}), 40000);
+  eq('新旧併用の一般の上限は60,000円（新120,000＋旧30,000）',
+    inc({ lifeNewGeneral: 120000, lifeOldGeneral: 30000 }, kid), 60000);
+  eq('旧だけなら特例はなく50,000円', inc({ lifeOldGeneral: 200000 }, kid), 50000);
+  eq('3区分合計の上限は120,000円のまま',
+    inc({ lifeNewGeneral: 200000, lifeNewCare: 80000, lifeNewPension: 80000 }, kid), 120000);
+  eq('住民税には特例がない（28,000円）', res({ lifeNewGeneral: 200000 }, kid), 28000);
+  eq('令和7年分には特例がない（40,000円）', dedOf(base({ ded: { lifeNewGeneral: 200000 }, family: kid }), '生命保険料控除'), 40000);
 }
 section('4c. 地震保険料控除');
 {

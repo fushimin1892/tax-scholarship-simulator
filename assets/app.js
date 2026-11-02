@@ -149,7 +149,7 @@
     '<div class="subblock"><h3>生命保険料控除・地震保険料控除（支払保険料を入れると控除額を計算します）</h3>' +
     '<p class="hint">保険会社から届く「控除証明書」の金額を入れてください。該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
-      fld(p + '_lifeNewGeneral', '一般の生命保険料・新契約（円）', '平成24年1月1日以後に契約') +
+      fld(p + '_lifeNewGeneral', '一般の生命保険料・新契約（円）', '平成24年1月1日以後に契約。令和8年分は23歳未満の扶養親族がいると所得税の上限が6万円（自動で判定）') +
       fld(p + '_lifeOldGeneral', '一般の生命保険料・旧契約（円）', '平成23年12月31日以前に契約') +
       fld(p + '_lifeNewCare', '介護医療保険料（円）', '新契約のみ') +
       fld(p + '_lifeNewPension', '個人年金保険料・新契約（円）', '') +
@@ -854,8 +854,17 @@
     if (first) $('city').value = first;
     syncRegion();
   }
+  /* 超過課税は課税期間ごとに税率が変わるので、住民税の年度（所得の年分＋1）の上書きを重ねる */
+  function prefForYear(pref, incomeYear) {
+    var o = pref.byYear && pref.byYear[incomeYear + 1];
+    if (!o) return pref;
+    var r = {};
+    Object.keys(pref).forEach(function (k) { r[k] = pref[k]; });
+    Object.keys(o).forEach(function (k) { r[k] = o[k]; });
+    return r;
+  }
   function syncRegion() {
-    var pref = D.PREFECTURES[Number(val('pref'))];
+    var pref = prefForYear(D.PREFECTURES[Number(val('pref'))], Number(val('year')));
     var cityName = val('city');
     var opt = $('city').selectedOptions[0];
     var kyuchi = opt ? Number(opt.dataset.kyuchi) || 3 : 3;
@@ -1149,7 +1158,11 @@
   function renderKokuho(k) {
     var K = D.KOKUHO, lv = k.level;
     var cls = lv === 7 ? 'v-good' : lv === 5 ? 'v-info' : lv === 2 ? 'v-warn' : 'v-bad';
+    var ry = Number(val('year')) + 1;
     var h = '<div class="card"><h2>国民健康保険料（税）の軽減判定（' + K.year + '）</h2>' +
+      /* 収録しているのは令和8年度の基準だけ。翌年度分は例年3月末の政令改正で決まる */
+      (ry > 2026 ? '<div class="warn">令和' + (ry - 2018) + '年度（' + ry + '年度）の基準額は例年3月末に公表されるため未収録です。' +
+        '<b>' + K.year + 'の基準（5割' + man(K.per5) + '・2割' + man(K.per2) + '）で判定しています</b>。公表後に変わる可能性があります。</div>' : '') +
       '<div class="verdict ' + cls + '"><h3>' + (lv ? lv + '割軽減に該当します' : '軽減には該当しません') + '</h3>' +
       '<span class="big">' + (lv ? '均等割額・平等割額が ' + lv + '割軽減' : '軽減割合 0割') + '</span>' +
       '<p>軽減の対象は<b>均等割額と平等割額</b>で、所得割額は軽減されません。申請は不要です。</p></div>' +
@@ -1657,7 +1670,8 @@
 
     $('pref').addEventListener('change', function () { fillCity(); refreshAll(); });
     $('city').addEventListener('change', function () { syncRegion(); refreshAll(); });
-    $('year').addEventListener('change', function () { updateYearNote(); refreshAll(); });
+    // 年度で超過課税の税率が変わる県があるので、地域の税率も入れ直す
+    $('year').addEventListener('change', function () { updateYearNote(); syncRegion(); refreshAll(); });
     document.querySelectorAll('input[name="mode"]').forEach(function (r) {
       r.addEventListener('change', function () {
         // 立場を変えたら奨学金の判定も既定値に戻す（学生・夫婦は判定する／ひとりはしない）
