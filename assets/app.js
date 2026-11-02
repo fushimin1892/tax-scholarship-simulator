@@ -13,6 +13,11 @@
   var val = function (id) { var e = $(id); return e ? e.value : ''; };
   var chk = function (id) { var e = $(id); return e ? e.checked : false; };
   var yen = function (v) { return (Math.round(v) || 0).toLocaleString('ja-JP') + '円'; };
+  /* 最終確認日（VERIFIED_AT）を「2026年11月」の形にする */
+  var asOfMonth = function () {
+    var p = D.VERIFIED_AT.split('-');
+    return p[0] + '年' + Number(p[1]) + '月';
+  };
   var man = function (v) { return (v / 10000).toLocaleString('ja-JP', { maximumFractionDigits: 1 }) + '万円'; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var pct = function (v) { return (Math.round(v * 1000) / 1000) + '％'; };
@@ -1455,7 +1460,7 @@
     return '<div class="card"><h2>出典</h2>' + D.SOURCES.map(function (s) {
       return '<div class="sourceline"><span class="cat">' + s.c + '</span>' + esc(s.t) +
         '<br><a href="' + s.u + '" target="_blank" rel="noopener">' + s.u + '</a></div>';
-    }).join('') + '<p class="hint" style="margin-top:12px">数値は2026年8月時点の公表内容に基づきます。' +
+    }).join('') + '<p class="hint" style="margin-top:12px">数値は' + asOfMonth() + '時点の公表内容に基づきます。' +
       '都道府県・市町村の超過課税や国民健康保険の料率、生活保護の級地区分は年度ごとに変わることがあるため、必ずお住まいの自治体でご確認ください。</p></div>';
   }
 
@@ -1652,6 +1657,10 @@
     /* 税制データの鮮度を画面に出す。
      * 税制は毎年変わるので、古いデータのまま気づかず使われるのが一番こわい。
      * 次回確認日を過ぎていたら、結果を鵜呑みにしないよう注意を出す。 */
+    /* 「最終更新」「◯年◯月時点」も最終確認日から出す。
+     * 直書きにすると確認日を進めても表示が古いまま残る（2026年8月のまま残っていた） */
+    ['lastUpdated', 'sourcesAsOf'].forEach(function (id) { if ($(id)) $(id).textContent = asOfMonth(); });
+
     if ($('freshness')) {
       var vd = new Date(D.VERIFIED_AT + 'T00:00:00');
       var nd = new Date(D.NEXT_REVIEW + 'T00:00:00');
@@ -1665,7 +1674,7 @@
           'この間に法改正があった場合、結果が実際と合わないことがあります。' +
           '最終確認は ' + fmt(vd) + ' です。必ずお住まいの自治体・国税庁の最新情報でご確認ください。'
         : '税制データの最終確認：<b>' + fmt(vd) + '</b>　／　次回の確認予定：' + fmt(nd) +
-          '（毎月18日に自動で公表資料と突き合わせています）';
+          '（毎月18日を目安に公表資料と突き合わせています）';
     }
 
     $('pref').addEventListener('change', function () { fillCity(); refreshAll(); });

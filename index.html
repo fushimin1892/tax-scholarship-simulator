@@ -81,7 +81,7 @@
            あとで数字が入った瞬間に2行に増えて、下の内容が全部ずれる。
            HTML の数と実データの数が食い違わないよう、test/audit.js が突き合わせている。 -->
       <span class="chip">全国 <b id="cityCount">1,719</b> 市区町村の級地に対応</span>
-      <span>最終更新：2026年8月</span>
+      <span>最終更新：<span id="lastUpdated">2026年11月</span></span>
     </p>
     <p id="freshness" class="hint"></p>
   </div>
@@ -789,7 +789,7 @@
   <h2 class="refhead">出典と免責</h2>
   <details class="card guide">
     <summary><b>参照した公的資料</b></summary>
-    <p class="hint">本サイトの数値は次の資料に基づいています（2026年8月時点）。</p>
+    <p class="hint">本サイトの数値は次の資料に基づいています（<span id="sourcesAsOf">2026年11月</span>時点）。</p>
     <div id="sourceList"></div>
   </details>
   <details class="card guide">
