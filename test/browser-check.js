@@ -140,6 +140,23 @@ const check = (label, cond, detail) => {
     check(`${pref}：国税の森林環境税と区別して案内している`, t.includes('国税の森林環境税'), t);
   }
 
+  console.log('\n=== 横浜市の均等割の軽減 ===');
+  {
+    const r = await ev(`pick('pref','神奈川県'); pick('city','横浜市');
+      const row = document.getElementById('reducedKinRow'), cb = document.getElementById('reducedKin');
+      const kin = () => document.getElementById('cityKin').value;
+      const shown = !row.classList.contains('hidden'), before = kin();
+      cb.checked = true; cb.dispatchEvent(new Event('change', {bubbles:true}));
+      const after = kin();
+      pick('pref','東京都'); pick('city','特別区（23区）');
+      return JSON.stringify([shown, before, after, !row.classList.contains('hidden'), cb.checked, kin()]);`);
+    const a = JSON.parse(r);
+    check('横浜市で軽減の選択肢が表示される', a[0] === true, r);
+    check('通常の市民税均等割は3,900円', a[1] === '3,900', r);
+    check('軽減を選ぶと1,500円になる', a[2] === '1,500', r);
+    check('他の市区町村では選択肢が消え、選択も解除される', a[3] === false && a[4] === false && a[5] === '3,000', r);
+  }
+
   console.log('\n=== 金額欄のカンマ区切り ===');
   {
     const r = await ev(`pick('pref','東京都'); pick('city','特別区（23区）');

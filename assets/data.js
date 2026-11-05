@@ -211,7 +211,9 @@
     '千葉県': [{ n: '千葉市', seirei: true, kyuchi: 1 }],
     '東京都': [{ n: '特別区（23区）', kyuchi: 1 }],
     '神奈川県': [
-      { n: '横浜市', seirei: true, addKin: 900, kyuchi: 1, note: '横浜みどり税900円（令和10年度まで）' },
+      /* reducedKin: 均等割を納める同一生計配偶者・扶養親族、またはその人を2人以上有する納税者は
+       * 市民税均等割が1,500円に軽減され、横浜みどり税も課税されない（横浜市「特別徴収税額の計算方法」） */
+      { n: '横浜市', seirei: true, addKin: 900, reducedKin: 1500, kyuchi: 1, note: '横浜みどり税900円（令和10年度まで）' },
       { n: '川崎市', seirei: true, kyuchi: 1 },
       { n: '相模原市', seirei: true, kyuchi: 1 }
     ],

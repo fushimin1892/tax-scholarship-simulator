@@ -885,6 +885,11 @@
     var seirei = !!(c && c.seirei);
     var cityKin = D.KINTOWARI.city + (c && c.addKin ? c.addKin : 0);
     if (c && c.fixKin) cityKin = c.fixKin;
+    /* 自治体独自の均等割の軽減。該当するかは家族の税額によるので、利用者に選んでもらう */
+    var canReduce = !!(c && c.reducedKin);
+    $('reducedKinRow').classList.toggle('hidden', !canReduce);
+    if (!canReduce) $('reducedKin').checked = false;
+    if (canReduce && $('reducedKin').checked) cityKin = c.reducedKin;
 
     $('kyuchi').value = String(kyuchi);
     $('seirei').checked = seirei;
@@ -1688,6 +1693,7 @@
 
     $('pref').addEventListener('change', function () { fillCity(); refreshAll(); });
     $('city').addEventListener('change', function () { syncRegion(); refreshAll(); });
+    $('reducedKin').addEventListener('change', function () { syncRegion(); refreshAll(); });
     // 年度で超過課税の税率が変わる県があるので、地域の税率も入れ直す
     $('year').addEventListener('change', function () { updateYearNote(); syncRegion(); refreshAll(); });
     document.querySelectorAll('input[name="mode"]').forEach(function (r) {
