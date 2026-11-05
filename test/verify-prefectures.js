@@ -21,7 +21,9 @@ const SOURCES = {
   '群馬県':   ['https://www.pref.gunma.jp/site/tax/5384.html', 'https://www.pref.gunma.jp/page/7190.html'],
   '埼玉県':   ['https://www.pref.saitama.lg.jp/a0209/z-kurashiindex/z-2-1.html'],
   '千葉県':   ['https://www.pref.chiba.lg.jp/zeimu/aramashi/shurui/kojin-kenminzei/index.html'],
-  '東京都':   ['https://www.tax.metro.tokyo.lg.jp/kazei/life/kojin_ju'],
+  /* 主税局のサイトは自動取得を拒否する（403）ことがあるため、区の公式ページでも確認する */
+  '東京都':   ['https://www.tax.metro.tokyo.lg.jp/kazei/life/kojin_ju',
+               'https://www.city.chuo.lg.jp/a0009/kurashi/zeikin/juuminzei/zeigaku/keisan.html'],
   '神奈川県': ['https://www.pref.kanagawa.jp/zei/kenzei/a001/b001/002.html'],
   '新潟県':   ['https://www.pref.niigata.lg.jp/sec/zeimu/kkenmin.html'],
   '富山県':   ['https://www.pref.toyama.jp/1107/kurashi/seikatsu/zeikin/kenzei/m01-00/m01-01.html'],
@@ -59,6 +61,11 @@ const SOURCES = {
                'https://eco.pref.miyazaki.lg.jp/forest/tax/'],
   '鹿児島県': ['http://www.pref.kagoshima.jp/ab07/kurashi-kankyo/zei/aramashi/shigoto/sigoto1.html'],
   '沖縄県':   ['https://www.city.naha.okinawa.jp/kurasitetuduki/zei/1001798/1001799.html']
+};
+
+/* 「1,000円」は森林環境税でも一致するため、東京都は都民税の記載であることまで確かめる */
+const TEXT_CHECKS = {
+  '東京都': [/都民税[^。]{0,10}1,000s*円/, /都民税[^。]{0,10}4s*(%|％|パーセント)/]
 };
 
 /* 全角の数字・カンマ・記号を半角に直す（自治体のページは全角表記が多い） */
@@ -100,7 +107,9 @@ function contextAround(text, keyword, span) {
     let text = '', status = '';
     for (const u of urls) {
       try {
-        const res = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (local-tax-tool)' }, redirect: 'follow' });
+        const get = () => fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (local-tax-tool)' }, redirect: 'follow' });
+        /* 一時的な通信エラーで未確認にならないよう、1回だけ再試行する */
+        const res = await get().catch(async () => { await new Promise(r => setTimeout(r, 2000)); return get(); });
         status = res.status;
         if (!res.ok) continue;
         const buf = Buffer.from(await res.arrayBuffer());
@@ -132,8 +141,9 @@ function contextAround(text, keyword, span) {
     const total = 1000 + expected;          // 道府県民税均等割の年額
     const hasAdd = expected > 0 && amounts.includes(expected);
     const hasTotal = amounts.includes(total);
-    const found = expected === 0 ? hasTotal : (hasAdd || hasTotal);
-    const mark = (hasAdd && hasTotal) ? '✅✅ 一致（上乗せ額・均等割総額とも）'
+    const textOk = (TEXT_CHECKS[pref.n] || []).every(re => re.test(text));
+    const found = textOk && (expected === 0 ? hasTotal : (hasAdd || hasTotal));
+    const mark = !textOk ? '❌ 要確認' : (hasAdd && hasTotal) ? '✅✅ 一致（上乗せ額・均等割総額とも）'
                : hasAdd ? '✅ 一致（上乗せ額）'
                : hasTotal ? `✅ 一致（均等割総額${total.toLocaleString()}円）`
                : '❌ 要確認';
