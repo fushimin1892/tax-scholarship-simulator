@@ -1,7 +1,4 @@
-
 test/.chrome-*/
-test/.chrome-err/
-test/.chrome-diag/
 test/shots/*
 !test/shots/result.pdf
 !test/shots/11-dark.png

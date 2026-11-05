@@ -748,7 +748,7 @@ section('D-6 tax-parameters.json が data.js と一致していること');
 {
   /* JSON は data.js から生成した写し。手で書き換えたり、data.js だけ直して
    * 再生成し忘れたりすると食い違うので、主要な値を突き合わせる。 */
-  const jf = path.join(__dirname, '..', 'tax-parameters.json');
+  const jf = path.join(__dirname, '..', 'assets', 'tax-parameters.json');
   if (!fs.existsSync(jf)) {
     ok('tax-parameters.json が存在する', false, 'node test/build-tax-parameters.js を実行してください');
   } else {

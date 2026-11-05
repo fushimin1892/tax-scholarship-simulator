@@ -2,7 +2,7 @@
  * build-tax-parameters.js — 税制パラメータを出典付きの JSON に書き出す
  *
  *   node test/build-tax-parameters.js
- *     → tax-parameters.json を生成する
+ *     → assets/tax-parameters.json を生成する
  *
  * 正本はあくまで assets/data.js。この JSON はそこから機械生成する
  * 「読む・差分をとる・外部に渡す」ための写しで、手で書き換えてはいけない。
@@ -241,6 +241,6 @@ const J = {
   ]
 };
 
-const file = path.join(__dirname, '..', 'tax-parameters.json');
+const file = path.join(__dirname, '..', 'assets', 'tax-parameters.json');
 fs.writeFileSync(file, JSON.stringify(J, null, 2) + '\n', 'utf8');
-console.log('生成しました: tax-parameters.json（' + (JSON.stringify(J, null, 2).split('\n').length).toLocaleString() + ' 行）');
+console.log('生成しました: assets/tax-parameters.json（' + (JSON.stringify(J, null, 2).split('\n').length).toLocaleString() + ' 行）');
