@@ -18,10 +18,13 @@
     var p = D.VERIFIED_AT.split('-');
     return p[0] + '年' + Number(p[1]) + '月';
   };
-  /* 最終確認日（VERIFIED_AT）を「2026年11月2日」の形にする */
-  var asOfDate = function () {
-    var p = D.VERIFIED_AT.split('-');
-    return p[0] + '年' + Number(p[1]) + '月' + Number(p[2]) + '日';
+  /* ページを最後に配信した日を「2026年11月2日」の形にする。
+   * GitHub Pages は配信のたびに更新日時を新しくするので、更新すれば自動で変わる。
+   * 税制データを照合した日（VERIFIED_AT）とは別の日付。 */
+  var lastUpdatedText = function () {
+    var d = new Date(document.lastModified);
+    if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
   };
   var man = function (v) { return (v / 10000).toLocaleString('ja-JP', { maximumFractionDigits: 1 }) + '万円'; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
@@ -1662,9 +1665,9 @@
     /* 税制データの鮮度を画面に出す。
      * 税制は毎年変わるので、古いデータのまま気づかず使われるのが一番こわい。
      * 次回確認日を過ぎていたら、結果を鵜呑みにしないよう注意を出す。 */
-    /* 「最終更新」「◯年◯月時点」も最終確認日から出す。
-     * 直書きにすると確認日を進めても表示が古いまま残る（2026年8月のまま残っていた） */
-    if ($('lastUpdated')) $('lastUpdated').textContent = asOfDate();
+    /* 「最終更新」はページを最後に配信した日、「◯年◯月時点」は最終確認日から出す。
+     * 直書きにすると更新しても表示が古いまま残る（2026年8月のまま残っていた） */
+    if ($('lastUpdated') && lastUpdatedText()) $('lastUpdated').textContent = lastUpdatedText();
     if ($('sourcesAsOf')) $('sourcesAsOf').textContent = asOfMonth();
 
     if ($('freshness')) {
