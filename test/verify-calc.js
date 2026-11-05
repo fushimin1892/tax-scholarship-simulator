@@ -232,6 +232,30 @@ section('2c. 公的年金等の雑所得に1円未満の端数を残さない');
   eq('総所得金額等が整数', Number.isInteger(r2.incomeTax.income.souShotokuTou), true);
 }
 
+section('2d. 給与所得（A×2.8／A×3.2）に小数の誤差を残さない');
+{
+  /* 国税庁「令和8年分 年末調整のしかた」の実表：収入2,800,000〜2,803,999円 → 1,880,000円、
+   * 収入5,000,000〜5,003,999円 → 3,560,000円。A×2.8 を小数で計算すると 1,879,999.9999… 円になり、
+   * 課税所得の千円未満切捨てで1,000円少なくなっていた */
+  [2025, 2026].forEach(function (y) {
+    const p = D.INCOME_TAX[y];
+    eq(`${y}年分 収入2,800,000円 → 1,880,000円`, Calc.salaryIncomeAmount(2800000, p), 1880000);
+    eq(`${y}年分 収入2,803,999円 → 1,880,000円`, Calc.salaryIncomeAmount(2803999, p), 1880000);
+    eq(`${y}年分 収入5,000,000円 → 3,560,000円`, Calc.salaryIncomeAmount(5000000, p), 3560000);
+    let allInt = true;
+    for (let r = p.salaryMinCap; r < 6600000; r += 4000) {
+      if (!Number.isInteger(Calc.salaryIncomeAmount(r, p))) { allInt = false; break; }
+    }
+    eq(`${y}年分 給与所得が660万円未満の全帯で整数`, allInt, true);
+  });
+  /* 給与所得1,880,000円 − 基礎控除1,040,000円 − 社会保険料340,000円 ＝ 課税所得500,000円（ちょうど千円単位） */
+  const r = Calc.calcAll(base({ incomeYear: 2026, residentYear: 2027,
+    income: { salary: 2800000 }, ded: { social: 340000 } }));
+  eq('令和8年分 収入280万円・社保34万円 → 所得税の課税所得', r.incomeTax.taxable, 500000);
+  eq('同 所得税（復興特別所得税込み・100円未満切捨て）', r.incomeTax.total, 25500);
+  eq('同 住民税の課税所得（基礎控除43万円）', r.resident.taxable, 1110000);
+}
+
 /* ==========================================================================
  * 3. 退職所得（所得税法30条・措置法）
  * ======================================================================== */

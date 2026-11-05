@@ -217,7 +217,7 @@ const J = {
         '給付奨学金は支援区分に応じた額のため、基準額154,500円以上では0円になる', source: src(31) },
     monthlyGrant: { value: D.JASSO.monthly, source: src(30) },
     tuitionReduction: { value: D.JASSO.genmen, source: src(33) },
-    assetLimit: { twoMaintainers: D.JASSO.assetTwo, oneMaintainer: D.JASSO.assetOne, source: src(28) },
+    assetLimit: { value: D.JASSO.asset, scope: '本人と生計維持者の資産額の合計（生計維持者の人数によらない）', source: src(28) },
     taiyoIchishu: { value: D.JASSO.taiyoIchishu, source: src(32) }
   },
 

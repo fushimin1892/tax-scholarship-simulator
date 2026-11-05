@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "meta": {
     "name": "税制パラメータ（住民税・所得税・国民健康保険・JASSO奨学金）",
-    "verifiedAt": "2026-11-02",
+    "verifiedAt": "2026-11-06",
     "generatedBy": "node test/build-tax-parameters.js",
     "masterFile": "assets/data.js",
     "note": "このファイルは assets/data.js から生成した写しです。手で編集せず、data.js を直して再生成してください。",
@@ -1504,8 +1504,8 @@
       "source": "奨学金／文部科学省 高等教育の修学支援新制度（https://www.mext.go.jp/a_menu/koutou/hutankeigen/）"
     },
     "assetLimit": {
-      "twoMaintainers": 50000000,
-      "oneMaintainer": 35000000,
+      "value": 50000000,
+      "scope": "本人と生計維持者の資産額の合計（生計維持者の人数によらない）",
       "source": "奨学金／JASSO 進学後（在学採用）の給付奨学金の家計基準（https://www.jasso.go.jp/shogakukin/about/kyufu/kakei/zaigaku.html）"
     },
     "taiyoIchishu": {
