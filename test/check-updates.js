@@ -82,7 +82,7 @@ const WATCH = [
     note: '第Ⅰ区分の自宅外 国公立66,700円・私立75,800円' },
   /* このページは本文がJavaScriptで描画されるため、取得しても中身が読めない。
    * 「確認できた」ふりをせず、最初から手で見る項目として扱う。 */
-  { cat: 'JASSO', name: '第一種の家計基準', url: 'https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/kakei/zaigaku.html',
+  { cat: 'JASSO', name: '第一種の家計基準', url: 'https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/kakei/zaigaku/daigaku.html',
     manualOnly: true,
     manualNote: '本文がJavaScriptで描画されるため取得しても読めない。' +
       '家計基準の目安（189,400円）は公表時期に手でページを開いて確認する' },

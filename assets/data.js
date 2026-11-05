@@ -202,7 +202,9 @@
   var CITIES = {
     '北海道': [
       { n: '札幌市', seirei: true, kyuchi: 1 },
-      { n: '夕張市', addKin: 500, fixRate: 6.5, kyuchi: 3, note: '財政再生計画に基づく超過課税' }
+      /* 夕張市の超過課税（所得割6.5％・均等割＋500円）は平成28年度で終了。総務省「税率等別市町村数調」
+       * 平成29年4月1日現在〜令和7年4月1日現在で超過税率採用団体に含まれないことを確認（2026-11-05） */
+      { n: '夕張市', kyuchi: 2 }
     ],
     '宮城県': [{ n: '仙台市', seirei: true, kyuchi: 1 }],
     '埼玉県': [{ n: 'さいたま市', seirei: true, kyuchi: 1 }],
@@ -213,10 +215,10 @@
       { n: '川崎市', seirei: true, kyuchi: 1 },
       { n: '相模原市', seirei: true, kyuchi: 1 }
     ],
-    '新潟県': [{ n: '新潟市', seirei: true, kyuchi: 1 }],
+    '新潟県': [{ n: '新潟市', seirei: true, kyuchi: 2 }],
     '静岡県': [
-      { n: '静岡市', seirei: true, kyuchi: 1 },
-      { n: '浜松市', seirei: true, kyuchi: 1 }
+      { n: '静岡市', seirei: true, kyuchi: 2 },
+      { n: '浜松市', seirei: true, kyuchi: 2 }
     ],
     '愛知県': [
       { n: '名古屋市', seirei: true, fixKin: 2800, fixRate: 7.7, kyuchi: 1, note: '市民税5％減税（均等割2,800円・所得割7.7％）' }
@@ -228,7 +230,7 @@
     ],
     '兵庫県': [
       { n: '神戸市', seirei: true, addKin: 400, kyuchi: 1, note: '認知症「神戸モデル」400円' },
-      { n: '豊岡市', fixRate: 6.1, kyuchi: 2, note: '都市計画税に代わる超過課税' }
+      { n: '豊岡市', fixRate: 6.1, kyuchi: 3, note: '都市計画税に代わる超過課税' }
     ],
     '岡山県': [{ n: '岡山市', seirei: true, kyuchi: 1 }],
     '広島県': [{ n: '広島市', seirei: true, kyuchi: 1 }],
@@ -236,7 +238,7 @@
       { n: '福岡市', seirei: true, kyuchi: 1 },
       { n: '北九州市', seirei: true, kyuchi: 1 }
     ],
-    '熊本県': [{ n: '熊本市', seirei: true, kyuchi: 1 }]
+    '熊本県': [{ n: '熊本市', seirei: true, kyuchi: 2 }]
   };
 
   /* ------------------------------------------------------------------

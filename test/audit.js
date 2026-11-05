@@ -349,7 +349,7 @@ section('B-1 不変条件：代表的な30パターン');
   // 地域のバリエーション
   [['政令市', { seirei: true, cityRate: 8, prefRate: 2, cityKin: 3900, prefKin: 1300 }],
    ['名古屋市', { seirei: true, cityRate: 7.7, prefRate: 2, cityKin: 2800, prefKin: 1500 }],
-   ['夕張市', { seirei: false, cityRate: 6.5, prefRate: 4, cityKin: 3500, prefKin: 1000 }],
+   ['所得割超過課税（6.5％・均等割3,500円の仮定）', { seirei: false, cityRate: 6.5, prefRate: 4, cityKin: 3500, prefKin: 1000 }],
    ['3級地', { kyuchi: 3 }]
   ].forEach(function (c) {
     const inp = baseInput();

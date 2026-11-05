@@ -42,7 +42,11 @@
     for (var i = 0; i < st.length; i++) {
       if (r >= st[i][0] && r < st[i][1]) return st[i][2];
     }
-    if (r < p.salaryMinCap) return Math.max(0, r - p.salaryMin);
+    /* 別表第五の最初の行は「（最低保障＋1,000円）未満 → 0円」（令和7年分 651,000円未満、
+     * 令和8年分 741,000円未満）。最低保障を1円〜999円超える収入も給与所得は0円になる
+     * （国税庁「令和8年分 年末調整のしかた」の給与所得控除後の給与等の金額の表で確認、2026-11-05） */
+    if (r < p.salaryMin + 1000) return 0;
+    if (r < p.salaryMinCap) return r - p.salaryMin;
     var A = Math.floor(r / 4 / 1000) * 1000;              // 4で除して千円未満切捨て
     if (r < 3600000) return A * 2.8 - 80000;
     if (r < 6600000) return A * 3.2 - 440000;
