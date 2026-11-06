@@ -122,7 +122,7 @@ const J = {
     },
     prefectureSurtax: {
       source: '各都道府県の個人住民税の課税案内（47団体すべてを node test/verify-prefectures.js で突合済み）',
-      verifiedAt: '2026-11-02',
+      verifiedAt: D.VERIFIED_AT,
       list: D.PREFECTURES.map(p => Object.assign({ pref: p.n, kintouAddition: p.add,
         shotokuRate: p.rate, taxName: p.tax || null }, p.byYear ? { byResidentYear: p.byYear } : {}))
     }

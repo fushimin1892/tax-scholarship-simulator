@@ -401,7 +401,7 @@
     },
     "prefectureSurtax": {
       "source": "各都道府県の個人住民税の課税案内（47団体すべてを node test/verify-prefectures.js で突合済み）",
-      "verifiedAt": "2026-11-02",
+      "verifiedAt": "2026-11-06",
       "list": [
         {
           "pref": "北海道",
