@@ -26,13 +26,17 @@ const only = process.argv[2];
  * 監視対象。value は「本文に出てくるはずの数字」。
  * 取得できるHTMLページだけを対象にしている（PDFは抽出できないため）。
  * ----------------------------------------------------------------*/
+/* 年分を直書きしない。tax-data.js に年分を足せば、自動で監視の対象になる */
+const YEARS = Object.keys(D.INCOME_TAX).map(Number).sort();
+
 const WATCH = [
   { cat: '国税庁', name: '基礎控除', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm',
-    expect: () => [D.INCOME_TAX[2025].basic[0][1], D.INCOME_TAX[2025].basic[4][1]],
-    note: '令和7年分の特例加算95万円と本則58万円' },
+    // 収録しているすべての年分について、最も低い所得の段の額と、合計所得2,350万円以下の段の額を見る
+    expect: () => YEARS.flatMap(y => [D.INCOME_TAX[y].basic[0][1], D.INCOME_TAX[y].basic.find(b => b[0] === 23500000)[1]]),
+    note: '収録している全年分の基礎控除（令和7年分95万円・58万円、令和8年分104万円・62万円など）' },
   { cat: '国税庁', name: '給与所得控除', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm',
-    expect: () => [D.INCOME_TAX[2025].salaryMin, D.INCOME_TAX[2025].salaryMinCap],
-    note: '最低保障65万円と適用上限190万円' },
+    expect: () => YEARS.flatMap(y => [D.INCOME_TAX[y].salaryMin, D.INCOME_TAX[y].salaryMinCap]),
+    note: '収録している全年分の最低保障額と適用上限（令和7年分65万円・190万円、令和8年分74万円・220万円など）' },
   { cat: '国税庁', name: '所得税の税率', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm',
     expect: () => D.INCOME_TAX_BRACKETS.filter(b => b[2] > 0).map(b => b[2]),
     note: '速算表の控除額' },

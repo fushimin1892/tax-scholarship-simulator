@@ -920,7 +920,7 @@
   function readPerson(p, year, skipFamily) {
     var o = {
       incomeYear: year,
-      residentYear: year === 2025 ? 2026 : 2027,
+      residentYear: year + 1,                        // 住民税の年度は所得の翌年
       region: {
         pref: D.PREFECTURES[Number(val('pref'))].n, city: val('city'), seirei: chk('seirei'),
         cityKin: num('cityKin'), prefKin: num('prefKin'),
@@ -1177,9 +1177,11 @@
     var K = D.KOKUHO, lv = k.level;
     var cls = lv === 7 ? 'v-good' : lv === 5 ? 'v-info' : lv === 2 ? 'v-warn' : 'v-bad';
     var ry = Number(val('year')) + 1;
+    /* 収録している国保の基準の年度（K.year の「（2026年度）」から読む。年度を直書きしない） */
+    var kokuhoFy = Number((String(K.year).match(/(\d{4})年度/) || [])[1]) || ry;
     var h = '<div class="card"><h2>国民健康保険料（税）の軽減判定（' + K.year + '）</h2>' +
       /* 収録しているのは令和8年度の基準だけ。翌年度分は例年3月末の政令改正で決まる */
-      (ry > 2026 ? '<div class="warn">令和' + (ry - 2018) + '年度（' + ry + '年度）の基準額は例年3月末に公表されるため未収録です。' +
+      (ry > kokuhoFy ? '<div class="warn">令和' + (ry - 2018) + '年度（' + ry + '年度）の基準額は例年3月末に公表されるため未収録です。' +
         '<b>' + K.year + 'の基準（5割' + man(K.per5) + '・2割' + man(K.per2) + '）で判定しています</b>。公表後に変わる可能性があります。</div>' : '') +
       '<div class="verdict ' + cls + '"><h3>' + (lv ? lv + '割軽減に該当します' : '軽減には該当しません') + '</h3>' +
       '<span class="big">' + (lv ? '均等割額・平等割額が ' + lv + '割軽減' : '軽減割合 0割') + '</span>' +
@@ -1629,10 +1631,8 @@
       'これで決まるのは <b>令和' + reiwaDo + '年度（' + ry + '年度）の住民税</b>' +
       '（' + ry + '年6月〜' + (ry + 1) + '年5月に納めるもの）と、' +
       ry + '年度の国民健康保険料・JASSOの支援区分です。' +
-      (y === 2025
-        ? '　<b>制度が確定している年分です。</b>'
-        : '　令和8年度税制改正（基礎控除104万円・給与所得控除の最低保障74万円など）を反映しています。' +
-          (y >= now ? '<b>年の途中なので見込みになります。</b>' : ''));
+      '　' + ((D.INCOME_TAX[y] && D.INCOME_TAX[y].screenNote) || '') +
+      (y >= now ? '<b>年の途中なので見込みになります。</b>' : '');
   }
 
   /* 起動時の組み立てを、少しずつ区切って進める。

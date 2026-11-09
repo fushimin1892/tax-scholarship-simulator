@@ -811,5 +811,70 @@ section('D-6 tax-parameters.json が tax-data.js と一致していること');
 }
 report();
 
+section('D-7 年分を足したときに、画面・生成物・テスト・文書がそろっていること');
+{
+  /* 年分（所得の年）を tax-data.js に足すと、画面の選択肢・住民税の年度・JSON・テスト・文書も
+   * 足さなければならない。どれか1つでも抜けると、新しい年分だけ検証されないまま公開されてしまう。 */
+  const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+  const html = read('index.html');
+  const doc05 = read('docs/05-計算方法とまるめの一覧.md');
+  const J = JSON.parse(read('data/tax-parameters.json'));
+  const tests = ['test/verify.js', 'test/verify-calc.js', 'test/verify-matrix.js'].map(f => [f, read(f)]);
+  Object.keys(D.INCOME_TAX).map(Number).forEach(function (y) {
+    const reiwa = y - 2018;
+    ok(`${y}年分：住民税の ${y + 1}年度のデータがある`, !!D.RESIDENT_TAX[y + 1]);
+    ok(`${y}年分：画面の説明文（screenNote）がある`, !!D.INCOME_TAX[y].screenNote);
+    ok(`${y}年分：画面の選択肢がある`, html.indexOf('<option value="' + y + '">') >= 0);
+    ok(`${y}年分：画面の説明に「令和${reiwa}年分」がある`, html.indexOf('令和' + reiwa + '年分') >= 0);
+    ok(`${y}年分：tax-parameters.json にある（build-tax-parameters.js の対応）`, !!(J.incomeTax && J.incomeTax[y]));
+    ok(`${y + 1}年度：tax-parameters.json にある（build-tax-parameters.js の対応）`, !!(J.residentTax && J.residentTax[y + 1]));
+    tests.forEach(([f, src]) => ok(`${y}年分：${f} に検証がある`, src.indexOf(String(y)) >= 0,
+      '一次資料から期待値を書き起こして足す'));
+    ok(`${y}年分：docs/05 に「令和${reiwa}年分」の説明がある`, doc05.indexOf('令和' + reiwa + '年分') >= 0);
+  });
+  Object.keys(D.RESIDENT_TAX).map(Number).forEach(function (ry) {
+    ok(`${ry}年度：もとになる ${ry - 1}年分のデータがある`, !!D.INCOME_TAX[ry - 1]);
+  });
+}
+report();
+
+section('D-8 計算かデータを変えたら、docs を見直していること（指紋の一致）');
+{
+  /* js/calc.js と data/tax-data.js（確認日の行を除く）から指紋を作り、docs に書いてある指紋と比べる。
+   * 合わなければ、コードが変わったのに docs が見直されていない。
+   *   docs/05・docs/02 … コードと照らして直してから node test/stamp-docs.js --update
+   *   docs/06          … node test/report-matrix.js で作り直す */
+  const S = require('./stamp-docs.js');
+  const fp = S.fingerprint();
+  S.DOCS.forEach(function (f) {
+    ok(`${f} の指紋が今のコードと一致`, S.stampOf(f) === fp,
+      `書いてある指紋 ${S.stampOf(f) || 'なし'} ／ 今 ${fp}。docs を見直して node test/stamp-docs.js --update`);
+  });
+  const doc06 = fs.readFileSync(path.join(__dirname, '..', 'docs', '06-総当たり検証結果.md'), 'utf8');
+  ok('docs/06 が今のコードで作られている', doc06.indexOf('生成時のコードの指紋：`' + fp + '`') >= 0,
+    'node test/report-matrix.js で作り直す');
+}
+report();
+
+section('D-9 画面の解説に書いた市の税率が、税制データと一致すること');
+{
+  /* 解説の「自治体による差」の行に書いた「◯◯市X％」は手書きの文章なので、
+   * CITIES を直しても書き換え忘れる（夕張市の超過課税の終了後も「夕張市6.5％」が残っていた）。 */
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const i = html.indexOf('<th>自治体による差</th>');
+  const row = i >= 0 ? html.slice(i, html.indexOf('</tr>', i)) : '';
+  ok('解説の「自治体による差」の行がある', !!row);
+  const byName = {};
+  Object.values(D.CITIES).forEach(list => list.forEach(c => { byName[c.n] = c; }));
+  const found = [...row.matchAll(/([一-龥ヶ]+市)(\d+(?:\.\d+)?)％/g)];
+  ok('解説に市の税率が書かれている', found.length > 0);
+  found.forEach(function (m) {
+    const c = byName[m[1]];
+    ok(`解説の「${m[1]}${m[2]}％」が CITIES の税率と一致`, !!c && c.fixRate === Number(m[2]),
+      c ? `CITIES は ${c.fixRate === undefined ? '標準税率' : c.fixRate + '％'}` : 'CITIES に登録がない');
+  });
+}
+report();
+
 console.log(`\n===== 監査 ${pass + fail} 件：問題なし ${pass} / 要修正 ${fail} =====`);
 process.exit(fail === 0 ? 0 : 1);

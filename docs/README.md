@@ -31,10 +31,42 @@
 
 | 変えたもの | 一緒に直すもの |
 |---|---|
-| `data/tax-data.js` の数値 | `docs/05` の該当箇所（`node test/audit.js` で一致を確認）→ `node test/report-matrix.js` で `docs/06` を作り直す |
-| `js/calc.js` の計算 | `docs/05` の計算式・端数処理 → `docs/06` を作り直す |
+| `data/tax-data.js` の数値 | `docs/05` の該当箇所 → `docs/06` を作り直す（`node test/report-matrix.js`）→ 画面（`index.html`）の解説・README に同じ数値が書かれていないか検索して直す |
+| `js/calc.js` の計算 | `docs/05` の計算式・端数処理、`docs/02` の API・入力の説明 → `docs/06` を作り直す |
+| 上の2つのどちらか | テスト（下の「テストを直すときの決まり」）。`docs/05`・`docs/02` を見直したら `node test/stamp-docs.js --update` で指紋を書き換える |
 | ファイルの構成や運用 | `docs/02` と、リポジトリ直下の `README.md` |
 | 月次確認の結果 | `README.md` の確認記録を最新にし、前回の記録は `docs/01` の8章の先頭へ移す |
+
+## 直し忘れを止める仕組み（`node test/audit.js`）
+
+| 監査 | 何を止めるか |
+|---|---|
+| D-5 | `data/tax-data.js` の主な金額が `docs/05` に載っていない |
+| D-6 | `data/tax-parameters.json` が `data/tax-data.js` と食い違う（作り直し忘れ） |
+| D-7 | 年分を足したのに、住民税の年度・画面の選択肢と説明・JSON・テスト（verify・verify-calc・verify-matrix）・`docs/05` のどれかが抜けている |
+| D-8 | `js/calc.js` か `data/tax-data.js` を変えたのに、`docs/05`・`docs/02` の指紋を書き換えていない（見直していない）、または `docs/06` を作り直していない。確認日（`VERIFIED_AT`）だけの変更では止まらない |
+| D-9 | 画面の解説に書いた「◯◯市X％」が `CITIES` の税率と違う |
+
+指紋は見直したことの印です。**指紋を書き換える前に、必ず `docs/05`・`docs/02` をコードと照らして直します。** 見直さずに指紋だけ書き換えてはいけません。
+
+## テストを直すときの決まり
+
+- **期待値は一次資料（法令・国税庁の表・自治体の公式計算例など）から書き起こします。** コードの出力をそのまま期待値にしません（それでは誤りに気づけません）。
+- `test/verify-matrix.js` の「正解」は、`js/calc.js` と `data/tax-data.js` を使わずに法令から書き下ろしたものです。改正があったら、ここも法令の表から直します。
+- 計算を変えたら、変わった境目の前後を `test/verify-calc.js` に足します。
+- 公式の計算例が公表されたら `test/verify.js` に足します。
+- テストを通すためだけに期待値を変えません。
+- `test/check-updates.js` は年分を直書きしていないので、年分を足せば自動で監視の対象になります。
+
+## 年分（所得の年）を足すときにやること
+
+`node test/audit.js` の D-7 が抜けを見つけますが、次をそろえます。
+
+1. `data/tax-data.js` の `INCOME_TAX`（`screenNote` を含む）と `RESIDENT_TAX`（翌年度）
+2. `index.html` の年分の選択肢と、「年分と年度」「税制改正のポイント」の表
+3. `test/build-tax-parameters.js` で新しい年分を JSON に出す
+4. `test/verify.js`・`test/verify-calc.js`・`test/verify-matrix.js` に新しい年分の検証（期待値は一次資料から）
+5. `docs/05` に新しい年分の説明 → `node test/stamp-docs.js --update` → `node test/report-matrix.js`
 
 「過去の記録」の文書（01の1〜7章・03・04）は、その時点の記録なので本文は書き換えません。
 古くなった記述が誤解を生む場合だけ、冒頭の「この文書について」か該当箇所に、いつ何が変わったかを書き足します。
