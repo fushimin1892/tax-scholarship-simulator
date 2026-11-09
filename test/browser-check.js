@@ -727,20 +727,22 @@ const check = (label, cond, detail) => {
     await shot('10-dom-audit');
   }
 
-  console.log('\n=== 入力欄が折りたたまれていないこと ===');
+  console.log('\n=== 入力欄の折りたたみ（①②③は開いたまま、④⑤⑥だけ畳む） ===');
   {
-    /* 「クリックしないと出てこない入力欄」がないことを、実際の表示状態で確かめる。
+    /* 2026年11月の画面改善で、該当する人が少ない④分離課税・⑤繰越控除・⑥税額控除だけを畳むことにした
+     * （利用者の了承済み）。それまでの「すべて最初から開いている」方針の代わりに、
+     * 「探さないと見つからない欄」にならないよう次を確かめる。
+     *   ・①②③と国保の欄は、最初から開いていて見える
+     *   ・④⑤⑥は見出し（legend）と、中身を書いた開閉ボタン（summary）が最初から見える
+     *   ・開けば入力欄が見え、何か入れると閉じていても「入力あり」の印が出る
      * 閉じた <details> の中にある入力欄は offsetParent が null になる。 */
     await ev(`mode('student'); return 1;`); await sleep(300);
-    const wanted = [
-      ['分離課税の所得', 'A_stockTransfer'], ['分離課税の所得', 'A_landLong'],
-      ['分離課税の所得', 'A_retirementRevenue'], ['分離課税の所得', 'A_forestRevenue'],
-      ['繰越控除', 'A_coStockLoss'], ['繰越控除', 'A_coNetLoss'],
-      ['税額控除', 'A_taxCredit'], ['税額控除', 'A_residentCredit'],
+    const shown = [
       ['生命保険料控除', 'A_lifeNewGeneral'], ['地震保険料控除', 'A_quake'],
+      ['給与収入', 'A_salary'], ['社会保険料控除', 'A_social'],
       ['国保の軽減判定所得の調整', 'k_landSpecial']
     ];
-    for (const [group, id] of wanted) {
+    for (const [group, id] of shown) {
       const st = await ev(`const e=document.getElementById('${id}');
         if(!e) return 'ない';
         if(e.closest('details:not([open])')) return '閉じた折りたたみの中';
@@ -751,8 +753,50 @@ const check = (label, cond, detail) => {
       .map(l=>l.textContent.trim()).join(' / ');`);
     check('収入・控除が①〜⑥の通し番号で並んでいる',
       /①/.test(legends) && /④/.test(legends) && /⑤/.test(legends) && /⑥/.test(legends), legends);
-    const stillFolded = await ev(`return [...document.querySelectorAll('#step4 details:not([open]) input')].length;`);
-    check('STEP 4 に折りたたまれた入力欄が残っていない', stillFolded === 0, stillFolded + '件');
+    const folded = [
+      ['④分離課税', 'A_stockTransfer', /株.*退職金/], ['④分離課税', 'A_retirementRevenue', /退職金/],
+      ['⑤繰越控除', 'A_coStockLoss', /損失/], ['⑥税額控除', 'A_taxCredit', /住宅ローン控除/]
+    ];
+    for (const [group, id, re] of folded) {
+      const r = await ev(`const e=document.getElementById('${id}'), d=e && e.closest('details.fold');
+        if(!d) return {fold:false};
+        const s=d.querySelector('summary');
+        return {fold:true, open:d.open, sum:s.textContent.trim(), sumShown:s.offsetParent!==null};`);
+      check(`${group}：${id} は中身を書いた見出しの下に畳まれている`,
+        r.fold && !r.open && r.sumShown && re.test(r.sum), JSON.stringify(r));
+    }
+    // 畳まれているのは④⑤⑥だけ（①②③の欄が誤って畳まれていない）
+    const wrongFold = await ev(`return [...document.querySelectorAll('#step4 details:not([open]) input')]
+      .map(e=>e.closest('fieldset.group').querySelector('legend').textContent.trim().charAt(0))
+      .filter(c=>!'④⑤⑥'.includes(c)).length;`);
+    check('STEP 4 で畳まれているのは④⑤⑥の欄だけ', wrongFold === 0, wrongFold + '件');
+    // 開けば見え、入れた値は閉じても見出しに「入力あり」と出る
+    const badge = await ev(`const e=document.getElementById('A_taxCredit'), d=e.closest('details.fold');
+      d.open=true; const vis=e.offsetParent!==null;
+      set('A_taxCredit','12000'); d.open=false;
+      return new Promise(r=>setTimeout(()=>{ const b=d.querySelector('summary').getAttribute('data-badge')||'';
+        set('A_taxCredit','0'); r({vis:vis, badge:b}); }, 600));`);
+    check('畳んだ欄も開けば入力でき、入力があると閉じていても印が出る',
+      badge.vis && /入力あり/.test(badge.badge), JSON.stringify(badge));
+  }
+
+  console.log('\n=== 自動計算と早見パネル ===');
+  {
+    /* 入力すると、ボタンを押さなくても早見パネルと下の結果が更新されること。
+     * 早見パネルの数字が、下の詳しい結果と同じであること（別に計算していないこと）。 */
+    await ev(`set('A_salary','9000000'); return 1;`); await sleep(900);
+    const q = await ev(`return {
+      big: document.querySelector('#quickBody .qbig').textContent,
+      res: document.querySelector('#results .kpis') ? [...document.querySelectorAll('#results .kpi')].map(k=>k.querySelector('.value').textContent) : [],
+      empty: !!document.querySelector('#results .empty') };`);
+    check('ボタンを押さなくても結果が表示される', !q.empty && q.res.length > 0, JSON.stringify(q.res));
+    check('早見パネルの JASSO 区分が下の結果と同じ', q.res.includes(q.big), q.big + ' / ' + q.res.join(','));
+    await sleep(700);   // 数え上げの動きが終わるのを待つ
+    const amt = await ev(`const a=document.querySelector('#quickBody .qamt[data-count]');
+      const row=[...document.querySelectorAll('#results table.compare.persons tbody tr')][0];
+      return { quick: a ? a.textContent : '(なし)', table: row ? row.querySelector('td.total').textContent : '(なし)' };`);
+    check('早見パネルの住民税額が下の表と1円まで同じ', amt.quick === amt.table, amt.quick + ' / ' + amt.table);
+    await ev(`set('A_salary','0'); return 1;`); await sleep(600);
   }
 
   console.log('\n=== 配色の切替（端末に合わせる／ライト／ダーク） ===');
@@ -1092,8 +1136,10 @@ const check = (label, cond, detail) => {
     check('フォーカス表示のスタイルが定義されている', focusOk === true);
 
     // DOMノード数（多すぎると描画とメモリに効く）
+    // 2026年11月：早見パネル・ナビ下の要約・④⑤⑥の折りたたみで約80個増えたため、利用者の了承を得て 3,000 → 3,100 にした。
+    // 飾り（点・ロゴ・印）は擬似要素で描いて増やさないようにしてある。これ以上増やすときは理由を書いて見直す。
     const nodes = await ev(`return document.getElementsByTagName('*').length;`);
-    check('DOMノード数が3,000未満', nodes < 3000, nodes + '個');
+    check('DOMノード数が3,100未満', nodes < 3100, nodes + '個');
 
     // aria-pressed / aria-label の整合
     const ariaBad = await ev(`

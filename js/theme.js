@@ -34,8 +34,13 @@
   /* mode（利用者の選択）から、実際に適用する配色を決めて <html> に反映する */
   function apply(mode) {
     var el = root.document.documentElement;
+    /* 切り替えの瞬間だけ色のアニメーションを止める。止めないと、背景色などが
+       0.15秒かけて変わる途中の「どちらでもない色」が一瞬見える。 */
+    el.classList.add('theme-switching');
     if (mode === 'auto') el.removeAttribute('data-theme');
     else el.setAttribute('data-theme', mode);
+    void el.offsetWidth;   // 新しい色をここで確定させてから
+    root.setTimeout(function () { el.classList.remove('theme-switching'); }, 0);
   }
 
   var current = read();

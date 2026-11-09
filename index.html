@@ -74,18 +74,39 @@
 <header class="site-header">
   <div class="wrap">
     <div class="headtop">
-      <h1>住民税・所得税・国民健康保険・JASSO奨学金 判定シミュレーター</h1>
+      <span class="brandmark" aria-hidden="true">税金・奨学金 判定</span>
       <div class="themeswitch no-print" role="group" aria-label="画面の配色">
         <button type="button" id="themeAuto"  data-theme-set="auto"  aria-pressed="true">端末に合わせる</button>
         <button type="button" id="themeLight" data-theme-set="light" aria-pressed="false">ライト</button>
         <button type="button" id="themeDark"  data-theme-set="dark"  aria-pressed="false">ダーク</button>
       </div>
     </div>
-    <p class="lead">
-      上から順に入力していくと、<strong>所得税</strong>と<strong>住民税（均等割・所得割）</strong>の課税額、
-      <strong>国民健康保険料の軽減割合</strong>、<strong>JASSO給付奨学金・授業料等減免の支援区分</strong>が判定できます。
-      結果はそのままPDFに保存できます。
-    </p>
+    <!-- ヒーロー：左に説明、右に「いまの判定」（早見パネル）。
+         早見パネルは入力のたびに自動で計算し直す（app.js の renderQuick）。
+         最初の画面で答えの目安が見えるようにするためのもの。 -->
+    <div class="hero">
+      <div class="hero-main">
+        <p class="eyebrow">サーバー不要・入力内容は保存も送信もしません</p>
+        <h1>住民税・所得税・国民健康保険・JASSO奨学金 <span class="h1-accent">判定シミュレーター</span></h1>
+        <p class="lead">
+          入力するそばから、<strong>所得税</strong>と<strong>住民税（均等割・所得割）</strong>の課税額、
+          <strong>国民健康保険料の軽減割合</strong>、<strong>JASSO給付奨学金・授業料等減免の支援区分</strong>が自動で計算されます。
+          結果はそのままPDFに保存できます。
+        </p>
+        <p class="hero-cta no-print">
+          <a class="pill primary" href="#step1">入力をはじめる →</a>
+          <a class="pill ghost" href="#stepResult">詳しい判定結果を見る</a>
+        </p>
+      </div>
+      <aside class="quick no-print" id="quick" aria-labelledby="quickTitle">
+        <div class="qhead">
+          <h2 id="quickTitle">いまの判定</h2>
+          <span class="qlive">入力に合わせて自動更新</span>
+        </div>
+        <div id="quickBody"><p class="qwait">計算しています…</p></div>
+        <a class="qmore" href="#stepResult">計算の内訳と根拠を見る ↓</a>
+      </aside>
+    </div>
     <p class="version">
       <span class="chip">令和7年分／令和8年分 所得税</span>
       <span class="chip">令和8年度／令和9年度 個人住民税</span>
@@ -103,6 +124,9 @@
 
 <nav class="stepnav no-print">
   <div class="wrap" id="stepNav"></div>
+  <!-- 早見パネルが画面の外に出たら、ナビの下に1行だけ判定の要約を出す。
+       ナビの外に重ねて出す（position:absolute）ので、出し入れしても下の内容は動かない。 -->
+  <div class="quickbar" id="quickBar" aria-hidden="true"><div class="wrap" id="quickBarBody"></div></div>
 </nav>
 
 <main class="wrap">
@@ -449,13 +473,14 @@
 
 <!-- ===================== 判定 ===================== -->
 <div class="actions no-print" id="runBar">
-  <button id="calcBtn" class="primary big">下に判定結果を表示する</button>
+  <button id="calcBtn" class="primary big">判定結果を見る ↓</button>
+  <span class="hint autonote">結果は入力に合わせて自動で計算し直しています。ボタンは結果の位置へ移動するだけです。</span>
   <button id="resetBtn" class="ghost">入力をリセット</button>
 </div>
 
 <!-- ===================== 結果 ===================== -->
 <section class="step" id="stepResult">
-  <div class="actions no-print" id="printBar" style="display:none">
+  <div class="actions no-print" id="printBar">
     <button id="printBtn" class="primary">PDFで保存／印刷する</button>
     <label class="field inline">
       <span>PDFに入れる内容</span>
@@ -466,7 +491,7 @@
     </label>
     <span class="hint">印刷ダイアログの「送信先／プリンター」で <strong>「PDFに保存」</strong> を選んでください。</span>
   </div>
-  <div id="results"><p class="empty">上の入力を終えたら、<strong>［下に判定結果を表示する］</strong>を押してください。</p></div>
+  <div id="results"><p class="empty">計算しています…（入力に合わせて自動で表示されます）</p></div>
 </section>
 
 <!-- ===================== 解説 ===================== -->

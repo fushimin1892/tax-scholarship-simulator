@@ -13,20 +13,20 @@
  */
 :root {
   color-scheme: light;
-  --bg: #eef1f5;
-  --bg-soft: #f7f9fb;
+  --bg: #f3f2ee;
+  --bg-soft: #f8f7f4;
   --surface: #ffffff;
-  --surface-2: #f6f8fa;
-  --line: #dbe2ea;
-  --line-soft: #e9eef3;
+  --surface-2: #f7f6f2;
+  --line: #dedbd2;
+  --line-soft: #ebe9e3;
 
-  --ink: #141d2b;
-  --ink-2: #4c5a6e;
-  --ink-3: #5c6875;   /* 補足文にも使うので WCAG AA 4.5:1 を満たす濃さにする */
+  --ink: #1a1a17;
+  --ink-2: #4d4a42;
+  --ink-3: #625e55;   /* 補足文にも使うので WCAG AA 4.5:1 を満たす濃さにする */
 
-  --brand: #1b5b8f;
-  --brand-strong: #0e3f68;
-  --brand-soft: #e7f0f8;
+  --brand: #7a5710;        /* 強調色（焦げ茶がかった金） */
+  --brand-strong: #573d06;
+  --brand-soft: #f6efdf;
   --on-accent: #ffffff;   /* --brand などの上に載せる文字色 */
 
   --kin: #6b46a8;          /* 均等割 */
@@ -36,75 +36,78 @@
 
   --good: #0c7a52;
   --good-soft: #e4f5ec;
-  --warn: #9a6400;
-  --warn-soft: #fdf2da;
+  --warn: #a24d0a;
+  --warn-soft: #fdeedd;
   --bad: #b0322a;
   --bad-soft: #fdeceb;
 
-  --r-lg: 14px;
-  --r-md: 10px;
-  --r-sm: 7px;
-  --shadow: 0 1px 2px rgba(15, 32, 51, .05), 0 4px 16px rgba(15, 32, 51, .05);
-  --shadow-lg: 0 2px 6px rgba(15, 32, 51, .07), 0 12px 32px rgba(15, 32, 51, .09);
+  --r-lg: 18px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  --shadow: 0 1px 2px rgba(40, 32, 12, .05), 0 6px 20px rgba(40, 32, 12, .05);
+  --shadow-lg: 0 2px 6px rgba(40, 32, 12, .07), 0 16px 40px rgba(40, 32, 12, .1);
+  --nav-bg: rgba(255, 255, 255, .82);
 }
 
 /* 端末がダーク（明示的にライトを選んでいないとき） */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0e141c;
-    --bg-soft: #141c26;
-    --surface: #18212c;
-    --surface-2: #1e2833;
-    --line: #2c3846;
-    --line-soft: #232e3a;
-    --ink: #e6ecf3;
-    --ink-2: #aebbcb;
-    --ink-3: #8695a8;
-    --brand: #6fb1e4;
-    --brand-strong: #9ccff4;
-    --brand-soft: #172c3e;
-    --on-accent: #0e141c;
+    --bg: #0a0f0d;
+    --bg-soft: #0f1613;
+    --surface: #121a17;
+    --surface-2: #17211d;
+    --line: #26332e;
+    --line-soft: #1d2824;
+    --ink: #ecf1ee;
+    --ink-2: #b3c0b9;
+    --ink-3: #8b9a92;
+    --brand: #e7c26a;
+    --brand-strong: #f5d891;
+    --brand-soft: #2a2414;
+    --on-accent: #14110a;
     --kin: #bda2ee;
-    --kin-soft: #251d3a;
+    --kin-soft: #241d36;
     --sho: #6dc0e3;
-    --sho-soft: #12303c;
-    --good: #5bd2a5;
-    --good-soft: #102f24;
-    --warn: #e8bc64;
-    --warn-soft: #322810;
+    --sho-soft: #10283a;
+    --good: #5fd3a0;
+    --good-soft: #0f2a20;
+    --warn: #f4a261;
+    --warn-soft: #33200f;
     --bad: #f59790;
     --bad-soft: #351b1a;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
-    --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 12px 32px rgba(0, 0, 0, .35);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .3);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, .4), 0 18px 44px rgba(0, 0, 0, .45);
+    --nav-bg: rgba(10, 15, 13, .78);
   }
 }
 /* ダークを明示的に選んだとき（端末がライトでも効かせる） */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e141c;
-  --bg-soft: #141c26;
-  --surface: #18212c;
-  --surface-2: #1e2833;
-  --line: #2c3846;
-  --line-soft: #232e3a;
-  --ink: #e6ecf3;
-  --ink-2: #aebbcb;
-  --ink-3: #8695a8;
-  --brand: #6fb1e4;
-  --brand-strong: #9ccff4;
-  --brand-soft: #172c3e;
-  --on-accent: #0e141c;
+  --bg: #0a0f0d;
+  --bg-soft: #0f1613;
+  --surface: #121a17;
+  --surface-2: #17211d;
+  --line: #26332e;
+  --line-soft: #1d2824;
+  --ink: #ecf1ee;
+  --ink-2: #b3c0b9;
+  --ink-3: #8b9a92;
+  --brand: #e7c26a;
+  --brand-strong: #f5d891;
+  --brand-soft: #2a2414;
+  --on-accent: #14110a;
   --kin: #bda2ee;
-  --kin-soft: #251d3a;
+  --kin-soft: #241d36;
   --sho: #6dc0e3;
-  --sho-soft: #12303c;
-  --good: #5bd2a5;
-  --good-soft: #102f24;
-  --warn: #e8bc64;
-  --warn-soft: #322810;
+  --sho-soft: #10283a;
+  --good: #5fd3a0;
+  --good-soft: #0f2a20;
+  --warn: #f4a261;
+  --warn-soft: #33200f;
   --bad: #f59790;
   --bad-soft: #351b1a;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
-  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 12px 32px rgba(0, 0, 0, .35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .3);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .4), 0 18px 44px rgba(0, 0, 0, .45);
+  --nav-bg: rgba(10, 15, 13, .78);
 }

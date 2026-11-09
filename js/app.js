@@ -183,7 +183,8 @@
       cb(p + '_welfare', '生活保護法の生活扶助を受けている') +
     '</div></fieldset>',
 
-    '<fieldset class="group"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' +
+    '<fieldset class="group foldgroup"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' +
+    '<details class="fold"><summary>株・投資信託の売却益や配当（申告分離）、FX・先物、土地建物の売却、退職金、山林があるときに開く</summary>' +
     '<p class="hint">確定申告で申告分離課税を選んだ所得を入力してください。源泉徴収ありの特定口座で<b>申告しない</b>ものは入力不要です。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
@@ -201,23 +202,25 @@
       cb(p + '_retirementShort', '一般社員で勤続5年以下（短期退職手当等）') +
       cb(p + '_retirementDisability', '障害者となったことによる退職（控除額に100万円加算）') +
     '</div>' +
-    '<p class="hint">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></fieldset>',
+    '<p class="hint">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></details></fieldset>',
 
-    '<fieldset class="group"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' +
+    '<fieldset class="group foldgroup"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' +
+    '<details class="fold"><summary>前の年までの株の損失・事業の赤字・災害や盗難の損失を繰り越しているときに開く</summary>' +
     '<p class="hint">繰越控除は<b>所得割</b>には効きますが、<b>均等割の非課税判定・扶養判定に使う「合計所得金額」は繰越控除前</b>で見ます。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_coStockLoss', '上場株式等に係る譲渡損失の繰越額（円）', '翌年以後3年間繰越可') +
       fld(p + '_coNetLoss', '純損失の繰越控除額（円）', '青色申告の事業所得等の損失。3年間繰越可') +
       fld(p + '_coCasualtyLoss', '雑損失の繰越控除額（円）', '災害・盗難等による損失。3年間繰越可') +
-    '</div></fieldset>',
+    '</div></details></fieldset>',
 
-    '<fieldset class="group"><legend>⑥ 税額控除（住宅ローン控除など）</legend>' +
+    '<fieldset class="group foldgroup"><legend>⑥ 税額控除（住宅ローン控除など）</legend>' +
+    '<details class="fold"><summary>住宅ローン控除・配当控除など、税額から直接引く控除があるときに開く</summary>' +
     '<p class="hint">所得ではなく<b>税額から直接引く</b>控除です。該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_taxCredit', '所得税の税額控除の額（円）', '住宅借入金等特別控除、配当控除など') +
       fld(p + '_residentCredit', '住民税の税額控除の額（円）', '調整控除を除く。ふるさと納税には未対応。') +
-    '</div></fieldset>'
+    '</div></details></fieldset>'
     ];
   }
 
@@ -811,6 +814,7 @@
     }
 
     refreshLocks();
+    queueRun();
   }
   function sbox(t, v, d) {
     return '<div class="sbox"><span class="st">' + t + '</span><span class="sv">' + v + '</span><span class="sd">' + d + '</span></div>';
@@ -1482,8 +1486,22 @@
   /* ============================================================
    * 8. 実行
    * ==========================================================*/
-  function run() {
-    refreshAll();
+  /* 入力のたびに結果を作り直す（自動計算）。
+   * 1文字ごとに作り直すと打っている間に固まるので、手が止まってから 250ミリ秒後に1回だけ動かす。
+   * run() の中でも refreshAll() を呼ぶので、そこから再び予約しないよう inRun で止める。
+   * 起動中（組み立ての途中）は入力欄がそろっていないので、ready になるまで予約しない。 */
+  var runTimer = null, inRun = false;
+  function queueRun() {
+    if (inRun || document.body.dataset.ready !== '1') return;
+    clearTimeout(runTimer);
+    runTimer = setTimeout(function () { run({ quiet: true }); }, 250);
+  }
+
+  function run(opt) {
+    var quiet = opt && opt.quiet;
+    clearTimeout(runTimer);
+    inRun = true;
+    try { refreshAll(); } finally { inRun = false; }
     var year = Number(val('year'));
     var showJasso = useJasso();
     var inA = readPerson('A', year);
@@ -1550,8 +1568,81 @@
 
     labelTableCells($('results'));
 
-    $('printBar').style.display = '';
-    $('stepResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    renderQuick({
+      people: people, hh: householdResidentStatus(people, params(), inA.region),
+      kokuho: rA.kokuho, kub: kub, showJasso: showJasso, jassoSum: jassoSum
+    });
+    refreshFolds();
+    if (!quiet) $('stepResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ---------- 早見パネル（ヒーロー右の「いまの判定」とナビ下の1行） ----------
+   * 数字はすべて run() が下の詳しい結果に使ったものをそのまま渡している。
+   * ここで計算し直すことはしない（上と下で数字が食い違わないようにするため）。 */
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countTo(el, to) {
+    var from = Number(el.dataset.v || 0);
+    el.dataset.v = String(to);
+    if (reduceMotion || from === to || !window.requestAnimationFrame) { el.textContent = yen(to); return; }
+    var t0 = null, dur = 520;
+    (function step(t) {
+      if (el.dataset.v !== String(to)) return;          // 途中で次の値が来たら古い動きはやめる
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = yen(k < 1 ? from + (to - from) * e : to);
+      if (k < 1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+  function renderQuick(q) {
+    var body = $('quickBody'), bar = $('quickBarBody');
+    if (!body) return;
+    var hhTxt = q.hh.allExempt ? '該当' : '該当しない';
+    var kTxt = q.kokuho.level ? q.kokuho.level + '割軽減' : '軽減なし';
+    var jTxt = q.kub.id ? q.kub.name : q.kub.genmenOnly ? '授業料等減免のみ' : '対象外';
+    var row = function (label, value, good) {
+      return '<div class="qrow">' + label + '<span class="qv' + (good ? ' ok' : '') + '">' + value + '</span></div>';
+    };
+    /* いちばん知りたい答えを大きく出す。奨学金を調べる人は区分、それ以外は非課税世帯かどうか。 */
+    var head = q.showJasso
+      ? { label: 'JASSO 支援区分', value: jTxt, good: !!q.kub.id }
+      : { label: '住民税非課税世帯', value: hhTxt, good: q.hh.allExempt };
+    var h = '<div class="qbig' + (head.good ? ' ok' : '') + '" data-label="' + head.label + '">' + head.value + '</div>' +
+      (q.showJasso ? row('住民税非課税世帯', hhTxt, q.hh.allExempt) : '') +
+      row('国保の軽減', kTxt, !!q.kokuho.level) +
+      (q.showJasso ? row('支給額算定基準額の合計', yen(q.jassoSum), false) : '') +
+      '<div class="qcap">住民税（年額）</div>';
+    q.people.slice(0, 4).forEach(function (x) {
+      var rt = x.res.resident, both = rt.kintouExempt && rt.shotokuExempt;
+      h += '<div class="qperson">' + esc(x.title) +
+        (both ? '<span class="qamt ok">非課税</span>'
+              : '<span class="qamt" data-count="' + Math.round(rt.total) + '"></span>') + '</div>';
+    });
+    /* 前の数字を覚えておいて、そこから数え上げる */
+    var prev = {};
+    body.querySelectorAll('.qamt[data-count]').forEach(function (e, i) { prev[i] = e.dataset.v; });
+    body.innerHTML = h;
+    body.querySelectorAll('.qamt[data-count]').forEach(function (e, i) {
+      e.dataset.v = prev[i] || '0';
+      countTo(e, Number(e.dataset.count));
+    });
+    if (bar) {
+      bar.innerHTML = '<span class="qchip' + (q.hh.allExempt ? ' ok' : '') + '">非課税世帯：' + hhTxt + '</span>' +
+        '<span class="qchip' + (q.kokuho.level ? ' ok' : '') + '">国保：' + kTxt + '</span>' +
+        (q.showJasso ? '<span class="qchip' + (q.kub.id ? ' ok' : '') + '">JASSO：' + jTxt + '</span>' : '');
+    }
+  }
+
+  /* 折りたたんだ④⑤⑥に何か入っていたら、閉じていても分かるよう見出しに印を出す */
+  function refreshFolds() {
+    document.querySelectorAll('details.fold').forEach(function (d) {
+      var n = 0;
+      d.querySelectorAll('input').forEach(function (e) {
+        if (e.type === 'checkbox') { if (e.checked) n++; }
+        else if (Number(String(e.value).replace(/,/g, '')) > 0) n++;
+      });
+      var sm = d.querySelector('summary');
+      if (n) sm.setAttribute('data-badge', '入力あり ' + n + '件'); else sm.removeAttribute('data-badge');
+    });
   }
 
   /* 表のマス1つ1つに、それが何の欄なのかを持たせる。
@@ -1718,7 +1809,7 @@
     });
     $('calcBtn').addEventListener('click', run);
     $('printBtn').addEventListener('click', function () {
-      if ($('results').querySelector('.empty')) { alert('先に［下に判定結果を表示する］を押してください。'); return; }
+      if ($('results').querySelector('.empty')) { alert('結果を計算しています。少し待ってからもう一度押してください。'); return; }
       var all = val('printScope') === 'all';
       document.body.classList.toggle('print-all', all);
       if (all) document.querySelectorAll('details.guide').forEach(function (d) { d.open = true; });
@@ -1790,6 +1881,14 @@
     }, { rootMargin: '-45% 0px -50% 0px' });
     document.querySelectorAll('.step').forEach(function (s) { obs.observe(s); });
 
+    /* 早見パネルが画面から消えたら、ナビの下に1行の要約を出す */
+    if ($('quick') && $('quickBar')) {
+      new IntersectionObserver(function (es) {
+        var away = !es[0].isIntersecting && es[0].boundingClientRect.top < 0;
+        document.body.classList.toggle('show-qbar', away);
+      }).observe($('quick'));
+    }
+
     /* ここから先が重い組み立て。上から順に、1区切りずつ進める。
      * 1区切りを50ミリ秒より短くしたいので、入力欄は①〜⑥のまとまり単位で入れる
      * （まとめて入れると1区切りが約300ミリ秒になり、その間操作できない）。
@@ -1808,6 +1907,8 @@
     // 狭い画面ではこれを使って縦に積み直すため。
     chunks.push(function () { labelTableCells(document); });
     chunks.push(function () { refreshAll(); document.body.dataset.ready = '1'; });
+    // 最初の結果は別の区切りで作る（読み込み直後に固まる時間を延ばさないため）
+    chunks.push(function () { run({ quiet: true }); });
     stepByStep(chunks);
   }
 
