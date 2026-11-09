@@ -1,5 +1,2 @@
 test/.chrome-*/
-test/shots/*
-!test/shots/result.pdf
-!test/shots/11-dark.png
-!test/shots/12-mobile.png
+test/shots/

@@ -60,6 +60,11 @@ w('**対象**：住民税・所得税・国民健康保険・JASSO奨学金 判�
 w('**生成日**：' + new Date().toLocaleDateString('ja-JP') + '  ');
 w('**生成方法**：`node test/report-matrix.js`（税制データを直せば作り直せます）');
 w('');
+w('> **この文書について（読む前に）**');
+w('> - 種類：**自動生成**。手で編集しない。`data/tax-data.js` か `js/calc.js` を直したら `node test/report-matrix.js` で作り直す');
+w('> - 生成時の「税制データの最終確認」（VERIFIED_AT）：' + D.VERIFIED_AT);
+w('> - 数値の正本は `data/tax-data.js`、計算の正本は `js/calc.js`。この文書と食い違ったら、作り直し忘れなので作り直す');
+w('');
 w('この文書は、収入・控除・家族構成・年齢を総当たりで計算した**実際の結果**です。');
 w('「合っているかどうか」の判定は `node test/verify-matrix.js`（636,008件）が行い、');
 w('この文書はその**中身の数字**を人が読める形にしたものです。');
