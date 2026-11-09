@@ -99,9 +99,9 @@ JASSO 2027年度予約採用 給付奨学金案内、国税庁タックスアン
 | TBT（固まる時間） | 0ms | 110〜270ms |
 | FCP（最初の表示） | 0.5秒 | 1.5秒 |
 
-robots.txt と sitemap.xml は、クローラーも Lighthouse も**ドメイン直下**しか読まないため、
-別の場所からドメイン直下の `robots.txt` として配信している。
-そのうえで Lighthouse は robots.txt を**ページの中から fetch** して確かめるので、
+robots.txt は、クローラーも Lighthouse も**ドメイン直下**（`https://fushimin1892.github.io/robots.txt`）しか読まないため、
+このリポジトリには置いていない（置いても読まれない）。ドメイン直下にも robots.txt がないので、検索エンジンは「すべて許可」として扱う。
+Lighthouse は robots.txt を**ページの中から fetch** して確かめるので、
 CSP に `connect-src 'self'`（通信先は自分自身のみ）を足してある。
 `default-src 'none'` はそのままなので、入力内容が外に出ないことは変わらない。
 
