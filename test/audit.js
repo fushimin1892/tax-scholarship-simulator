@@ -8,8 +8,8 @@
  */
 const path = require('path');
 const fs = require('fs');
-const D = require('../assets/data.js');
-const C = require('../assets/calc.js');
+const D = require('../data/tax-data.js');
+const C = require('../js/calc.js');
 
 let pass = 0, fail = 0;
 const issues = [];
@@ -184,7 +184,7 @@ section('A-8 都道府県・市区町村データの妥当性');
     ok(`${p.n} 上乗せがあるなら税の名称がある`, p.add === 0 || !!p.tax);
     ok(`${p.n} 上乗せがないなら税の名称は空`, p.add !== 0 || !p.tax);
   });
-  const CK = require('../assets/cities.js');
+  const CK = require('../data/cities.js');
   ok('市区町村マスタが47都道府県ぶんある', Object.keys(CK).length === 47);
   let total = 0, k1 = 0, k2 = 0;
   Object.entries(CK).forEach(function (e) {
@@ -479,7 +479,7 @@ report();
  * ===================================================================*/
 section('D-1 app.js が参照するIDが、HTMLまたは生成フォームに存在すること');
 {
-  const app = fs.readFileSync(path.join(__dirname, '..', 'assets', 'app.js'), 'utf8');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
   // HTML に直接書かれている id
@@ -514,9 +514,10 @@ report();
 
 section('D-2 危険なAPIを使っていないこと');
 {
-  const JS = ['app.js', 'calc.js', 'data.js', 'cities.js', 'theme.js'];
+  const JS = ['app.js', 'calc.js', 'tax-data.js', 'cities.js', 'theme.js'];
+  const DIR = { 'app.js': 'js', 'calc.js': 'js', 'theme.js': 'js', 'tax-data.js': 'data', 'cities.js': 'data' };
   const src = {};
-  JS.forEach(f => { src[f] = fs.readFileSync(path.join(__dirname, '..', 'assets', f), 'utf8'); });
+  JS.forEach(f => { src[f] = fs.readFileSync(path.join(__dirname, '..', DIR[f], f), 'utf8'); });
   const files = JS.map(f => src[f]).join('\n');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const banned = ['eval(', 'new Function', 'sessionStorage', 'indexedDB',
@@ -565,7 +566,7 @@ section('D-2 危険なAPIを使っていないこと');
   try { ldObj = JSON.parse(ld); } catch (e) { ldObj = null; }
   /* 市区町村の数は「読み込み中に画面がずれない」ようHTMLに直書きしてある。
    * 収録データを足し引きしたときに書き換え忘れると嘘の数字が残るので、ここで突き合わせる。 */
-  const cityTotal = Object.values(require('../assets/cities.js'))
+  const cityTotal = Object.values(require('../data/cities.js'))
     .reduce((a, b) => a + b.length, 0).toLocaleString('ja-JP');
   const written = [...html.matchAll(/id="cityCount2?"[^>]*>([^<]+)</g)].map(m => m[1]);
   ok('HTMLに書いた市区町村の数が実データと一致する',
@@ -590,8 +591,8 @@ section('D-2 危険なAPIを使っていないこと');
   ok('実行されるインライン script がない（CSPを厳しくしても動くように）',
     !/<script(?![^>]*\bsrc=)(?![^>]*type="application\/ld\+json")[^>]*>[\s\S]*?<\/script>/.test(html),
     'インラインscript検出');
-  ok('読み込んでいるスクリプトはすべて assets 配下の相対パス',
-    [...html.matchAll(/<script[^>]*\bsrc="([^"]+)"/g)].every(m => /^assets\/[\w.-]+\.js$/.test(m[1])), '想定外のsrc');
+  ok('読み込んでいるスクリプトはすべて js・data 配下の相対パス',
+    [...html.matchAll(/<script[^>]*\bsrc="([^"]+)"/g)].every(m => /^(js|data)\/[\w.-]+\.js$/.test(m[1])), '想定外のsrc');
 }
 report();
 
@@ -613,7 +614,9 @@ report();
 
 section('D-4 配色（ライト／ダーク）の定義が揃っていること');
 {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'style.css'), 'utf8');
+  /* CSS は css フォルダに分かれているので、index.html の読み込み順につなげて調べる */
+  const css = [...fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8').matchAll(/<link rel="stylesheet" href="([^"]+)">/g)]
+    .map(m => fs.readFileSync(path.join(__dirname, '..', m[1]), 'utf8')).join('\n');
   /* 指定したセレクタのブロックを取り出して、定義しているカスタムプロパティを拾う */
   const blockAfter = function (needle) {
     const i = css.indexOf(needle);
@@ -656,10 +659,10 @@ section('D-4 配色（ライト／ダーク）の定義が揃っていること'
 }
 report();
 
-section('D-5 計算方法ドキュメントの数値が data.js と一致すること');
+section('D-5 計算方法ドキュメントの数値が tax-data.js と一致すること');
 {
   /* docs/05 は「サイトが実際に何をしているか」を書いた資料なので、
-   * data.js を直したのに書き換え忘れる、という食い違いが一番こわい。
+   * tax-data.js を直したのに書き換え忘れる、という食い違いが一番こわい。
    * 主要な金額が資料に載っていることを機械的に確かめる。 */
   const doc = fs.readFileSync(path.join(__dirname, '..', 'docs', '05-計算方法とまるめの一覧.md'), 'utf8');
   const yen = (v) => v.toLocaleString('en-US');
@@ -744,16 +747,16 @@ section('D-5 計算方法ドキュメントの数値が data.js と一致する�
 }
 report();
 
-section('D-6 tax-parameters.json が data.js と一致していること');
+section('D-6 tax-parameters.json が tax-data.js と一致していること');
 {
-  /* JSON は data.js から生成した写し。手で書き換えたり、data.js だけ直して
+  /* JSON は tax-data.js から生成した写し。手で書き換えたり、tax-data.js だけ直して
    * 再生成し忘れたりすると食い違うので、主要な値を突き合わせる。 */
-  const jf = path.join(__dirname, '..', 'assets', 'tax-parameters.json');
+  const jf = path.join(__dirname, '..', 'data', 'tax-parameters.json');
   if (!fs.existsSync(jf)) {
     ok('tax-parameters.json が存在する', false, 'node test/build-tax-parameters.js を実行してください');
   } else {
     const J = JSON.parse(fs.readFileSync(jf, 'utf8'));
-    ok('生成元が data.js と明記されている', J.meta.masterFile === 'assets/data.js');
+    ok('生成元が tax-data.js と明記されている', J.meta.masterFile === 'data/tax-data.js');
 
     [2025, 2026].forEach(y => {
       const a = D.INCOME_TAX[y], b = J.incomeTax[String(y)];

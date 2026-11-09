@@ -1,0 +1,51 @@
+/* ============================================================================
+ * 印刷（PDF保存）
+ * ==========================================================================*/
+
+/* ---------- 印刷（PDF保存） ---------- */
+@media print {
+  @page { size: A4; margin: 13mm 11mm; }
+  /* ダークで表示していても紙は白基調にする。
+   * :root[data-theme="dark"] のほうが詳細度が高いので、
+   * ここでも同じ詳細度のセレクタを並べて確実に上書きする。 */
+  :root, :root[data-theme="dark"], :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #fff; --bg-soft: #fafbfc; --surface: #fff; --surface-2: #f6f8fa;
+    --line: #c6ced8; --line-soft: #dfe5ec; --ink: #101822; --ink-2: #3d4a5c; --ink-3: #6b7787;
+    --brand: #14568b; --brand-strong: #0d3255; --brand-soft: #eaf2f9;
+    --kin: #5c3c94; --kin-soft: #f2ecfb; --sho: #0e5c80; --sho-soft: #e6f2f8;
+    --good: #0a6b47; --good-soft: #e7f6ee; --warn: #8a5a00; --warn-soft: #fdf3dc;
+    --bad: #9c2c25; --bad-soft: #fdeceb;
+    --shadow: none; --shadow-lg: none;
+  }
+  body { background: #fff; font-size: 10pt; line-height: 1.55; }
+  .no-print, .stepnav, .site-footer, .actions { display: none !important; }
+  .site-header {
+    background: #fff !important; color: #000 !important;
+    border-bottom: 2.5px solid #0d3255; padding: 0 0 8px; margin-bottom: 10px;
+  }
+  .site-header h1 { font-size: 14pt; color: #0d3255; }
+  .site-header .lead { display: none; }
+  .site-header .version { color: #444; }
+  .site-header .chip { background: #eef2f6; border-color: #ccd; color: #333; }
+  .wrap { max-width: none; padding: 0; }
+  /* 入力欄は印刷しない。結果（と、指定があれば解説・出典）だけを出す */
+  .step:not(#stepResult), .reference { display: none !important; }
+  #stepResult { display: block !important; }
+  body.print-all .reference { display: block !important; }
+  body.print-all #tab-guide { break-before: page; }
+  details.guide > summary { list-style: none; }
+  details.guide > summary::before { content: ""; }
+  .card {
+    border: 1px solid #b9c3cf; box-shadow: none; break-inside: avoid;
+    margin-bottom: 9px; padding: 10px 13px; border-radius: 6px;
+  }
+  .card > h2 { font-size: 11pt; margin-bottom: 9px; }
+  .verdict, .kpi, .gauge, .steps { break-inside: avoid; }
+  .verdict .big { font-size: 15pt; }
+  .kpi .value { font-size: 13pt; }
+  table.detail, table.compare { font-size: 8.6pt; }
+  table.compare { min-width: 0; }
+  .tablewrap { overflow: visible; }
+  a { color: #14568b; text-decoration: none; }
+}

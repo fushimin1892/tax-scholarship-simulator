@@ -161,7 +161,7 @@ node test/check-cities.js       # 超過課税・減税の市区町村が CITIES
 1. `node test/check-updates.js` … 国税庁・JASSO・国保の公表ページと収録値を突合
 2. `node test/verify-prefectures.js` … 47都道府県の超過課税を突合
 3. `node test/check-cities.js` … 総務省「市町村民税及び固定資産税の税率等別市町村数調」の最新版に載る
-   超過課税・減税の市区町村が、`assets/data.js` の `CITIES` に同じ税率で登録されているかを突合
+   超過課税・減税の市区町村が、`data/tax-data.js` の `CITIES` に同じ税率で登録されているかを突合
 4. PDF でしか出ない資料（下記）は公表時期に手で開いて確認
 5. **未登録の市区町村が見つかったら、必ず追加する**（「要追加」の行）。
    総務省の調査は前年4月1日現在なので、その自治体の公式ページで今年度の税率・適用期間を確かめてから
@@ -422,17 +422,24 @@ STEP 4／5 の合計所得金額の欄に注意書きとして表示されます
 ```
 税金奨学金シミュレーター/
 ├── index.html               画面本体（STEP 1〜8 → 結果 → 解説・出典の1枚もの）
-├── assets/
-│   ├── data.js              税制・社会保険・奨学金の基礎データと出典
+├── css/                     デザイン（index.html で次の順に読み込む）
+│   ├── colors.css           配色（ライト／ダーク）
+│   ├── design.css           画面の部品の見た目
+│   ├── responsive.css       スマートフォン・タブレット向けの調整
+│   └── print.css            印刷（PDF保存）
+├── data/                    税金・保険・奨学金の数値（法令改正のときに直すのはここ）
+│   ├── tax-data.js          税制・社会保険・奨学金の基礎データと出典（正本）
 │   ├── cities.js            全国1,719市区町村の級地区分（自動生成）
+│   └── tax-parameters.json  tax-data.js から生成した写し（手で編集しない）
+├── js/                      プログラム
+│   ├── theme.js             配色の切り替え（最初の描画より前に読み込む）
 │   ├── calc.js              計算エンジン（ブラウザ／Node 両対応）
-│   ├── app.js               フォーム生成・入力取得・結果描画
-│   └── style.css            スタイル（ダークモード・印刷用CSSを含む）
+│   └── app.js               フォーム生成・入力取得・結果描画
 ├── test/
 │   ├── verify.js            計算エンジンの検証（196件。うち27件は公式計算例との突合）
 │   ├── browser-check.js     ブラウザ検証（190件：級地・カンマ区切り・人数の自動集計・控除のロック・立場の切替・配色のコントラスト・スマホ幅・読み込み中のガタつき・PDF生成）
 │   ├── shot-detail.js       カード単位の拡大スクリーンショット（レイアウト確認用）
-│   └── build-city-data.js   assets/cities.js を再生成する
+│   └── build-city-data.js   data/cities.js を再生成する
 ├── docs/
 │   ├── 01-検証レポート.md        全数値の一次資料との突合結果
 │   ├── 02-システム設計書.md       要件・アーキテクチャ・データ設計・API・運用
@@ -480,7 +487,7 @@ node test/build-city-data.js # 級地データを再生成（Wikipedia の「級
 
 ## 出典
 
-すべてサイト最下部の「出典と免責」および `assets/data.js` の `SOURCES` に URL 付きで収録しています。主なもの：
+すべてサイト最下部の「出典と免責」および `data/tax-data.js` の `SOURCES` に URL 付きで収録しています。主なもの：
 
 ### 所得税
 - 国税庁 [No.1199 基礎控除](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm)

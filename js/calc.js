@@ -7,12 +7,12 @@
  *   合計所得金額   … 繰越控除を適用する「前」の金額。均等割の非課税判定・扶養判定に使う
  *   総所得金額等   … 繰越控除を適用した「後」の金額。所得割の非課税判定・課税標準に使う
  *
- * data.js に依存。ブラウザ / Node の両方で動作する。
+ * tax-data.js に依存。ブラウザ / Node の両方で動作する。
  * ==========================================================================*/
 (function (root) {
   'use strict';
 
-  var D = root.TaxData || (typeof require === 'function' ? require('./data.js') : null);
+  var D = root.TaxData || (typeof require === 'function' ? require('../data/tax-data.js') : null);
 
   var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
   var pos = function (v) { return Math.max(0, n(v)); };

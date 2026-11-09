@@ -1,0 +1,110 @@
+/* ============================================================================
+ * 配色（デザイントークン）— ライト／ダークの色はここだけで決める
+ * ==========================================================================*/
+
+/* ---------- デザイントークン ----------
+ * 配色は3状態。
+ *   端末に合わせる … data-theme を付けない（@media prefers-color-scheme が効く）
+ *   ライト固定     … data-theme="light"
+ *   ダーク固定     … data-theme="dark"
+ * ダークの値は @media 側と :root[data-theme="dark"] 側の2か所に書く必要がある
+ * （CSSではメディアクエリと属性セレクタを1つの規則にまとめられないため）。
+ * 2か所が食い違わないよう test/audit.js の D-4 で機械的に突き合わせている。
+ */
+:root {
+  color-scheme: light;
+  --bg: #eef1f5;
+  --bg-soft: #f7f9fb;
+  --surface: #ffffff;
+  --surface-2: #f6f8fa;
+  --line: #dbe2ea;
+  --line-soft: #e9eef3;
+
+  --ink: #141d2b;
+  --ink-2: #4c5a6e;
+  --ink-3: #5c6875;   /* 補足文にも使うので WCAG AA 4.5:1 を満たす濃さにする */
+
+  --brand: #1b5b8f;
+  --brand-strong: #0e3f68;
+  --brand-soft: #e7f0f8;
+  --on-accent: #ffffff;   /* --brand などの上に載せる文字色 */
+
+  --kin: #6b46a8;          /* 均等割 */
+  --kin-soft: #f0eafa;
+  --sho: #10688f;          /* 所得割 */
+  --sho-soft: #e5f2f8;
+
+  --good: #0c7a52;
+  --good-soft: #e4f5ec;
+  --warn: #9a6400;
+  --warn-soft: #fdf2da;
+  --bad: #b0322a;
+  --bad-soft: #fdeceb;
+
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 7px;
+  --shadow: 0 1px 2px rgba(15, 32, 51, .05), 0 4px 16px rgba(15, 32, 51, .05);
+  --shadow-lg: 0 2px 6px rgba(15, 32, 51, .07), 0 12px 32px rgba(15, 32, 51, .09);
+}
+
+/* 端末がダーク（明示的にライトを選んでいないとき） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e141c;
+    --bg-soft: #141c26;
+    --surface: #18212c;
+    --surface-2: #1e2833;
+    --line: #2c3846;
+    --line-soft: #232e3a;
+    --ink: #e6ecf3;
+    --ink-2: #aebbcb;
+    --ink-3: #8695a8;
+    --brand: #6fb1e4;
+    --brand-strong: #9ccff4;
+    --brand-soft: #172c3e;
+    --on-accent: #0e141c;
+    --kin: #bda2ee;
+    --kin-soft: #251d3a;
+    --sho: #6dc0e3;
+    --sho-soft: #12303c;
+    --good: #5bd2a5;
+    --good-soft: #102f24;
+    --warn: #e8bc64;
+    --warn-soft: #322810;
+    --bad: #f59790;
+    --bad-soft: #351b1a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 12px 32px rgba(0, 0, 0, .35);
+  }
+}
+/* ダークを明示的に選んだとき（端末がライトでも効かせる） */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e141c;
+  --bg-soft: #141c26;
+  --surface: #18212c;
+  --surface-2: #1e2833;
+  --line: #2c3846;
+  --line-soft: #232e3a;
+  --ink: #e6ecf3;
+  --ink-2: #aebbcb;
+  --ink-3: #8695a8;
+  --brand: #6fb1e4;
+  --brand-strong: #9ccff4;
+  --brand-soft: #172c3e;
+  --on-accent: #0e141c;
+  --kin: #bda2ee;
+  --kin-soft: #251d3a;
+  --sho: #6dc0e3;
+  --sho-soft: #12303c;
+  --good: #5bd2a5;
+  --good-soft: #102f24;
+  --warn: #e8bc64;
+  --warn-soft: #322810;
+  --bad: #f59790;
+  --bad-soft: #351b1a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 12px 32px rgba(0, 0, 0, .35);
+}

@@ -12,8 +12,8 @@
  * オラクル（oracle＝独立実装）で作る。実装と突き合わせて食い違いを探す。
  * 実装から期待値を逆算すると検証にならないため、この分離が要。
  * ==========================================================================*/
-const Calc = require('../assets/calc.js');
-const D = require('../assets/data.js');
+const Calc = require('../js/calc.js');
+const D = require('../data/tax-data.js');
 
 const only = process.argv[2];
 let pass = 0, fail = 0, current = '', shown = false, sectionCount = 0;
@@ -123,7 +123,7 @@ function oracleSalaryIncome(rev, minAmt, minCap) {
   rev = Math.floor(rev);
   if (rev <= 0) return 0;
   /* 令和8・9年分（最低保障74万円）は219万1千円〜220万円未満が固定額の3段。
-   * 実装の data.js を参照せず、国税庁の実表（年末調整のしかた 47ページ）の値を直書きする */
+   * 実装の tax-data.js を参照せず、国税庁の実表（年末調整のしかた 47ページ）の値を直書きする */
   if (minAmt === 740000) {
     if (rev >= 2196000 && rev < 2200000) return 1456000;
     if (rev >= 2193000 && rev < 2196000) return 1453000;

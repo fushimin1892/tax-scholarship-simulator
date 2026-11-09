@@ -4,8 +4,8 @@
     "name": "税制パラメータ（住民税・所得税・国民健康保険・JASSO奨学金）",
     "verifiedAt": "2026-11-06",
     "generatedBy": "node test/build-tax-parameters.js",
-    "masterFile": "assets/data.js",
-    "note": "このファイルは assets/data.js から生成した写しです。手で編集せず、data.js を直して再生成してください。",
+    "masterFile": "data/tax-data.js",
+    "note": "このファイルは data/tax-data.js から生成した写しです。手で編集せず、tax-data.js を直して再生成してください。",
     "statusLegend": {
       "final": "公表済みの確定値",
       "provisional": "改正は成立しているが実務資料（通知・表）が未公表で要再確認",

@@ -1,12 +1,12 @@
 /* ============================================================================
- * set-verified-at.js — assets/data.js の「最終確認日」を進める
+ * set-verified-at.js — data/tax-data.js の「最終確認日」を進める
  *
  *   node test/set-verified-at.js            … 今日（日本時間）にする
  *   node test/set-verified-at.js 2026-09-18 … 日付を指定する
  *
  * ■ この1行だけを書き換えます
  *     var VERIFIED_AT = 'YYYY-MM-DD';
- *   次回の確認予定日（NEXT_REVIEW）は data.js が自動で計算するので触りません。
+ *   次回の確認予定日（NEXT_REVIEW）は tax-data.js が自動で計算するので触りません。
  *
  * ■ なぜ sed ではなく専用スクリプトなのか
  *   この日付は「いつ時点の値か」を利用者に約束する表示です。書き損じても
@@ -24,7 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const FILE = path.join(__dirname, '..', 'assets', 'data.js');
+const FILE = path.join(__dirname, '..', 'data', 'tax-data.js');
 /* Windows の git（core.autocrlf=true）では作業ツリーが CRLF になる。
  * 正規表現の . は \r に一致しないので、行末の \r も許して残す */
 const LINE = /^(\s*var VERIFIED_AT = ')(\d{4}-\d{2}-\d{2})(';.*\r?)$/;
@@ -59,7 +59,7 @@ const before = fs.readFileSync(FILE, 'utf8');
 const hits = before.split('\n').filter(l => LINE.test(l));
 if (hits.length !== 1) {
   die(`VERIFIED_AT の行が ${hits.length} 個見つかりました（1個であるべきです）。` +
-      'data.js の書き方が変わっていないか確認してください。');
+      'tax-data.js の書き方が変わっていないか確認してください。');
 }
 
 const current = hits[0].match(LINE)[2];

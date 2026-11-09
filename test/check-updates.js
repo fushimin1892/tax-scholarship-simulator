@@ -4,7 +4,7 @@
  *   node test/check-updates.js            … 全件
  *   node test/check-updates.js 国税庁      … 分類で絞り込み
  *
- * ■ このスクリプトは data.js を書き換えません（意図的に）
+ * ■ このスクリプトは tax-data.js を書き換えません（意図的に）
  *
  * 税額計算のデータを自動で書き換えるのは危険です。実際に次のことが起きます。
  *   ・国税庁の改正資料PDFはCIDフォントでテキストが取れない
@@ -16,9 +16,9 @@
  *
  * 使い方の想定
  *   年に数回（1月・4月・6月・10月）これを流し、⚠ が出た項目だけ
- *   一次資料を自分で開いて確認し、assets/data.js を直す。
+ *   一次資料を自分で開いて確認し、data/tax-data.js を直す。
  * ==========================================================================*/
-const D = require('../assets/data.js');
+const D = require('../data/tax-data.js');
 
 const only = process.argv[2];
 
@@ -137,7 +137,7 @@ async function fetchText(url) {
   const needsEyes = [];
 
   console.log('公表資料の見張り（' + new Date().toLocaleDateString('ja-JP') + '）');
-  console.log('※ このスクリプトは data.js を書き換えません。⚠ が出た項目だけ一次資料を開いて確認してください。\n');
+  console.log('※ このスクリプトは tax-data.js を書き換えません。⚠ が出た項目だけ一次資料を開いて確認してください。\n');
   console.log('分類 | 項目 | 判定 | 内容');
   console.log('-----|------|------|------');
 
@@ -197,7 +197,7 @@ async function fetchText(url) {
     needsEyes.forEach((s, i) => console.log(`\n  ${i + 1}. ${s}`));
     console.log('\n  「要確認」は必ずしも誤りではありません。ページの言い回しが変わった、');
     console.log('  表が画像になった、複数年度が併記されている、なども同じ表示になります。');
-    console.log('  一次資料を開いて確かめ、実際に改正されていれば assets/data.js を直し、');
+    console.log('  一次資料を開いて確かめ、実際に改正されていれば data/tax-data.js を直し、');
     console.log('  そのあと次を順に実行してください。');
     console.log('    node test/verify.js && node test/verify-calc.js && node test/verify-matrix.js');
     console.log('    node test/build-tax-parameters.js && node test/audit.js');

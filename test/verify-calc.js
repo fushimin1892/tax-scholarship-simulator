@@ -9,8 +9,8 @@
  * 期待値はすべて条文・速算表から手計算したものを直書きしている（実装から
  * 逆算した値を書くと検証にならないため）。
  * ==========================================================================*/
-const Calc = require('../assets/calc.js');
-const D = require('../assets/data.js');
+const Calc = require('../js/calc.js');
+const D = require('../data/tax-data.js');
 
 const only = process.argv[2];
 let pass = 0, fail = 0, skipped = 0, current = '', shown = false;

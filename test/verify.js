@@ -1,6 +1,6 @@
 /* 計算エンジンの検証（node test/verify.js） */
-const Calc = require('../assets/calc.js');
-const D = require('../assets/data.js');
+const Calc = require('../js/calc.js');
+const D = require('../data/tax-data.js');
 
 let pass = 0, fail = 0;
 function eq(label, actual, expected) {

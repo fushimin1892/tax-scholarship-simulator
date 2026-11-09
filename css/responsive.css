@@ -1,0 +1,205 @@
+/* ============================================================================
+ * スマートフォン・タブレット向けの調整
+ * ==========================================================================*/
+
+/* ---------- スマートフォン・タブレット ----------
+ * ねらい
+ *   ・入力欄は1列にして、指で押せる大きさ（44px以上）を確保する
+ *   ・iOS で入力時に画面が拡大されないよう、入力欄の文字は16px以上にする
+ *   ・幅の広い表は自前の枠内だけで横スクロールさせ、本文は横に流れないようにする
+ */
+@media (max-width: 820px) {
+  .grid, .grid.two { grid-template-columns: 1fr; }
+  .mgrid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .choices { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  body { font-size: 15.5px; line-height: 1.8; }
+  .wrap { padding: 0 13px; }
+  .card { padding: 15px 14px; border-radius: var(--r-md); margin-bottom: 14px; }
+  .card > h2 { font-size: 1rem; gap: 8px; }
+  .site-header { padding: 18px 0 18px; }
+  .site-header h1 { font-size: 1.14rem; }
+  .site-header .lead { font-size: .88rem; }
+  .headtop { gap: 12px; }
+  .themeswitch { width: 100%; }
+  .themeswitch button { flex: 1 1 0; padding: 9px 6px; min-height: 44px; }
+
+  /* 指で押せる大きさ。iOSの自動ズーム回避のため文字は16px以上 */
+  input[type="number"], input[type="text"], select { font-size: 16px; padding: 11px 12px; min-height: 44px; }
+  .mgrid input, .mgrid select { font-size: 16px; padding: 9px 10px; min-height: 42px; }
+  /* チェックボックスはラベル全体が押せる。行そのものを44px確保する。 */
+  .checkline { min-height: 44px; padding: 5px 0; }
+  .checkline input { width: 22px; height: 22px; margin-top: 2px; }
+  .choice { padding: 15px 14px; }
+  button.primary, button.ghost { width: 100%; justify-content: center; min-height: 48px; padding: 13px 20px; }
+  button.small, .del { width: auto; min-height: 40px; }
+  .actions { flex-direction: column; align-items: stretch; }
+
+  .kpis, .kpis.five { grid-template-columns: 1fr 1fr; }
+  .kpi .value { font-size: 1.2rem; }
+  .sgrid { grid-template-columns: 1fr 1fr; }
+  .steps { flex-direction: column; }
+  .stepnav a { padding: 11px 11px; font-size: .8rem; }
+  .stepnav .wrap { min-height: 48px; }
+
+  fieldset.group { padding: 12px 12px 14px; }
+  fieldset.group > legend { font-size: .88rem; }
+  .subblock { padding: 11px 12px 13px; }
+  .member { padding: 11px 11px 9px; }
+  .mhead { gap: 8px; }
+  /* 続柄セレクトも16px以上にする（iOSの自動ズーム回避） */
+  .relsel { min-width: 0; flex: 1 1 130px; font-size: 16px; padding: 8px 10px; min-height: 42px; }
+
+  /* 横並びの設定行（PDFに入れる内容など）は縦に積む。
+     横並びのままだとセレクトが縮まず画面からはみ出す。 */
+  .field.inline { flex-direction: column; align-items: stretch; gap: 6px; }
+  .field.inline > span { white-space: normal; }
+  .field.inline select { width: 100%; }
+
+  /* ---- 狭い画面では、表を縦に積み直す ----
+   *
+   * 「項目 × 人」の表を横に並べたままだと、1列あたり70pxほどしか取れず、
+   * 「51,300円 以上 154,500円 未満」や「税額の決まり方」が1文字ずつ
+   * 縦に並んでしまう。右端の列は画面の外に出て、横スクロールにも気づけない。
+   *
+   * そこで1行を1つのカードにして、行の見出しを小見出し、
+   * 各マスを「列の見出し ─ 値」として縦に積む。結果の表だけでなく、
+   * 制度の解説にある表も同じ形にする（そちらのほうが列が細かく、潰れやすい）。
+   * 列の見出しは JS が data-label として各マスに入れている（app.js の
+   * labelTableCells）。横スクロールは要らなくなる。 */
+  .tablewrap { overflow-x: visible; border: 0; border-radius: 0; padding: 0; }
+  table.compare, table.detail,
+  table.compare.persons, table.compare.narrow {
+    display: block; min-width: 0; width: 100%; font-size: .87rem; background: none;
+  }
+  /* 人ごとの表は名前を横幅で確保していたが、縦に積むので不要 */
+  table.compare.persons tbody th.who { width: auto; }
+  table.compare.persons th.who b { display: inline; }
+  table.compare.persons th.who .role { display: inline; margin-left: 6px; }
+  /* 表の見出し。table を display:block にすると caption が15px幅に潰れる */
+  table.compare > caption, table.detail > caption {
+    display: block; width: auto; text-align: left; padding: 2px 0 6px;
+  }
+  table.compare > thead, table.detail > thead { display: none; }
+  table.compare > tbody, table.detail > tbody { display: block; }
+  table.compare > tbody > tr, table.detail > tbody > tr {
+    display: block; background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  table.compare > tbody > tr:last-child,
+  table.detail > tbody > tr:last-child { margin-bottom: 0; }
+  /* 行の見出し（左端）はカードの小見出しに */
+  table.compare > tbody > tr > th,
+  table.detail > tbody > tr > th {
+    display: block; width: auto; padding: 0 0 7px; border: 0; background: none;
+    font-weight: 700; color: var(--ink); line-height: 1.6;
+  }
+  table.compare > tbody > tr > td,
+  table.detail > tbody > tr > td {
+    display: block; width: auto; padding: 7px 0 3px; border: 0;
+    border-top: 1px solid var(--line-soft); text-align: left; white-space: normal;
+  }
+  /* 列の見出しは小さな見出しとして値の上に置く。
+     値の幅を削らないので、何文字の値でも1文字ずつにはならない。 */
+  table.compare > tbody > tr > td::before,
+  table.detail > tbody > tr > td::before {
+    content: attr(data-label); display: block;
+    font-size: .8em; font-weight: 400; color: var(--ink-2); line-height: 1.5;
+    word-break: auto-phrase;
+  }
+  table.compare > tbody > tr > td:not([data-label])::before,
+  table.detail > tbody > tr > td:not([data-label])::before { content: none; }
+  /* 金額は「見出し ─ 金額」を1行に収める（桁が右に揃って比べやすい）。
+     値の側を先に必要な幅だけ確保するので、金額が折り返すことはない。 */
+  table.compare > tbody > tr > td.num,
+  table.detail > tbody > tr > td.num {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px; align-items: baseline;
+  }
+  table.compare > tbody > tr > td.num::before,
+  table.detail > tbody > tr > td.num::before { align-self: baseline; }
+  /* 値の列が1つだけの表（項目 ─ 金額）は、枠で囲わず1行ずつ並べる。
+     1項目ごとに箱ができると、数字1つを読むのに画面を大きく使ってしまう。 */
+  table[data-value-cols="1"] > tbody > tr,
+  table[data-value-cols="1"] > tr {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    justify-content: space-between; gap: 2px 14px;
+    background: none; border: 0; border-bottom: 1px solid var(--line-soft);
+    border-radius: 0; padding: 8px 2px; margin: 0;
+  }
+  /* 値が長いときは折り返して次の行に回す。
+     幅を決め打ちで分け合うと、長い値が項目名を幅ゼロまで押し潰してしまう。 */
+  table[data-value-cols="1"] > tbody > tr > th,
+  table[data-value-cols="1"] > tr > th {
+    display: block; flex: 0 1 auto; min-width: 0;
+    padding: 0; border: 0; font-weight: 400; color: var(--ink-2); line-height: 1.6;
+  }
+  table[data-value-cols="1"] > tbody > tr > td,
+  table[data-value-cols="1"] > tr > td {
+    display: block; flex: 0 1 auto; min-width: 0;
+    padding: 0; border: 0; text-align: right; font-weight: 700;
+  }
+  /* 文章が入る欄は右揃えだと読みにくいので左のまま */
+  table[data-value-cols="1"] > tbody > tr > td:not(.num),
+  table[data-value-cols="1"] > tr > td:not(.num) { text-align: left; font-weight: 400; }
+  table[data-value-cols="1"] > tbody > tr.sum,
+  table[data-value-cols="1"] > tr.sum {
+    background: var(--brand-soft); border-bottom-color: var(--brand);
+    border-radius: var(--r-sm); padding: 9px 10px; margin: 2px 0;
+  }
+  table[data-value-cols="1"] > tbody > tr.sum > th,
+  table[data-value-cols="1"] > tr.sum > th { color: var(--brand-strong); font-weight: 700; }
+  /* 枠で囲っているので、マスの下線は要らない（二重に線が出る） */
+  table[data-value-cols="1"] > tbody > tr.sum > th,
+  table[data-value-cols="1"] > tbody > tr.sum > td,
+  table[data-value-cols="1"] > tr.sum > th,
+  table[data-value-cols="1"] > tr.sum > td { border-bottom: 0; }
+
+  /* 人ごとの計算（.jperson）は、もともと「項目 ─ 金額」の2列で狭い画面でも
+     そのまま読める。積み直しの対象から外して、二重線が出ないようにする。 */
+  .jperson table.detail { display: table; width: 100%; }
+  .jperson table.detail > tbody { display: table-row-group; }
+  .jperson table.detail > tbody > tr {
+    display: table-row; background: none; border: 0; border-radius: 0; padding: 0; margin: 0;
+  }
+  .jperson table.detail > tbody > tr > th,
+  .jperson table.detail > tbody > tr > td {
+    display: table-cell; padding: 6px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .jperson table.detail > tbody > tr > td::before { content: none; }
+  .jperson table.detail > tbody > tr.sum > th,
+  .jperson table.detail > tbody > tr.sum > td {
+    border-top: 2px solid var(--brand); border-bottom: 0; padding-top: 9px;
+  }
+
+  /* 合計行はカードごと目立たせる */
+  table.detail > tbody > tr.sum { border-color: var(--brand); background: var(--brand-soft); }
+  table.compare > tbody > tr > td.good { background: none; color: var(--good); font-weight: 700; }
+  table.compare > tbody > tr > td.bad { background: none; color: var(--bad); font-weight: 700; }
+  table.compare > tbody > tr > th.c1, table.compare > tbody > tr > th.c2 { background: none !important; }
+  .formula { font-size: .87rem; line-height: 1.85; padding: 12px 13px; }
+  .verdict { padding: 15px 15px; }
+  .verdict .big { font-size: 1.3rem; }
+  .gauge-label { font-size: .66rem; }
+}
+@media (max-width: 380px) {
+  .kpis, .kpis.five, .sgrid { grid-template-columns: 1fr; }
+}
+/* 表がはみ出していることを指で気づけるように、端に影を出す */
+.tablewrap {
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent),
+    linear-gradient(to left, var(--surface) 30%, transparent) 100% 0,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .16), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .16), transparent) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+/* 動きを減らす設定にしている端末ではアニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

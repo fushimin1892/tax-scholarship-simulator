@@ -5,12 +5,12 @@
  *
  * 総務省「市町村民税及び固定資産税の税率等別市町村数調」（ichiran06_rNN_13.pdf）の
  * 注記に載る「所得割／均等割の超過税率採用団体・標準税率未満採用団体」を読み取り、
- * assets/data.js の CITIES に同じ税率で登録されているかを突き合わせる。
+ * data/tax-data.js の CITIES に同じ税率で登録されているかを突き合わせる。
  *
  *   ⚠ 要追加 … 総務省の一覧にあるのに CITIES に登録がない（標準税率で計算されてしまう）
  *   ⚠ 要確認 … 登録はあるが税率が違う／CITIES で特例にしているのに総務省の一覧にない
  *
- * check-updates.js と同じく data.js は書き換えない。総務省の調査は前年4月1日現在の値なので、
+ * check-updates.js と同じく tax-data.js は書き換えない。総務省の調査は前年4月1日現在の値なので、
  * 追加・修正するときは必ずその自治体の公式ページで今年度の税率と適用期間を確かめてから
  * CITIES に書き、境界のテストを足す。要追加の行には CITIES に書く形の候補を表示する。
  *
@@ -20,9 +20,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const D = require('../assets/data.js');
+const D = require('../data/tax-data.js');
 global.window = global;
-require('../assets/cities.js');
+require('../data/cities.js');
 const CK = global.CityKyuchi;
 
 const BASE = 'https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/pdf/';
@@ -179,6 +179,6 @@ function kyuchiOf(pref, name) {
   const n = s => rows.filter(r => r[0] === s).length;
   const add = n('⚠ 要追加'), chk = n('⚠ 要確認');
   console.log(`\n一致 ${n('✅ 一致')} / 要追加 ${add} / 要確認 ${chk + fail} / 取得失敗 0`);
-  if (add) console.log('\n要追加の団体は、確認のうえ assets/data.js の CITIES に追加し、test/verify-calc.js に境界のテストを足してください。');
+  if (add) console.log('\n要追加の団体は、確認のうえ data/tax-data.js の CITIES に追加し、test/verify-calc.js に境界のテストを足してください。');
   process.exit(add || chk || fail ? 1 : 0);
 })();

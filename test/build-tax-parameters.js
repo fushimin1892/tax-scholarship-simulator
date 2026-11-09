@@ -2,11 +2,11 @@
  * build-tax-parameters.js — 税制パラメータを出典付きの JSON に書き出す
  *
  *   node test/build-tax-parameters.js
- *     → assets/tax-parameters.json を生成する
+ *     → data/tax-parameters.json を生成する
  *
- * 正本はあくまで assets/data.js。この JSON はそこから機械生成する
+ * 正本はあくまで data/tax-data.js。この JSON はそこから機械生成する
  * 「読む・差分をとる・外部に渡す」ための写しで、手で書き換えてはいけない。
- * data.js と食い違っていないことは test/audit.js の D-6 で確認する。
+ * tax-data.js と食い違っていないことは test/audit.js の D-6 で確認する。
  *
  * status の意味
  *   final       … 公表済みの確定値
@@ -15,7 +15,7 @@
  * ==========================================================================*/
 const fs = require('fs');
 const path = require('path');
-const D = require('../assets/data.js');
+const D = require('../data/tax-data.js');
 
 const S = D.SOURCES;
 const src = (i) => `${S[i].c}／${S[i].t}（${S[i].u}）`;
@@ -24,13 +24,13 @@ const J = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   meta: {
     name: '税制パラメータ（住民税・所得税・国民健康保険・JASSO奨学金）',
-    /* 実行日は入れない。入れると「同じ data.js から作ったのに中身が変わる」ことになり、
+    /* 実行日は入れない。入れると「同じ tax-data.js から作ったのに中身が変わる」ことになり、
      * CI の「生成し直して差分が出ないか」の検査が、翌日以降かならず落ちてしまう。
-     * ここに書くべきは、中身がいつ時点のものかを表す data.js の最終確認日。 */
+     * ここに書くべきは、中身がいつ時点のものかを表す tax-data.js の最終確認日。 */
     verifiedAt: D.VERIFIED_AT,
     generatedBy: 'node test/build-tax-parameters.js',
-    masterFile: 'assets/data.js',
-    note: 'このファイルは assets/data.js から生成した写しです。手で編集せず、data.js を直して再生成してください。',
+    masterFile: 'data/tax-data.js',
+    note: 'このファイルは data/tax-data.js から生成した写しです。手で編集せず、tax-data.js を直して再生成してください。',
     statusLegend: {
       final: '公表済みの確定値',
       provisional: '改正は成立しているが実務資料（通知・表）が未公表で要再確認',
@@ -241,6 +241,6 @@ const J = {
   ]
 };
 
-const file = path.join(__dirname, '..', 'assets', 'tax-parameters.json');
+const file = path.join(__dirname, '..', 'data', 'tax-parameters.json');
 fs.writeFileSync(file, JSON.stringify(J, null, 2) + '\n', 'utf8');
-console.log('生成しました: assets/tax-parameters.json（' + (JSON.stringify(J, null, 2).split('\n').length).toLocaleString() + ' 行）');
+console.log('生成しました: data/tax-parameters.json（' + (JSON.stringify(J, null, 2).split('\n').length).toLocaleString() + ' 行）');

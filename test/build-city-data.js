@@ -1,4 +1,4 @@
-/* 47都道府県の市区町村一覧＋生活保護法の級地区分を組み立てて assets/cities.js を生成する
+/* 47都道府県の市区町村一覧＋生活保護法の級地区分を組み立てて data/cities.js を生成する
  *   出典: Wikipedia「級地制度」の生ウィキテキスト／MediaWiki API の Category:◯◯県の市町村
  *   実行: node test/build-city-data.js                                          */
 const fs = require('fs');
@@ -131,7 +131,7 @@ async function fetchCities(pref) {
     '  root.CityKyuchi = CITY_KYUCHI;\n' +
     '  if (typeof module !== "undefined" && module.exports) module.exports = CITY_KYUCHI;\n' +
     '})(typeof globalThis !== "undefined" ? globalThis : this);\n';
-  const out = path.join(__dirname, '..', 'assets', 'cities.js');
+  const out = path.join(__dirname, '..', 'data', 'cities.js');
   fs.writeFileSync(out, body);
   console.log('→', out, Math.round(body.length / 1024) + 'KB');
 })();
