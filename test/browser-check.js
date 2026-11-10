@@ -890,20 +890,18 @@ const check = (label, cond, detail) => {
     { const pg = await ev(`return TaxWizard.page() + ':' + document.getElementById('useJasso').checked;`); check('［戻る］で前のページへ', pg === '10:true', pg); }
   }
 
-  console.log('\n=== 自動計算とナビ下の要約 ===');
+  console.log('\n=== 自動計算 ===');
   {
-    /* 入力すると、ボタンを押さなくてもナビ下の要約と下の結果が更新されること。
-     * 要約の判定が、下の詳しい結果と同じであること（別に計算していないこと）。
-     * 2026年11月、ヒーロー右の「いまの判定」パネルは利用者の希望で外した。 */
+    /* 入力すると、ボタンを押さなくても結果が更新されること。
+     * 2026年11月、ヒーロー右の「いまの判定」パネルと、ナビ下の1行要約は利用者の希望で外した
+     * （入力の途中で結果を出すのは不要という判断）。 */
     await ev(`TaxWizard.go(TaxWizard.LAST); set('A_salary','9000000'); return 1;`); await sleep(900);
     const q = await ev(`return {
-      chips: [...document.querySelectorAll('#quickBarBody .qchip')].map(c=>c.textContent.replace(/^[^：]*：/,'')),
       res: document.querySelector('#results .kpis') ? [...document.querySelectorAll('#results .kpi')].map(k=>k.querySelector('.value').textContent) : [],
       empty: !!document.querySelector('#results .empty') };`);
     check('ボタンを押さなくても結果が表示される', !q.empty && q.res.length > 0, JSON.stringify(q.res));
-    check('ナビ下の要約（非課税世帯・国保・JASSO）が下の結果と同じ',
-      q.chips.length === 3 && q.chips.every(c => q.res.includes(c)), q.chips.join(',') + ' / ' + q.res.join(','));
-    check('「いまの判定」パネルは出していない', (await ev(`return !document.getElementById('quick');`)) === true);
+    check('「いまの判定」パネルとナビ下の1行要約は出していない',
+      (await ev(`return !document.getElementById('quick') && !document.getElementById('quickBar');`)) === true);
 
     /* 結果の人ごとの明細（所得・所得税・住民税）と出典は畳んである。見出しを押すと開き、
      * 入力して結果が作り直されても、開いた明細は開いたまま。要約・JASSO・国保は畳まない。 */

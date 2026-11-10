@@ -1697,28 +1697,10 @@
     $('results').querySelectorAll('details[data-key]').forEach(function (d) { if (opened[d.dataset.key]) d.open = true; });
     labelTableCells($('results'));
 
-    renderQuick({
-      people: people, hh: householdResidentStatus(people, params(), inA.region),
-      kokuho: rA.kokuho, kub: kub, showJasso: showJasso, jassoSum: jassoSum
-    });
     refreshFolds();
     if (!quiet) $('stepResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* ---------- ナビ下の1行要約 ----------
-   * 中身は run() が下の詳しい結果に使った判定をそのまま渡している。
-   * ここで計算し直すことはしない（上と下で食い違わないようにするため）。 */
-  function renderQuick(q) {
-    var bar = $('quickBarBody');
-    var hhTxt = q.hh.allExempt ? '該当' : '該当しない';
-    var kTxt = q.kokuho.level ? q.kokuho.level + '割軽減' : '軽減なし';
-    var jTxt = q.kub.id ? q.kub.name : q.kub.genmenOnly ? '授業料等減免のみ' : '対象外';
-    if (bar) {
-      bar.innerHTML = '<span class="qchip' + (q.hh.allExempt ? ' ok' : '') + '">非課税世帯：' + hhTxt + '</span>' +
-        '<span class="qchip' + (q.kokuho.level ? ' ok' : '') + '">国保：' + kTxt + '</span>' +
-        (q.showJasso ? '<span class="qchip' + (q.kub.id ? ' ok' : '') + '">JASSO：' + jTxt + '</span>' : '');
-    }
-  }
 
   /* 折りたたんだ④⑤⑥に何か入っていたら、閉じていても分かるよう見出しに印を出す */
   function refreshFolds() {
@@ -2244,14 +2226,6 @@
       });
     });
 
-    /* ヘッダー（最初の画面）が画面から消えたら、ナビの下に1行の要約を出す */
-    var hero = document.querySelector('.site-header');
-    if ($('quickBar') && hero) {
-      new IntersectionObserver(function (es) {
-        var away = !es[0].isIntersecting && es[0].boundingClientRect.top < 0;
-        document.body.classList.toggle('show-qbar', away);
-      }).observe(hero);
-    }
 
     /* ここから先が重い組み立て。上から順に、1区切りずつ進める。
      * 1区切りを50ミリ秒より短くしたいので、入力欄は①〜⑥のまとまり単位で入れる

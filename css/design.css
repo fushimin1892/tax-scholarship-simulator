@@ -626,27 +626,6 @@ body::before {
     radial-gradient(35% 30% at 0% 60%, color-mix(in srgb, var(--good) 6%, transparent), transparent 70%);
 }
 
-/* ---------- ナビ下の1行要約 ----------
- * ナビの外側に重ねて出す（position:absolute）。出し入れしても本文は動かない。 */
-.quickbar {
-  position: absolute; left: 0; right: 0; top: 100%;
-  background: var(--nav-bg); border-bottom: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
-  opacity: 0; transform: translateY(-6px); pointer-events: none; visibility: hidden;
-  transition: opacity .2s, transform .2s, visibility 0s .2s;
-}
-body.show-qbar .quickbar { opacity: 1; transform: none; visibility: visible; transition: opacity .2s, transform .2s; }
-.quickbar .wrap {
-  display: flex; gap: 8px; align-items: center; min-height: 40px; padding-top: 5px; padding-bottom: 5px;
-  overflow-x: auto; scrollbar-width: none;
-}
-.quickbar .wrap::-webkit-scrollbar { display: none; }
-.qchip {
-  flex: none; font-size: .78rem; color: var(--ink-2); white-space: nowrap;
-  padding: 3px 11px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line);
-}
-.qchip.ok { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 30%, transparent); }
-.qchip.ok { color: var(--good); font-weight: 700; }
 
 /* ---------- ④⑤⑥の折りたたみ ----------
  * 該当する人が少ない欄なので普段は閉じておく。見出しに中身を書いておき、
@@ -815,8 +794,6 @@ body:not([data-page="0"]) .site-header h1 .h1-accent { display: inline; font-siz
 #step1 > p.hint, #step6 > p.hint { display: none; }
 /* 税制データの確認日：表紙と結果のページだけで出す（入力のページで毎回は要らない） */
 body:not([data-page="0"]):not([data-page="11"]) .site-header #freshness { display: none; }
-/* ナビ下の1行要約：入力の途中（4〜10）だけで出す。結果のページでは本体と同じなので出さない */
-body:is([data-page="0"], [data-page="1"], [data-page="2"], [data-page="3"], [data-page="11"]) .quickbar { display: none; }
 
 /* ---------- 形の崩れの手直し（2026年11月） ---------- */
 /* 結果の表を縦に積んだとき、「所得税」などの項目名は左、金額は右に置く（項目名まで右に寄っていた） */
@@ -836,3 +813,17 @@ details.sub > summary { align-items: flex-start; }
 details.sub > summary::before { margin-top: .45em; }
 /* ナビの、まだ通っていないページ（押せない）。並び方は押せる項目と同じにして、色だけ薄くする */
 .stepnav .todo { color: var(--ink-3); opacity: .6; cursor: default; }
+
+/* 国保の加入チェックの付け方（3行の一覧） */
+.note ul.kglist { list-style: none; margin: 10px 0; padding: 0; }
+.kglist li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: .88rem;
+}
+.kglist li:last-child { border-bottom: 0; }
+.kglist .kg { margin-left: auto; font-weight: 800; white-space: nowrap; }
+.kglist .kg.ok { color: var(--good); }
+.kglist .kg.ng { color: var(--bad); }
+.kglist small { flex-basis: 100%; color: var(--ink-3); font-size: .78rem; }
+.kguide details.fold { margin-top: 10px; }
+.kguide details.fold p { font-size: .86rem; }
