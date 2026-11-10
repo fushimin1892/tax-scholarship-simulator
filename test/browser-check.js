@@ -796,15 +796,20 @@ const check = (label, cond, detail) => {
     await ev(`pick('A_rel','father'); TaxWizard.go(5); return 1;`); await sleep(400);
     const g3 = await ev(`return [...document.querySelectorAll('.ichips[data-p="A"][data-g="g3"] .ichip')].filter(e=>!e.classList.contains('it-off')).map(e=>e.textContent);`);
     check('所得控除のページ：本人の状況は選ぶまで出ない', (await vis('A_student')) === '非表示', await vis('A_student'));
-    check('所得控除のページ：お父さん（50歳）には「寡婦」「未成年」を出さない',
-      !g3.some(t => /寡婦|未成年/.test(t)) && g3.some(t => /勤労学生/.test(t)) && g3.some(t => /ひとり親/.test(t)), g3.join(' / '));
-    await ev(`${chip('A', 'student')}.click(); return 1;`); await sleep(300);
-    check('所得控除のページ：「勤労学生」を選ぶと勤労学生控除の欄が出る', (await vis('A_student')) === '表示', await vis('A_student'));
-    await ev(`${chip('A', 'student')}.click(); return 1;`); await sleep(300);
+    /* 夫婦（A・Bの両方がいる）なら、ひとり親・寡婦は「婚姻していない」条件に当てはまらないので出さない。
+     * 「学生本人が使う」の生計維持者（学生の親）には勤労学生も出さない。生活保護は世帯で受けていれば親も対象なので出す */
+    check('所得控除のページ：夫婦のお父さんには「寡婦」「未成年」「ひとり親」「勤労学生」を出さない（生活保護は出す）',
+      !g3.some(t => /寡婦|未成年|ひとり親|勤労学生/.test(t)) && g3.some(t => /生活保護/.test(t)), g3.join(' / '));
     await ev(`TaxWizard.next(); return 1;`); await sleep(300);
     const g3b = await ev(`return [...document.querySelectorAll('.ichips[data-p="B"][data-g="g3"] .ichip')].filter(e=>!e.classList.contains('it-off')).map(e=>e.textContent);`);
-    check('所得控除のページ：お母さんには「寡婦」を出す', g3b.some(t => /寡婦/.test(t)), g3b.join(' / '));
-    await ev(`TaxWizard.back(); return 1;`); await sleep(300);
+    check('所得控除のページ：夫婦のお母さんにも「寡婦」「ひとり親」を出さない', !g3b.some(t => /寡婦|ひとり親/.test(t)), g3b.join(' / '));
+    // お母さんを削除してひとり親世帯にすると、お父さんに「ひとり親」が出て、選べば欄が出る
+    await ev(`document.querySelector('[data-delb]').click(); TaxWizard.go(5); return 1;`); await sleep(400);
+    const g3c = await ev(`return [...document.querySelectorAll('.ichips[data-p="A"][data-g="g3"] .ichip')].filter(e=>!e.classList.contains('it-off')).map(e=>e.textContent);`);
+    check('所得控除のページ：生計維持者が1人なら「ひとり親」を出す', g3c.some(t => /ひとり親/.test(t)), g3c.join(' / '));
+    await ev(`${chip('A', 'singleParent')}.click(); return 1;`); await sleep(300);
+    check('所得控除のページ：「ひとり親」を選ぶとひとり親控除の欄が出る', (await vis('A_singleParent')) === '表示', await vis('A_singleParent'));
+    await ev(`${chip('A', 'singleParent')}.click(); document.querySelector('[data-addb]').click(); TaxWizard.go(5); return 1;`); await sleep(400);
     check('所得控除のページ：所得の欄は隠れる', (await vis('A_salary')) === '非表示', await vis('A_salary'));
 
     // 6〜8：ある → 誰ですか（複数）→ どれですか → 欄。「ない」なら0円に戻して次へ

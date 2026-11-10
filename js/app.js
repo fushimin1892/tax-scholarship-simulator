@@ -142,7 +142,7 @@
       ['singleParent', 'ひとり親', ['_singleParent']],
       ['widow', '寡婦（夫と死別・離別した女性）', ['_widow']],
       ['minor', '未成年', ['_minor']],
-      ['welfare', '生活保護を受けている', ['_welfare']]
+      ['welfare', '生活保護の生活扶助を受けている', ['_welfare']]
     ]
   };
   /* その人に当てはまりようがない項目は、選択肢に出さない（例：お父さんに「寡婦」、50歳に「未成年」）。
@@ -151,8 +151,13 @@
     var m = memberByPrefix(p), rel, age;
     if (m) { rel = m.rel; age = m.age; }
     else if (meta[p]) { rel = mode() === 'student' ? meta[p].rel : 'self'; age = meta[p].age; }
-    if (it[0] === 'widow') return rel !== 'father' && rel !== 'child';
+    // 生計維持者A・Bの両方がいる＝夫婦。ひとり親・寡婦は「婚姻していない」ことが条件なので当てはまらない
+    var married = !m && !!meta[p] && mode() !== 'single' && meta.B.enabled;
+    if (it[0] === 'widow') return !married && rel !== 'father' && rel !== 'child';
+    if (it[0] === 'singleParent') return !married;
     if (it[0] === 'minor') return age === undefined || age < 18;
+    // 「学生本人が使う」の生計維持者は学生の親なので、勤労学生はまず当てはまらない
+    if (it[0] === 'student') return !(mode() === 'student' && !m && !!meta[p]);
     return true;
   }
   var itemChoice = {};   // [接頭辞:キー] → 利用者が選んだ（true）／外した（false）
@@ -290,7 +295,7 @@
         '生計を一にする子がいて、事実婚でない場合に受けられます。控除額は母・父とも同じ（所得税35万円／住民税30万円）ですが、' +
         '住民税の調整控除に使う人的控除の差が母5万円・父1万円と異なるため、どちらかを選んでください。') +
       cb(p + '_minor', '未成年者である', '合計所得135万円以下なら住民税は非課税') +
-      cb(p + '_welfare', '生活保護法の生活扶助を受けている') +
+      cb(p + '_welfare', '生活保護法の生活扶助を受けている', '住民税が非課税になるのは生活扶助を受けている人だけです。医療扶助・住宅扶助などだけを受けている場合は当たりません。') +
     '</div></fieldset>',
 
     '<fieldset class="group g4"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' + chipsHtml(p, 'g4') +
