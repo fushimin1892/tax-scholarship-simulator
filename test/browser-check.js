@@ -586,7 +586,7 @@ const check = (label, cond, detail) => {
 
     const reason = await ev(`return document.getElementById('A_kokuho_lock').textContent.trim();`);
     check('ロックの理由に、どこを操作すればよいかが書いてある',
-      /STEP 7/.test(reason) && /外して/.test(reason), reason);
+      /「国保」のページ/.test(reason) && /外して/.test(reason), reason);   // 2026-11：画面の呼び方を STEP 7 からページ名に変えた
 
     // 手動の値が実際に計算に使われること
     await ev(`set('k_insured','5'); document.getElementById('calcBtn').click(); return 1;`);
@@ -785,10 +785,26 @@ const check = (label, cond, detail) => {
     check('所得控除のページ：社会保険料は最初から見えている', (await vis('A_social')) === '表示', await vis('A_social'));
     check('所得控除のページ：生命保険料は選ぶまで出ない', (await vis('A_lifeNewGeneral')) === '非表示', await vis('A_lifeNewGeneral'));
     await ev(`${chip('A', 'life')}.click(); ${chip('A', 'donation')}.click(); return 1;`); await sleep(300);
-    for (const [label, id] of [['生命保険料', 'A_lifeNewGeneral'], ['ふるさと納税', 'A_donationFurusato'], ['勤労学生控除', 'A_student']])
+    for (const [label, id] of [['生命保険料', 'A_lifeNewGeneral'], ['ふるさと納税', 'A_donationFurusato']])
       check(`所得控除のページ：${label}（${id}）が見えている`, (await vis(id)) === '表示', await vis(id));
     check('所得控除のページ：選んでいない地震保険料は出ない', (await vis('A_quake')) === '非表示', await vis('A_quake'));
     await ev(`${chip('A', 'life')}.click(); ${chip('A', 'donation')}.click(); return 1;`); await sleep(300);
+
+    /* 本人の状況（③）も「あてはまるもの」で選ぶ。最初は何も選ばない。
+     * その人に当てはまりようがない項目は出さない（お父さんに「寡婦」、50歳に「未成年」）。
+     * 前の検査で A・B の続柄を入れ替えていることがあるので、A をお父さんに戻してから確かめる。 */
+    await ev(`pick('A_rel','father'); TaxWizard.go(5); return 1;`); await sleep(400);
+    const g3 = await ev(`return [...document.querySelectorAll('.ichips[data-p="A"][data-g="g3"] .ichip')].filter(e=>!e.classList.contains('it-off')).map(e=>e.textContent);`);
+    check('所得控除のページ：本人の状況は選ぶまで出ない', (await vis('A_student')) === '非表示', await vis('A_student'));
+    check('所得控除のページ：お父さん（50歳）には「寡婦」「未成年」を出さない',
+      !g3.some(t => /寡婦|未成年/.test(t)) && g3.some(t => /勤労学生/.test(t)) && g3.some(t => /ひとり親/.test(t)), g3.join(' / '));
+    await ev(`${chip('A', 'student')}.click(); return 1;`); await sleep(300);
+    check('所得控除のページ：「勤労学生」を選ぶと勤労学生控除の欄が出る', (await vis('A_student')) === '表示', await vis('A_student'));
+    await ev(`${chip('A', 'student')}.click(); return 1;`); await sleep(300);
+    await ev(`TaxWizard.next(); return 1;`); await sleep(300);
+    const g3b = await ev(`return [...document.querySelectorAll('.ichips[data-p="B"][data-g="g3"] .ichip')].filter(e=>!e.classList.contains('it-off')).map(e=>e.textContent);`);
+    check('所得控除のページ：お母さんには「寡婦」を出す', g3b.some(t => /寡婦/.test(t)), g3b.join(' / '));
+    await ev(`TaxWizard.back(); return 1;`); await sleep(300);
     check('所得控除のページ：所得の欄は隠れる', (await vis('A_salary')) === '非表示', await vis('A_salary'));
 
     // 6〜8：ある → 誰ですか（複数）→ どれですか → 欄。「ない」なら0円に戻して次へ

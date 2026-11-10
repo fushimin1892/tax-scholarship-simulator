@@ -1,7 +1,7 @@
 /* ============================================================================
  * app.js  —  画面の生成・入力の取得・結果の描画
  *   上から下へ進む1本の流れ（STEP 1〜7 → 判定結果）で構成する。
- *   人数は STEP 3 の「世帯にいる人」から自動で数え、控除の所得条件を満たさなく
+ *   人数は 「家族構成」のページの「世帯にいる人」から自動で数え、控除の所得条件を満たさなく
  *   なった項目は自動的にロックする。
  * ==========================================================================*/
 (function () {
@@ -135,12 +135,31 @@
       ['coStock', '株の譲渡損失', ['_coStockLoss']],
       ['coNet', '事業などの赤字（純損失）', ['_coNetLoss']],
       ['coCasualty', '災害・盗難の損失（雑損失）', ['_coCasualtyLoss']]
+    ],
+    /* 本人の状況（人的控除など）。ふつうは何も当てはまらないので、最初は何も選ばない */
+    g3: [
+      ['student', '勤労学生（働きながら学校に通っている）', ['_student']],
+      ['singleParent', 'ひとり親', ['_singleParent']],
+      ['widow', '寡婦（夫と死別・離別した女性）', ['_widow']],
+      ['minor', '未成年', ['_minor']],
+      ['welfare', '生活保護を受けている', ['_welfare']]
     ]
   };
+  /* その人に当てはまりようがない項目は、選択肢に出さない（例：お父さんに「寡婦」、50歳に「未成年」）。
+   * ただし金額やチェックがすでに入っていれば、消えないよう必ず出す（itemHasValue）。 */
+  function itemAllowed(p, it) {
+    var m = memberByPrefix(p), rel, age;
+    if (m) { rel = m.rel; age = m.age; }
+    else if (meta[p]) { rel = mode() === 'student' ? meta[p].rel : 'self'; age = meta[p].age; }
+    if (it[0] === 'widow') return rel !== 'father' && rel !== 'child';
+    if (it[0] === 'minor') return age === undefined || age < 18;
+    return true;
+  }
   var itemChoice = {};   // [接頭辞:キー] → 利用者が選んだ（true）／外した（false）
   function chipsHtml(p, g) {
     return '<div class="ichips" data-p="' + p + '" data-g="' + g + '">' +
-      '<p class="ichips-q">あてはまるものを選んでください（いくつでも）</p>' +
+      '<p class="ichips-q">' + (g === 'g3' ? '本人の状況：あてはまるものがあれば選んでください（なければ選ばずに次へ）'
+                                        : 'あてはまるものを選んでください（いくつでも）') + '</p>' +
       ITEMS[g].map(function (it) {
         return '<label class="ichip"><input type="checkbox" data-item="' + it[0] + '"><span>' + it[1] + '</span></label>';
       }).join('') + '</div>';
@@ -150,6 +169,7 @@
   }
   function itemHasValue(p, it) {
     return itemEls(p, it).some(function (e) {
+      if (e.tagName === 'SELECT') return !!e.value && e.value !== 'none';
       return e.type === 'checkbox' ? e.checked : Number(String(e.value).replace(/,/g, '')) > 0;
     });
   }
@@ -165,7 +185,10 @@
       ITEMS[box.dataset.g].forEach(function (it) {
         var on = itemOn(p, it);
         var chip = box.querySelector('input[data-item="' + it[0] + '"]');
-        if (chip) chip.checked = on;
+        if (chip) {
+          chip.checked = on;
+          chip.closest('.ichip').classList.toggle('it-off', !on && !itemAllowed(p, it));
+        }
         itemEls(p, it).forEach(function (e) { var f = e.closest('.field'); if (f) f.classList.toggle('it-off', !on); });
         fs.querySelectorAll('[data-item="' + it[0] + '"]:not(input)').forEach(function (e) { e.classList.toggle('it-off', !on); });
       });
@@ -178,7 +201,8 @@
   }
   function clearItem(p, it) {
     itemEls(p, it).forEach(function (e) {
-      if (e.type === 'checkbox') e.checked = false; else e.value = '0';
+      if (e.tagName === 'SELECT') e.value = 'none';
+      else if (e.type === 'checkbox') e.checked = false; else e.value = '0';
     });
   }
 
@@ -246,7 +270,7 @@
     '</div></div>' +
     // 見出しは h2（STEPカード）→ h3 の順にする（レベルを飛ばさない）
     '<div class="subblock"><h3>生命保険料控除・地震保険料控除（支払保険料を入れると控除額を計算します）</h3>' +
-    '<p class="hint">保険会社から届く「控除証明書」の金額を入れてください。該当がなければ空欄のままで大丈夫です。</p>' +
+    '<p class="hint">保険会社から届く「控除証明書」の金額を入れてください。</p>' +
     '<div class="grid rows">' +
       fld(p + '_lifeNewGeneral', '一般の生命保険料・新契約（円）', '平成24年1月1日以後に契約。令和8年分は23歳未満の扶養親族がいると所得税の上限が6万円（自動で判定）') +
       fld(p + '_lifeOldGeneral', '一般の生命保険料・旧契約（円）', '平成23年12月31日以前に契約') +
@@ -257,7 +281,7 @@
       fld(p + '_longOld', '旧長期損害保険料（円）', '平成18年末までに契約した満期返戻金のあるもの') +
     '</div></div></fieldset>',
 
-    '<fieldset class="group g3"><legend>③ 本人の状況（所得の条件を満たさないものは自動でロックされます）</legend>' +
+    '<fieldset class="group g3"><legend>③ 本人の状況</legend>' + chipsHtml(p, 'g3') +
     '<div class="grid rows">' +
       cb(p + '_student', '勤労学生控除を受ける', '働きながら学校に通っている場合') +
       cb(p + '_widow', '寡婦控除を受ける', '夫と死別・離別して再婚していない女性') +
@@ -270,8 +294,6 @@
     '</div></fieldset>',
 
     '<fieldset class="group g4"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' + chipsHtml(p, 'g4') +
-    '<p class="hint">確定申告で申告分離課税を選んだ所得を入力してください。源泉徴収ありの特定口座で<b>申告しない</b>ものは入力不要です。' +
-    '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_stockTransfer', '株式等に係る譲渡所得等（円）', '同一年内の損益通算後・繰越控除前の金額') +
       fld(p + '_stockDividend', '上場株式等に係る配当所得等（円）', '申告分離課税を選択した配当・分配金') +
@@ -290,8 +312,7 @@
     '<p class="hint" data-item="retire">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></fieldset>',
 
     '<fieldset class="group g5"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' + chipsHtml(p, 'g5') +
-    '<p class="hint">繰越控除は<b>所得割</b>には効きますが、<b>均等割の非課税判定・扶養判定に使う「合計所得金額」は繰越控除前</b>で見ます。' +
-    '該当がなければ空欄のままで大丈夫です。</p>' +
+    '<p class="hint">繰越控除は<b>所得割</b>には効きますが、<b>均等割の非課税判定・扶養判定に使う「合計所得金額」は繰越控除前</b>で見ます。</p>' +
     '<div class="grid rows">' +
       fld(p + '_coStockLoss', '上場株式等に係る譲渡損失の繰越額（円）', '翌年以後3年間繰越可') +
       fld(p + '_coNetLoss', '純損失の繰越控除額（円）', '青色申告の事業所得等の損失。3年間繰越可') +
@@ -299,7 +320,6 @@
     '</div></fieldset>',
 
     '<fieldset class="group g6"><legend>⑥ 税額控除（住宅ローン控除など）</legend>' +
-    '<p class="hint">所得ではなく<b>税額から直接引く</b>控除です。該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_taxCredit', '所得税の税額控除の額（円）', '住宅借入金等特別控除、配当控除など') +
       fld(p + '_residentCredit', '住民税の税額控除の額（円）', '調整控除を除く。ふるさと納税には未対応。') +
@@ -369,8 +389,11 @@
       '</div>' +
       '<label class="field checkline detailtoggle"><input type="checkbox" data-detail="' + m.id + '"' + (m.detail ? ' checked' : '') + '>' +
       '<span>この人の税金も詳しく計算する' +
-      '<small class="hint">株の譲渡益・繰越控除・社会保険料控除・勤労学生控除などを入力できます（STEP 6 に欄が出ます）。' +
-      '学生本人が自分のアルバイト代や株の利益を入れたいときはこちら。</small></span></label>' +
+      '<small class="hint">オンにすると、このあとの「所得」「所得控除」などのページに、この人の番が出ます' +
+      '（アルバイト代・株の譲渡益・社会保険料控除・勤労学生控除などを入力できます）。' +
+      'オフのときは、上の給与・年金・その他の所得だけで扶養を判定します。' +
+      '学生本人として使うときは、最初の子は<b>はじめからオン</b>になっています（奨学金の判定に本人の分が要るため）。' +
+      '「分離課税」などのページで「誰ですか」にこの人を選んだときも、自動でオンになります。</small></span></label>' +
       '<div class="mnote" id="' + id + '_note"></div></div>';
   }
 
@@ -611,7 +634,7 @@
 
   /* ---------- 国保の入力の排他 ----------
    * 国保の人数・所得を決める入口は2つある。
-   *   ① STEP 3 の「この人が国民健康保険の被保険者」チェック（→ 自動集計）
+   *   ① 「家族構成」のページの「この人が国民健康保険の被保険者」チェック（→ 自動集計）
    *   ② STEP 7 の「手動で上書きする」の数値欄
    * 実際に使われるのはどちらか一方だけなので、効かないほうを操作できないようにして
    * 理由を出す。黙って無視すると「チェックしたのに結果が変わらない」
@@ -639,20 +662,20 @@
     if (!$('k_manual')) return;
     var manual = chk('k_manual');
 
-    // ① STEP 3 の加入チェック：手動上書き中は使われないのでロックする
+    // ① 「家族構成」のページの加入チェック：手動上書き中は使われないのでロックする
     var boxes = ['A_kokuho', 'B_kokuho'].concat(
       roster.map(function (m) { return 'm' + m.id + '_kokuho'; }));
     boxes.forEach(function (id) {
       softLock(id, manual,
-        'STEP 7 で「手動で上書きする」を選んでいるため、この加入チェックは使われません。' +
-        '自動で数えさせたい場合は STEP 7 のチェックを外してください。');
+        '「国保」のページで「手動で上書きする」を選んでいるため、この加入チェックは使われません。' +
+        '自動で数えさせたい場合は 「国保」のページのチェックを外してください。');
     });
 
     // ② STEP 7 の数値欄：自動計算中は書いても上書きされるのでロックする
     [['k_insured', '被保険者数'], ['k_salary', '給与所得者等の数'], ['k_other', 'そのほかの世帯員の所得']]
       .forEach(function (x) {
         softLock(x[0], !manual,
-          'STEP 3 の加入チェックから自動計算しています（' + x[1] + '）。' +
+          '「家族構成」のページの加入チェックから自動計算しています（' + x[1] + '）。' +
           'ここに直接入れたい場合は、下の「上の3つを手入力した値で計算する」にチェックを入れてください。');
       });
   }
@@ -678,7 +701,7 @@
       });
       lock(w + '_singleParent', has500 && hasChild,
         !has500 ? '合計所得金額が ' + yen(g) + ' で、要件の500万円以下を超えています'
-          : 'STEP 3 に「生計を一にする子」（' + esc(labelForWho(w)) + 'の扶養に入れる子）が登録されていません');
+          : '「家族構成」のページに「生計を一にする子」（' + esc(labelForWho(w)) + 'の扶養に入れる子）が登録されていません');
       var widowOk = has500 && val(w + '_singleParent') === 'none';
       lock(w + '_widow', widowOk,
         !has500 ? '合計所得金額が ' + yen(g) + ' で、要件の500万円以下を超えています'
@@ -691,7 +714,7 @@
         if (g > 25000000) msgs.push('<span class="ng">合計所得2,500万円超のため基礎控除は0円です</span>');
         if (!meta[w]) {
           var mm = memberByPrefix(w);
-          if (mm) msgs.push('この所得で <b>' + esc(shortLabel('A')) + 'の扶養に入れるか</b>が決まります（STEP 3 に判定が出ます）');
+          if (mm) msgs.push('この所得で <b>' + esc(shortLabel('A')) + 'の扶養に入れるか</b>が決まります（「家族構成」のページに判定が出ます）');
         }
         note.innerHTML = msgs.join('　／　');
       }
@@ -752,7 +775,7 @@
     function kokuhoReminder(isChecked, age) {
       if (!anyKokuho || isChecked) return '';
       if (age >= 75) return '<br><span class="muted">75歳以上のため後期高齢者医療です。' +
-        '国保から移った方は STEP 7 の「特定同一世帯所属者の数」に入れてください。</span>';
+        '国保から移った方は 「国保」のページの「特定同一世帯所属者の数」に入れてください。</span>';
       return '<br><b class="attn">⚠ この世帯には国保の加入者がいます。</b>' +
         'この人が<b>勤め先の健康保険（またはその扶養）に入っていないなら、この人も国保の被保険者</b>です。' +
         'チェックを入れてください。<b>親が加入していても、子どもは自動では入りません</b>' +
@@ -764,7 +787,7 @@
       an.innerHTML = 'この人の税金を計算します。' +
         (mode() !== 'single' && !meta.B.enabled
           ? '<br>配偶者は<b>いないもの</b>として計算します。<b>ひとり親の世帯</b>なら、' +
-            'STEP 4 の「ひとり親控除」で <b>' +
+            '「所得控除」のページの「ひとり親控除」で <b>' +
             (meta.A.rel === 'mother' ? 'この人は母親' : meta.A.rel === 'father' ? 'この人は父親' : '母親か父親か') +
             '</b> を選んでください。' : '') +
         kokuhoReminder(meta.A.kokuho, meta.A.age);
@@ -858,8 +881,8 @@
       var useOther = manual ? num('k_other') : k.otherIncome;
       $('kokuhoAuto').innerHTML =
         '<div class="summarybox"><h3>' +
-        (manual ? '手入力した値で計算しています（STEP 3 の加入チェックは使いません）'
-                : 'STEP 3 から自動で数えた内容') + '</h3><div class="sgrid">' +
+        (manual ? '手入力した値で計算しています（「家族構成」のページの加入チェックは使いません）'
+                : '「家族構成」のページから自動で数えた内容') + '</h3><div class="sgrid">' +
         sbox('国保の被保険者数', useInsured + '人', '均等割の人数・軽減の基準額に効きます') +
         sbox('特定同一世帯所属者', num('k_tokutei') + '人', '軽減の基準額では被保険者と同じように数えます') +
         sbox('給与所得者等の数', useEarners + '人', '世帯主＋被保険者のうち該当者') +
@@ -869,7 +892,7 @@
         (useInsured + num('k_tokutei') === 0
           ? '<div class="warn">国保の被保険者が0人です。世帯の誰も国保に加入していない場合、軽減判定は行われません。' +
             (manual ? '「国保の被保険者数」に人数を入れてください。'
-                    : 'STEP 3 で「この人が国民健康保険の被保険者」にチェックを入れてください。') + '</div>'
+                    : '「家族構成」のページで「この人が国民健康保険の被保険者」にチェックを入れてください。') + '</div>'
           : '');
       if (!manual) {
         $('k_insured').value = k.insured;
@@ -883,8 +906,8 @@
     var kids = roster.filter(function (m) { return m.rel === 'child' && m.support !== 'none'; }).length;
     if ($('j_tashiNote')) {
       $('j_tashiNote').innerHTML = kids >= 3
-        ? 'STEP 3 に扶養する子が <b>' + kids + '人</b> 登録されています。多子世帯に該当する可能性があります。'
-        : 'STEP 3 に扶養する子は ' + kids + '人 登録されています（3人以上で該当）。';
+        ? '「家族構成」のページに扶養する子が <b>' + kids + '人</b> 登録されています。多子世帯に該当する可能性があります。'
+        : '「家族構成」のページに扶養する子は ' + kids + '人 登録されています（3人以上で該当）。';
     }
 
     refreshLocks();
@@ -1294,7 +1317,7 @@
       '<li>退職金を一時金で受け取った<b>退職所得は含めません</b>。</li>' +
       '<li>純損失・雑損失の<b>繰越控除は適用した後</b>の額で判定します。</li>' +
       '<li>65歳以上の方は<b>公的年金等に係る所得からさらに15万円</b>を控除します。</li>' +
-      '<li>土地建物等の分離譲渡所得は<b>特別控除前</b>の額で判定します（STEP 7 で足し戻せます）。</li>' +
+      '<li>土地建物等の分離譲渡所得は<b>特別控除前</b>の額で判定します（「国保」のページで足し戻せます）。</li>' +
       '<li>事業専従者控除・青色事業専従者給与は<b>事業主の所得に戻して</b>判定します。</li>' +
       '<li>基礎控除・社会保険料控除などの<b>所得控除は差し引きません</b>。</li>' +
       '<li>世帯主が会社の健康保険に入っていても（擬制世帯主）、<b>世帯主の所得は判定に含めます</b>。ただし均等割の人数には入りません。</li>' +
@@ -1333,7 +1356,7 @@
             : '<span class="badge n">超えていない</span>　より手厚い上位の区分に該当') + '</td></tr>';
     });
     h += '</tbody></table></div>';
-    if (!opts.tashi && !opts.rikonou) h += '<p class="hint">※第Ⅳ区分は<b>多子世帯</b>または<b>私立の理工農系学部</b>の学生のみが対象です。STEP 8 のチェックを入れると判定に反映されます。</p>';
+    if (!opts.tashi && !opts.rikonou) h += '<p class="hint">※第Ⅳ区分は<b>多子世帯</b>または<b>私立の理工農系学部</b>の学生のみが対象です。「奨学金」のページで「ある」を選び、チェックを入れると判定に反映されます。</p>';
 
     h += '<h3>支給額算定基準額の計算</h3><div class="formula">支給額算定基準額 ＝ <b>課税標準額 × 6％</b> −' +
       '（市町村民税の<b>調整控除額</b> ＋ <b>調整額</b>）' + (seirei ? ' <b>× 4分の3</b>' : '') +
@@ -1381,9 +1404,9 @@
       '（均等割が課税されていても、所得割が非課税なら基準額は0円です。）</p>';
     if (cols[cols.length - 1].missing) h += '<div class="warn">学生本人（' + esc(stuLabel) +
       '）の税額を計算していないため、<b>本人の基準額を0円として合計しています</b>。' +
-      '本人にアルバイト代や株の利益がある場合は、STEP 3 でその人の「この人の税金も詳しく計算する」をONにしてください。</div>';
+      '本人にアルバイト代や株の利益がある場合は、「家族構成」のページでその人の「この人の税金も詳しく計算する」をONにしてください。</div>';
     if (cols[cols.length - 1].none) h += '<div class="warn">学生本人が選ばれていません。' +
-      'STEP 8 の「奨学金を申し込む学生本人はだれですか」で選ぶと、本人の基準額も合計に入ります。</div>';
+      '「奨学金」のページの「奨学金を申し込む学生本人はだれですか」で選ぶと、本人の基準額も合計に入ります。</div>';
 
     var school = val('j_school'), founder = val('j_founder'), home = Number(val('j_home'));
     var mk = (school === '高等専門学校') ? '高等専門学校' : '大学・短期大学・専修学校（専門課程）';
@@ -1521,7 +1544,7 @@
         msgs.push('学生本人（' + esc(student.title) + '）は<b>住民税の所得割が非課税</b>のため、本人の支給額算定基準額は<b>0円</b>です。');
       } else if (!student && studentMember) {
         msgs.push('学生本人（' + esc(studentMember.title) + '）の税額を計算していないため、本人の基準額を<b>0円</b>として合計しています。' +
-          'STEP 3 でその人の「この人の税金も詳しく計算する」をONにすると、本人分も計算されます。');
+          '「家族構成」のページでその人の「この人の税金も詳しく計算する」をONにすると、本人分も計算されます。');
       }
     }
     /* labelA() は「お父さん（生計維持者A）」まで含んでいる。ここで足すと二重になる。 */
@@ -1758,7 +1781,7 @@
   var PERSONS = ['step4', 'step5', 'step6'];
   var PAGES = [
     { label: '立場', title: 'だれの立場で入力しますか', parts: ['step1'],
-      desc: '選ぶと次のページへ進みます。入力欄の呼び名が切り替わるだけで、学生本人と夫婦の計算は同じです。' },
+      desc: '選ぶと次のページへ進みます。入力欄の呼び名（お父さん・あなた など）が切り替わります。奨学金を調べるかどうかは「家族構成」のページで選べます。' },
     { label: 'お住まい', title: 'お住まいと対象の年分', parts: ['step2'],
       desc: '市区町村を選ぶと、級地と住民税の税率が自動で入ります。' },
     { label: '家族構成', title: '同じ世帯にいる人を登録する', parts: ['step3'] },
@@ -1920,7 +1943,7 @@
     var shown = 0, total = 0;
     PAGES.forEach(function (x, i) { if (pageOn(i + 1)) { total++; if (i + 1 <= n) shown++; } });
     $('wizHead').innerHTML = '<div class="wizbar"><span style="width:' + Math.round(shown / total * 100) + '%"></span></div>' +
-      '<p class="wizno">' + shown + ' / ' + total + '</p><h2 class="wiztitle">' + pg.title + '</h2>' +
+      '<h2 class="wiztitle">' + pg.title + '</h2>' +
       (cur ? '<p class="wizperson"><b>' + esc(cur.title) + '</b><span>' + (sub + 1) + ' / ' + people.length + ' 人目</span></p>'
            : pg.desc ? '<p class="hint wizdesc">' + pg.desc + '</p>' : '');
     $('wizBack').disabled = false;   // 1 で戻ると表紙へ
@@ -1929,6 +1952,8 @@
     $('wizNext').textContent = nextPerson ? '次へ：' + personName(nextPerson) + ' →'
       : nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
     $('calcBtn').classList.toggle('wiz-off', n === LAST);
+    // リセットは結果のページでだけ出す（毎ページあると押し間違えやすい）
+    $('resetBtn').classList.toggle('wiz-off', n !== LAST);
     buildStepNav();
     if (n === LAST) run({ quiet: true });
     if (!opt.noScroll) {

@@ -805,3 +805,15 @@ body:not([data-page="0"]) .site-header h1 .h1-accent { display: inline; font-siz
 }
 .ichip input:checked + span::after { content: "✓"; background: var(--brand); border-color: var(--brand); }
 .ichip input:focus-visible + span { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+/* ---------- 重複・不要な表示を出さない（2026年11月） ----------
+ * 1ページずつ進む形では、ページの見出しが「いま何を入れるか」を言うので、同じことを言う部品は出さない。 */
+/* 家族の入力カードの ①〜⑥ の枠と見出し：ページの見出しと同じなので枠ごと平らにする */
+:is(#step4, #step5, #step6) fieldset.group { border: 0; padding: 0; margin: 0 0 10px; background: none; }
+:is(#step4, #step5, #step6) fieldset.group > legend { display: none; }
+/* カードの頭の説明：ページの見出しの下の説明（.wizdesc）や今の人の表示（.wizperson）と同じ */
+#step1 > p.hint, #step6 > p.hint { display: none; }
+/* 税制データの確認日：表紙と結果のページだけで出す（入力のページで毎回は要らない） */
+body:not([data-page="0"]):not([data-page="11"]) .site-header #freshness { display: none; }
+/* ナビ下の1行要約：入力の途中（4〜10）だけで出す。結果のページでは本体と同じなので出さない */
+body:is([data-page="0"], [data-page="1"], [data-page="2"], [data-page="3"], [data-page="11"]) .quickbar { display: none; }
