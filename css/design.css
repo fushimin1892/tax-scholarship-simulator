@@ -30,7 +30,8 @@ body {
 }
 /* 金額や税率は途中で折り返さない */
 .num, td.num, th.num, .kpi .value, .sbox .sv, .readout { word-break: keep-all; overflow-wrap: normal; }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+/* スマホ基準：どの画面でもスマホと同じ1列の幅で、真ん中に置く（印刷は print.css で広げる） */
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 20px; }
 b, strong { font-weight: 700; }
 h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 :where(a, button, input, select, summary):focus-visible {
@@ -197,40 +198,8 @@ details.guide > *:last-child { padding-bottom: 16px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px 18px; }
 .grid.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
 
-/* ---------- 入力欄は「1項目1行」 ----------
- * 3列に並べると、ラベル・入力欄・説明の高さが揃わず項目の切れ目が分からない。
- * 対になる欄（短期の収入と経費など）が列またぎで分断されるのも読みにくい。
- * そこで1行につき1項目とし、ラベルと入力欄を横に、説明をその下に置く。
- * 狭い画面では従来どおりラベルの下に入力欄を積む。
- */
-@media (min-width: 641px) {
-  .grid.rows { grid-template-columns: 1fr; gap: 0; }
-  /* 説明文は1つとは限らない（年分の欄は2つ、控除の欄は説明＋ロック理由）。
-     マスに名前を付けて割り当てると、2つ目以降が同じマスに入って文字が重なる。
-     そこでラベルと入力欄だけ1行目に固定し、説明文は「横いっぱい」とだけ指定して
-     2行目・3行目…へ自動で送る。いくつあっても重ならない。 */
-  .grid.rows > .field {
-    display: grid;
-    grid-template-columns: minmax(220px, 22rem) minmax(140px, 15rem);
-    align-items: center;
-    gap: 3px 20px;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--line-soft);
-  }
-  .grid.rows > .field:last-child { border-bottom: 0; }
-  .grid.rows > .field > .lbl,
-  .grid.rows > .field > span:first-child { grid-column: 1; grid-row: 1; }
-  .grid.rows > .field > input,
-  .grid.rows > .field > select,
-  .grid.rows > .field > .readout { grid-column: 2; grid-row: 1; }
-  .grid.rows > .field > .hint,
-  .grid.rows > .field > .lockmsg { grid-column: 1 / -1; max-width: 62rem; }
-  /* チェックボックスの行は左にチェック、右に文章のまま */
-  .grid.rows > .field.checkline {
-    display: flex; grid-template-columns: none; grid-template-areas: none;
-    align-items: flex-start;
-  }
-}
+/* ---------- 入力欄はスマホ基準（2026年11月）----------
+ * どの画面幅でもスマホと同じく、ラベルの下に入力欄を積む（以前の「広い画面ではラベル左・入力右」はやめた）。 */
 .field { display: flex; flex-direction: column; gap: 5px; font-size: .87rem; min-width: 0; }
 .field > span { font-weight: 700; color: var(--ink-2); line-height: 1.5; }
 input[type="number"], input[type="text"], select {
@@ -632,7 +601,7 @@ input:disabled, select:disabled { background: var(--surface-2); cursor: not-allo
 /* ステップナビと同じ理由で、中身が入る前に高さを取っておく。
    狭い画面ほど折り返して背が高くなるので、幅ごとに実測値を入れている。 */
 .site-header #freshness { min-height: 39px; }
-@media (max-width: 640px) { .site-header #freshness { min-height: 60px; } }
+@media screen { .site-header #freshness { min-height: 60px; } }
 @media (max-width: 380px) { .site-header #freshness { min-height: 81px; } }
 .site-header #freshness b { color: #ffffff; }
 /* 確認予定日を過ぎたときだけ色を変えて目立たせる */
@@ -711,7 +680,7 @@ details.fold > summary[data-badge]::after {
 }
 
 /* ---------- ヒーロー（狭い画面） ---------- */
-@media (max-width: 640px) {
+@media screen {
   .headtop { margin-bottom: 20px; }
   .brandmark { display: none; }
   .hero-cta .pill { flex: 1 1 100%; }
@@ -789,10 +758,31 @@ body:not([data-page="1"]) .site-header h1 .h1-accent { display: inline; font-siz
 /* ナビ：終わったページと、いまのページ */
 .stepnav a.done b { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 40%, transparent); color: var(--good); }
 
-@media (max-width: 640px) {
+@media screen {
   .wizhead { margin: 18px 0 12px; }
   #runBar { margin: 16px -13px 0; flex-direction: row; flex-wrap: wrap; }
   #runBar button { width: auto; flex: 1 1 40%; }
   #runBar #wizNext { flex: 1 1 55%; }
   #runBar #calcBtn, #runBar #resetBtn { flex: 1 1 40%; min-height: 44px; font-size: .86rem; }
 }
+
+/* ---------- 「あてはまるもの」「誰ですか」のチップ ---------- */
+.it-off, .who-off { display: none !important; }
+.ichips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 14px; }
+.ichips-q { flex: 1 1 100%; margin: 0 0 2px; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
+.who { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.who .ichips-q { font-size: .95rem; color: var(--ink); }
+.who .hint { margin: 8px 0 0; }
+.ichip { position: relative; cursor: pointer; }
+.ichip input { position: absolute; opacity: 0; pointer-events: none; }
+.ichip span {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 15px;
+  border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface);
+  font-size: .88rem; font-weight: 700; color: var(--ink-2); line-height: 1.35;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.ichip span::before { content: "＋"; font-weight: 900; color: var(--ink-3); }
+.ichip:hover span { border-color: var(--brand); }
+.ichip input:checked + span { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
+.ichip input:checked + span::before { content: "✓"; color: var(--brand); }
+.ichip input:focus-visible + span { outline: 3px solid var(--brand); outline-offset: 2px; }

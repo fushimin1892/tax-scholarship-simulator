@@ -752,43 +752,75 @@ const check = (label, cond, detail) => {
     check('見えているのは今のページだけ（1ページ目の選択肢は隠れる）',
       (await ev(`return document.getElementById('step1').offsetParent===null && document.getElementById('step2').offsetParent!==null;`)) === true);
 
-    // 4：所得。給与・年金・事業所得は開いていて、ほかの所得は中身を書いたボタンの下に畳む
+    // 4：所得。人ごとに「あてはまる所得」を選ぶと欄が出る。最初は給与だけ
+    const chip = (p, item) => `[...document.querySelectorAll('.ichips[data-p="${p}"] input[data-item="${item}"]')][0]`;
     await go(4);
-    for (const [label, id] of [['給与収入', 'A_salary'], ['公的年金等', 'A_pension'], ['事業所得', 'A_business'], ['配偶者の給与収入', 'B_salary']])
-      check(`所得のページ：${label}（${id}）が見えている`, (await vis(id)) === '表示', await vis(id));
+    check('所得のページ：人ごとに「あてはまるもの」のチップが出る',
+      (await ev(`return ['A','B'].every(p=>{const b=document.querySelector('.ichips[data-p="'+p+'"][data-g="g1"]'); return b && b.offsetParent!==null && b.querySelectorAll('input').length===9;});`)) === true);
+    for (const [label, id] of [['給与収入', 'A_salary'], ['配偶者の給与収入', 'B_salary']])
+      check(`所得のページ：${label}（${id}）は最初から見えている`, (await vis(id)) === '表示', await vis(id));
+    for (const [label, id] of [['公的年金等', 'A_pension'], ['不動産所得', 'A_realEstate'], ['配当', 'A_dividendGeneral']])
+      check(`所得のページ：${label}（${id}）は選ぶまで出ない`, (await vis(id)) === '非表示', await vis(id));
     check('所得のページ：控除の欄はまだ出ない', (await vis('A_social')) === '非表示', await vis('A_social'));
-    for (const [label, id, re] of [['不動産所得', 'A_realEstate', /不動産/], ['雑所得', 'A_otherIncome', /雑所得/],
-      ['配当', 'A_dividendGeneral', /配当/], ['一時所得', 'A_temporaryRevenue', /一時所得/]]) {
-      const r = await ev(`const e=document.getElementById('${id}'), d=e && e.closest('details.fold');
-        if(!d) return {fold:false}; const s=d.querySelector('summary');
-        return {fold:true, open:d.open, sum:s.textContent.trim(), sumShown:s.offsetParent!==null};`);
-      check(`所得のページ：${label}は中身を書いたボタンの下に畳まれている`, r.fold && !r.open && r.sumShown && re.test(r.sum), JSON.stringify(r));
-    }
-    const badge = await ev(`const e=document.getElementById('A_realEstate'), d=e.closest('details.fold');
-      d.open=true; const v=e.offsetParent!==null; set('A_realEstate','120000'); d.open=false;
-      return new Promise(r=>setTimeout(()=>{ const b=d.querySelector('summary').getAttribute('data-badge')||'';
-        set('A_realEstate','0'); r({vis:v, badge:b}); }, 600));`);
-    check('畳んだ所得も開けば入力でき、入力があると閉じていても印が出る', badge.vis && /入力あり/.test(badge.badge), JSON.stringify(badge));
+    await ev(`${chip('A', 'pension')}.click(); return 1;`); await sleep(300);
+    check('所得のページ：「年金」を選ぶと年金の欄が出る', (await vis('A_pension')) === '表示', await vis('A_pension'));
+    await ev(`set('A_pension','600000'); return 1;`); await sleep(300);
+    await ev(`${chip('A', 'pension')}.click(); return 1;`); await sleep(300);
+    const offed = await ev(`return {v:document.getElementById('A_pension').value, chk:${chip('A', 'pension')}.checked};`);
+    check('所得のページ：チップを外すと、その欄は0円に戻って隠れる', offed.v === '0' && !offed.chk && (await vis('A_pension')) === '非表示', JSON.stringify(offed));
+    await ev(`set('A_realEstate','120000'); return 1;`); await sleep(300);
+    check('所得のページ：金額が入っている項目は、選んでいなくても選んだ状態で見せる',
+      (await ev(`return ${chip('A', 'realEstate')}.checked;`)) === true && (await vis('A_realEstate')) === '表示');
+    await ev(`${chip('A', 'realEstate')}.click(); return 1;`); await sleep(300);
 
     // 5：所得控除と本人の状況
     await go(5);
-    for (const [label, id] of [['社会保険料控除', 'A_social'], ['生命保険料控除', 'A_lifeNewGeneral'], ['地震保険料控除', 'A_quake'],
-      ['ふるさと納税', 'A_donationFurusato'], ['勤労学生控除', 'A_student']])
+    check('所得控除のページ：社会保険料は最初から見えている', (await vis('A_social')) === '表示', await vis('A_social'));
+    check('所得控除のページ：生命保険料は選ぶまで出ない', (await vis('A_lifeNewGeneral')) === '非表示', await vis('A_lifeNewGeneral'));
+    await ev(`${chip('A', 'life')}.click(); ${chip('A', 'donation')}.click(); return 1;`); await sleep(300);
+    for (const [label, id] of [['生命保険料', 'A_lifeNewGeneral'], ['ふるさと納税', 'A_donationFurusato'], ['勤労学生控除', 'A_student']])
       check(`所得控除のページ：${label}（${id}）が見えている`, (await vis(id)) === '表示', await vis(id));
+    check('所得控除のページ：選んでいない地震保険料は出ない', (await vis('A_quake')) === '非表示', await vis('A_quake'));
+    await ev(`${chip('A', 'life')}.click(); ${chip('A', 'donation')}.click(); return 1;`); await sleep(300);
     check('所得控除のページ：所得の欄は隠れる', (await vis('A_salary')) === '非表示', await vis('A_salary'));
 
-    // 6〜8：ある／ない
-    for (const [n, key, id, label] of [[6, 'g4', 'A_stockTransfer', '分離課税'], [7, 'g5', 'A_coStockLoss', '繰越控除'], [8, 'g6', 'A_taxCredit', '税額控除']]) {
+    // 6〜8：ある → 誰ですか（複数）→ どれですか → 欄。「ない」なら0円に戻して次へ
+    for (const [n, key, id, item, label] of [[6, 'g4', 'A_stockTransfer', 'stock', '分離課税'], [7, 'g5', 'A_coStockLoss', 'coStock', '繰越控除'], [8, 'g6', 'A_taxCredit', null, '税額控除']]) {
       await go(n);
       const q0 = await ev(`const c=document.querySelector('.wizq[data-q="${key}"]'); return {shown:c.offsetParent!==null, h:c.querySelector('h2').textContent};`);
       check(`${label}のページ：まず「ある／ない」を聞く`, q0.shown && (await vis(id)) === '非表示', q0.h);
       await ev(`document.querySelector('.wizq[data-q="${key}"] input[value="yes"]').click(); return 1;`); await sleep(300);
-      check(`${label}のページ：「ある」を選ぶと入力欄が出て、ページはそのまま`,
+      const who = await ev(`return [...document.querySelectorAll('.wizq[data-q="${key}"] input[data-who]')].map(e=>e.dataset.who+':'+e.checked);`);
+      check(`${label}のページ：「ある」のあとに「誰ですか」を世帯の全員から選べる（まだ誰も選んでいない）`,
+        who.length >= 3 && who.every(w => /:false$/.test(w)) && (await vis(id)) === '非表示', who.join(' '));
+      await ev(`document.querySelector('.wizq[data-q="${key}"] input[data-who="A"]').click(); return 1;`); await sleep(300);
+      check(`${label}のページ：選んだ人のカードだけ出る`,
+        (await ev(`return document.getElementById('step4').offsetParent!==null && document.getElementById('step5').offsetParent===null;`)) === true);
+      if (item) {
+        check(`${label}のページ：種類は選ぶまで出ない`, (await vis(id)) === '非表示', await vis(id));
+        await ev(`${chip('A', item)}.click(); return 1;`); await sleep(300);
+      }
+      check(`${label}のページ：選んだ人の選んだ欄が出て、ページはそのまま`,
         (await vis(id)) === '表示' && (await ev(`return TaxWizard.page();`)) === n, await vis(id));
       await ev(`set('${id}','50000'); return 1;`); await sleep(300);
       await ev(`document.querySelector('.wizq[data-q="${key}"] input[value="no"]').click(); return 1;`); await sleep(400);
       const after = await ev(`return {page:TaxWizard.page(), v:document.getElementById('${id}').value};`);
       check(`${label}のページ：「ない」を選ぶと入れた金額は0円に戻り、次のページへ進む`, after.page === n + 1 && after.v === '0', JSON.stringify(after));
+    }
+    // 詳しく計算していない家族を「誰ですか」で選ぶと、その人を詳しく計算する人にする
+    {
+      await ev(`addMember('parent'); return 1;`); await sleep(400);
+      const mid = await ev(`const ids=memberIds(); return ids[ids.length-1];`);
+      const num = mid.replace('m', '');
+      const before = await ev(`return !!document.getElementById('md${num}_stockTransfer');`);
+      await go(6);
+      await ev(`document.querySelector('.wizq[data-q="g4"] input[value="yes"]').click(); return 1;`); await sleep(300);
+      await ev(`document.querySelector('.wizq[data-q="g4"] input[data-who="${mid}"]').click(); return 1;`); await sleep(500);
+      const after = await ev(`const f=document.getElementById('md${num}_stockTransfer');
+        return {made: !!f, shown: !!f && f.closest('.detailperson').offsetParent!==null};`);
+      check('詳しく計算していない家族を選ぶと、その人の入力欄ができて出る', !before && after.made && after.shown, JSON.stringify(after));
+      await ev(`document.querySelector('.wizq[data-q="g4"] input[value="no"]').click();
+        document.querySelector('[data-del="${num}"]').click(); return 1;`); await sleep(400);
     }
 
     // 9：国保。「ある」のときだけ細かい設定を出す
@@ -1200,10 +1232,12 @@ const check = (label, cond, detail) => {
     check('フォーカス表示のスタイルが定義されている', focusOk === true);
 
     // DOMノード数（多すぎると描画とメモリに効く）
-    // 2026年11月：自動で出る結果・ナビ下の要約・④⑤⑥の折りたたみで増えたため、利用者の了承を得て 3,000 → 3,100 にした。
-    // 飾り（点・ロゴ・印）は擬似要素で描いて増やさないようにしてある。これ以上増やすときは理由を書いて見直す。
+    // 上限の変更の記録（利用者の方針：機能を足して上限を超えたら、そのつど上限を上げてよい。理由はここに書く）
+    //   2026-11-09 3,000 → 3,100 … 自動で出る結果・ナビ下の要約・④⑤⑥の折りたたみ
+    //   2026-11-10 3,100 → 3,500 … 「あてはまるもの」のチップ（1人26個 × 家族の人数）。測定時 3,293個
+    // 飾り（点・ロゴ・印）は擬似要素で描いて増やさないようにしてある。
     const nodes = await ev(`return document.getElementsByTagName('*').length;`);
-    check('DOMノード数が3,100未満', nodes < 3100, nodes + '個');
+    check('DOMノード数が3,500未満', nodes < 3500, nodes + '個');
 
     // aria-pressed / aria-label の整合
     const ariaBad = await ev(`

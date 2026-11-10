@@ -96,21 +96,102 @@
     '　<b>外す</b>：勤め先の健康保険とその扶養に入っている人／75歳以上／生活保護。' +
     '</small>';
 
+  /* ---------- 「あてはまるもの」の選択（2026年11月、利用者の希望） ----------
+   * 所得・控除・分離課税・繰越控除の欄を、人ごとに「あてはまるものを選ぶ」チップで出し入れする。
+   * [キー, チップの文字, その項目の入力欄（接頭辞 A_ などを除いたid）, 最初から選んでおくか]
+   * 金額が入っている項目は、選んでいなくても必ず「選んだ」状態で見せる（見えない所に数字を残さない）。
+   * チップを外すと、その項目の欄は0円（チェックは外す）に戻す。 */
+  var ITEMS = {
+    g1: [
+      ['salary', '給与', ['_salary'], true],
+      ['pension', '年金', ['_pension']],
+      ['business', '事業所得', ['_business']],
+      ['realEstate', '不動産所得', ['_realEstate']],
+      ['otherIncome', '副業などの雑所得', ['_otherIncome']],
+      ['interest', '利子（申告するもの）', ['_interest']],
+      ['dividend', '配当（総合課税）', ['_dividendGeneral', '_dividendDebt']],
+      ['temporary', '一時所得（満期保険金・懸賞金など）', ['_temporaryRevenue', '_temporaryExpense']],
+      ['transfer', '車・金地金などの売却', ['_transferShortRevenue', '_transferShortExpense', '_transferLongRevenue', '_transferLongExpense']]
+    ],
+    g2: [
+      ['social', '社会保険料', ['_social'], true],
+      ['kyosai', 'iDeCo・小規模企業共済', ['_kyosai']],
+      ['medical', '医療費', ['_medical', '_medicalComp']],
+      ['life', '生命保険料', ['_lifeNewGeneral', '_lifeOldGeneral', '_lifeNewCare', '_lifeNewPension', '_lifeOldPension']],
+      ['quake', '地震保険料', ['_quake', '_longOld']],
+      ['donation', 'ふるさと納税・寄附金', ['_donationFurusato', '_donationOther']],
+      ['zasson', '災害・盗難の損失（雑損控除）', ['_zasson']],
+      ['otherDed', 'その他の所得控除', ['_otherDeduction']]
+    ],
+    g4: [
+      ['stock', '株式・投資信託の売却', ['_stockTransfer']],
+      ['stockDiv', '上場株式などの配当（申告分離）', ['_stockDividend']],
+      ['futures', 'FX・先物', ['_futures']],
+      ['land', '土地・建物の売却', ['_landLong', '_landShort']],
+      ['retire', '退職金', ['_retirementRevenue', '_retirementYears', '_retirementOfficer', '_retirementShort', '_retirementDisability']],
+      ['forest', '山林', ['_forestRevenue', '_forestExpense']]
+    ],
+    g5: [
+      ['coStock', '株の譲渡損失', ['_coStockLoss']],
+      ['coNet', '事業などの赤字（純損失）', ['_coNetLoss']],
+      ['coCasualty', '災害・盗難の損失（雑損失）', ['_coCasualtyLoss']]
+    ]
+  };
+  var itemChoice = {};   // [接頭辞:キー] → 利用者が選んだ（true）／外した（false）
+  function chipsHtml(p, g) {
+    return '<div class="ichips" data-p="' + p + '" data-g="' + g + '">' +
+      '<p class="ichips-q">あてはまるものを選んでください（いくつでも）</p>' +
+      ITEMS[g].map(function (it) {
+        return '<label class="ichip"><input type="checkbox" data-item="' + it[0] + '"><span>' + it[1] + '</span></label>';
+      }).join('') + '</div>';
+  }
+  function itemEls(p, it) {
+    return it[2].map(function (suf) { return $(p + suf); }).filter(Boolean);
+  }
+  function itemHasValue(p, it) {
+    return itemEls(p, it).some(function (e) {
+      return e.type === 'checkbox' ? e.checked : Number(String(e.value).replace(/,/g, '')) > 0;
+    });
+  }
+  function itemOn(p, it) {
+    if (itemHasValue(p, it)) return true;
+    var c = itemChoice[p + ':' + it[0]];
+    return c === undefined ? !!it[3] : c;
+  }
+  /* チップの状態に合わせて、欄の出し入れをする（何度呼んでもよい） */
+  function applyItems() {
+    document.querySelectorAll('.ichips[data-g]').forEach(function (box) {
+      var p = box.dataset.p, fs = box.closest('fieldset');
+      ITEMS[box.dataset.g].forEach(function (it) {
+        var on = itemOn(p, it);
+        var chip = box.querySelector('input[data-item="' + it[0] + '"]');
+        if (chip) chip.checked = on;
+        itemEls(p, it).forEach(function (e) { var f = e.closest('.field'); if (f) f.classList.toggle('it-off', !on); });
+        fs.querySelectorAll('[data-item="' + it[0] + '"]:not(input)').forEach(function (e) { e.classList.toggle('it-off', !on); });
+      });
+      // 中の欄がすべて隠れた小見出しや並びは、まとめて隠す
+      fs.querySelectorAll('.subblock, .grid').forEach(function (b) {
+        var fields = b.querySelectorAll('.field');
+        b.classList.toggle('it-off', fields.length > 0 && [].every.call(fields, function (f) { return f.classList.contains('it-off'); }));
+      });
+    });
+  }
+  function clearItem(p, it) {
+    itemEls(p, it).forEach(function (e) {
+      if (e.type === 'checkbox') e.checked = false; else e.value = '0';
+    });
+  }
+
   /* ---------- 収入・控除フォーム（A / B 共通） ---------- */
   /* ①〜⑥のまとまりごとに、別々の文字列で返す。
    * 起動時はこれを1つずつ画面に入れていく（一度に入れると、並べ直しに
    * 300ミリ秒近くかかって操作を受け付けなくなるため。init のコメント参照）。 */
   function personFormGroups(p) {
     return [
-    '<fieldset class="group g1"><legend>① 総合課税の収入・所得</legend><div class="grid rows">' +
+    '<fieldset class="group g1"><legend>① 総合課税の収入・所得</legend>' + chipsHtml(p, 'g1') + '<div class="grid rows">' +
       fld(p + '_salary', '給与収入（円）', '源泉徴収票の「支払金額」。複数ある場合は合計。') +
       fld(p + '_pension', '公的年金等の収入（円）', '国民年金・厚生年金・企業年金など') +
       fld(p + '_business', '事業所得の金額（円）', '収入金額 − 必要経費（青色申告特別控除後）') +
-    '</div>' +
-    /* 給与・年金・事業以外の所得は該当する人が少ないので普段は畳んでおく（2026年11月、利用者の希望）。
-     * 何か入っていれば、閉じていても見出しに「入力あり」と出る（refreshFolds）。 */
-    '<details class="fold"><summary>不動産・副業などの雑所得・利子・配当・一時所得（満期保険金など）・車などの売却があるときに開く</summary>' +
-    '<div class="grid rows">' +
       fld(p + '_realEstate', '不動産所得の金額（円）', '') +
       fld(p + '_otherIncome', 'その他の所得の金額（円）', '雑所得（業務・その他）など。下に専用欄がある所得はそちらへ') +
       fld(p + '_interest', '利子所得（円）', '国外の預金利子など、確定申告するものだけ。国内の預貯金は源泉分離課税で申告不要です') +
@@ -140,10 +221,10 @@
       fld(p + '_transferShortExpense', '短期の取得費・譲渡費用（円）', '') +
       fld(p + '_transferLongRevenue', '長期（所有5年超）の収入金額（円）', '') +
       fld(p + '_transferLongExpense', '長期の取得費・譲渡費用（円）', '') +
-    '</div></div></details>' +
+    '</div></div>' +
     '<p class="derived" id="' + p + '_incomeNote"></p></fieldset>',
 
-    '<fieldset class="group g2"><legend>② 所得控除</legend><div class="grid rows">' +
+    '<fieldset class="group g2"><legend>② 所得控除</legend>' + chipsHtml(p, 'g2') + '<div class="grid rows">' +
       fld(p + '_social', '社会保険料控除（円）', '国民健康保険料・国民年金・厚生年金・健康保険・介護保険等の支払額') +
       fld(p + '_kyosai', '小規模企業共済等掛金控除（円）', 'iDeCo（個人型確定拠出年金）、小規模企業共済など') +
       fld(p + '_medical', '医療費の支払額（円）', '') +
@@ -188,7 +269,7 @@
       cb(p + '_welfare', '生活保護法の生活扶助を受けている') +
     '</div></fieldset>',
 
-    '<fieldset class="group g4"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' +
+    '<fieldset class="group g4"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' + chipsHtml(p, 'g4') +
     '<p class="hint">確定申告で申告分離課税を選んだ所得を入力してください。源泉徴収ありの特定口座で<b>申告しない</b>ものは入力不要です。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
@@ -206,9 +287,9 @@
       cb(p + '_retirementShort', '一般社員で勤続5年以下（短期退職手当等）') +
       cb(p + '_retirementDisability', '障害者となったことによる退職（控除額に100万円加算）') +
     '</div>' +
-    '<p class="hint">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></fieldset>',
+    '<p class="hint" data-item="retire">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></fieldset>',
 
-    '<fieldset class="group g5"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' +
+    '<fieldset class="group g5"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' + chipsHtml(p, 'g5') +
     '<p class="hint">繰越控除は<b>所得割</b>には効きますが、<b>均等割の非課税判定・扶養判定に使う「合計所得金額」は繰越控除前</b>で見ます。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
@@ -807,6 +888,7 @@
     }
 
     refreshLocks();
+    applyItems();
     queueRun();
   }
   function sbox(t, v, d) {
@@ -1681,9 +1763,9 @@
       desc: '市区町村を選ぶと、級地と住民税の税率が自動で入ります。' },
     { label: '家族構成', title: '同じ世帯にいる人を登録する', parts: ['step3'] },
     { label: '所得', title: '所得の金額', parts: PERSONS, g: ['g1'],
-      desc: '給与・年金・事業所得を入れてください。不動産・副業・配当などがある人は「開く」から入れます。' },
+      desc: '人ごとに、あてはまる所得を選ぶと入力欄が出ます。選んだ所得の金額を入れてください。' },
     { label: '所得控除', title: '所得控除と本人の状況', parts: PERSONS, g: ['g2', 'g3'],
-      desc: '社会保険料・iDeCo・医療費・生命保険料・ふるさと納税など。該当がなければ0円のままで大丈夫です。' },
+      desc: '人ごとに、あてはまる控除を選ぶと入力欄が出ます。勤労学生・ひとり親などの本人の状況は下で選びます。' },
     { label: '分離課税', title: '分離課税の所得', parts: PERSONS, g: ['g4'], q: 'g4' },
     { label: '繰越控除', title: '前年から繰り越した損失', parts: PERSONS, g: ['g5'], q: 'g5' },
     { label: '税額控除', title: '税額控除（住宅ローン控除など）', parts: PERSONS, g: ['g6'], q: 'g6' },
@@ -1701,20 +1783,74 @@
 
   /* 質問の欄に、いま何か入っているか（入っていれば最初から「ある」にしておく） */
   function groupHasInput(key) {
-    return [].some.call(document.querySelectorAll('fieldset.' + key + ' input'), function (e) {
+    return [].some.call(document.querySelectorAll('fieldset.' + key + ' input:not([data-item])'), function (e) {
       return e.type === 'checkbox' ? e.checked : Number(String(e.value).replace(/,/g, '')) > 0;
     });
   }
   /* 「ない」を選んだら、その欄の入力を空に戻す。見えない所に数字が残って結果が変わらないようにする */
   function clearGroup(key) {
-    document.querySelectorAll('fieldset.' + key + ' input').forEach(function (e) {
+    document.querySelectorAll('fieldset.' + key + ' input:not([data-item])').forEach(function (e) {
       if (e.type === 'checkbox') e.checked = false; else e.value = '0';
     });
+    whoChoice[key] = {};
     refreshAll();
   }
   function answerOf(key) {
     if (answer[key] === undefined && /^g\d$/.test(key) && groupHasInput(key)) answer[key] = 'yes';
     return answer[key];
+  }
+
+  /* ---------- 6〜8 の「誰ですか」（複数選べる） ----------
+   * 世帯の全員を選択肢に出す。「詳しく計算する」にしていない家族を選んだら、
+   * その人を詳しく計算する人にして入力欄を作る（株や退職金は扶養の判定にも効くため）。
+   * 金額が入っている人は、選んでいなくても必ず選んだ状態で見せる。 */
+  var whoChoice = {};   // [質問のキー] → { 人のキー: true/false }
+  function householdPeople() {
+    var list = [{ key: 'A', pfx: 'A', box: 'step4', title: labelA() }];
+    if (mode() !== 'single' && meta.B.enabled) list.push({ key: 'B', pfx: 'B', box: 'step5', title: labelB() });
+    roster.forEach(function (m) {
+      list.push({ key: 'm' + m.id, m: m, pfx: m.detail ? memberPrefix(m) : null, title: memberTitle(m) });
+    });
+    return list;
+  }
+  function personBox(x) {
+    return x.box ? $(x.box) : x.pfx ? $('formsDetail').querySelector('[data-prefix="' + x.pfx + '"]') : null;
+  }
+  function personGroupHasInput(x, g) {
+    var box = personBox(x);
+    return !!box && [].some.call(box.querySelectorAll('fieldset.' + g + ' input:not([data-item])'), function (e) {
+      return e.type === 'checkbox' ? e.checked : Number(String(e.value).replace(/,/g, '')) > 0;
+    });
+  }
+  function whoOn(g, x) {
+    if (personGroupHasInput(x, g)) return true;
+    return !!(whoChoice[g] && whoChoice[g][x.key]);
+  }
+  function renderWho(g) {
+    var area = document.querySelector('.wizq[data-q="' + g + '"] .who');
+    if (!area) return;
+    area.innerHTML = '<p class="ichips-q">誰ですか（いくつでも選べます）</p><div class="ichips who-chips">' +
+      householdPeople().map(function (x) {
+        return '<label class="ichip"><input type="checkbox" data-who="' + x.key + '"' + (whoOn(g, x) ? ' checked' : '') + '>' +
+          '<span>' + esc(x.title) + '</span></label>';
+      }).join('') + '</div>' +
+      '<p class="hint">選んだ人の入力欄が下に出ます。家族構成で「詳しく計算する」にしていない家族を選ぶと、その人の税金も詳しく計算します。</p>';
+  }
+  /* 6〜8 で「ある」のときは、選んだ人の入力カードだけを見せる。ほかのページでは全員分を見せる */
+  function applyWho(pg, ans) {
+    var g = pg.q && /^g\d$/.test(pg.q) ? pg.q : null;
+    var people = householdPeople();
+    var anyDetail = false;
+    people.forEach(function (x) {
+      var box = personBox(x);
+      if (!box) return;
+      var on = !g || (ans === 'yes' && whoOn(g, x));
+      box.classList.toggle('who-off', !on);
+      if (on && x.m) anyDetail = true;
+    });
+    $('step6').classList.toggle('who-off', !!g && !anyDetail);
+    var area = g && document.querySelector('.wizq[data-q="' + g + '"] .who');
+    if (area) { area.classList.toggle('wiz-off', ans !== 'yes'); if (ans === 'yes') renderWho(g); }
   }
 
   function buildStepNav() {
@@ -1756,6 +1892,8 @@
     $('wizNext').classList.toggle('wiz-off', n === LAST);
     $('wizNext').textContent = nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
     $('calcBtn').classList.toggle('wiz-off', n === LAST);
+    applyItems();
+    applyWho(pg, ans);
     buildStepNav();
     if (n === LAST) run({ quiet: true });
     if (!(opt && opt.noScroll)) {
@@ -1977,6 +2115,40 @@
     });
     // 奨学金を調べるかどうかで、奨学金のページを出し入れする
     $('useJasso').addEventListener('change', function () { buildStepNav(); wizGo(page, { noScroll: true }); });
+    /* 「あてはまるもの」と「誰ですか」のチップ。
+     * チェックボックスを押すと input → change の順に起き、どちらでも document の処理が refreshAll を呼んで
+     * チップを「いまの状態」に描き直す。その前に選んだ結果を覚えるよう、capture で先に受ける。
+     * 2回目（change）は同じ値を入れ直すだけなので、何度呼ばれても結果は変わらない。 */
+    var onChip = function (e) {
+      var t = e.target;
+      if (!t.closest || t.type !== 'checkbox') return;
+      var box = t.closest('.ichips[data-g]');
+      if (box && t.dataset.item) {
+        var p = box.dataset.p, it = ITEMS[box.dataset.g].filter(function (x) { return x[0] === t.dataset.item; })[0];
+        itemChoice[p + ':' + it[0]] = t.checked;
+        if (!t.checked) clearItem(p, it);
+        return;   // このあと document の input / change が refreshAll → applyItems を呼ぶ
+      }
+      if (t.dataset.who) {
+        if (e.type === 'change') { e.stopPropagation(); return; }   // input のときに済ませてある
+        var g = t.closest('.wizq').dataset.q;
+        var x = householdPeople().filter(function (y) { return y.key === t.dataset.who; })[0];
+        whoChoice[g] = whoChoice[g] || {};
+        whoChoice[g][x.key] = t.checked;
+        if (t.checked && x.m && !x.m.detail) { x.m.detail = true; renderRoster(); }
+        if (!t.checked) {
+          var b = personBox(x);
+          if (b) b.querySelectorAll('fieldset.' + g + ' input:not([data-item])').forEach(function (e) {
+            if (e.type === 'checkbox') e.checked = false; else e.value = '0';
+          });
+        }
+        refreshAll();
+        wizGo(page, { noScroll: true });
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener('input', onChip, true);
+    document.addEventListener('change', onChip, true);
     // 「ある／ない」の質問
     document.querySelectorAll('.wizq input[type=radio]').forEach(function (r) {
       r.addEventListener('change', function () {

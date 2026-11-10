@@ -2,18 +2,21 @@
  * スマートフォン・タブレット向けの調整
  * ==========================================================================*/
 
-/* ---------- スマートフォン・タブレット ----------
+/* ---------- スマートフォン基準 ----------
+ * 2026年11月から、どの画面幅でもこの並べ方にする（以前は 820px・640px 以下のときだけ）。
+ * 印刷には効かせない（@media screen）。紙は print.css の広い並べ方のまま。
+ *
  * ねらい
  *   ・入力欄は1列にして、指で押せる大きさ（44px以上）を確保する
  *   ・iOS で入力時に画面が拡大されないよう、入力欄の文字は16px以上にする
  *   ・幅の広い表は自前の枠内だけで横スクロールさせ、本文は横に流れないようにする
  */
-@media (max-width: 820px) {
+@media screen {
   .grid, .grid.two { grid-template-columns: 1fr; }
   .mgrid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .choices { grid-template-columns: 1fr; }
 }
-@media (max-width: 640px) {
+@media screen {
   body { font-size: 15.5px; line-height: 1.8; }
   .wrap { padding: 0 13px; }
   .card { padding: 15px 14px; border-radius: var(--r-md); margin-bottom: 14px; }
