@@ -270,8 +270,8 @@ button.primary, button.ghost {
   cursor: pointer; border: 1px solid transparent; transition: background .15s, box-shadow .15s, transform .06s;
 }
 button.primary { background: var(--brand); color: var(--on-accent); box-shadow: var(--shadow); }
-button.primary:hover { background: var(--brand-strong); transform: translateY(-1px); }
-button.primary:active { transform: translateY(1px); }
+/* 主ボタンは押しても浮かない（色だけ変える）。次へボタンが浮いて見えないように */
+button.primary:hover { background: var(--brand-strong); }
 button.ghost { background: var(--surface); color: var(--ink-2); border-color: var(--line); }
 button.ghost:hover { background: var(--surface-2); border-color: var(--ink-3); }
 .field.inline { flex-direction: row; align-items: center; gap: 9px; }
