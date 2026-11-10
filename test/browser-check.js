@@ -755,10 +755,17 @@ const check = (label, cond, detail) => {
     // 4：所得。人ごとに「あてはまる所得」を選ぶと欄が出る。最初は給与だけ
     const chip = (p, item) => `[...document.querySelectorAll('.ichips[data-p="${p}"] input[data-item="${item}"]')][0]`;
     await go(4);
-    check('所得のページ：人ごとに「あてはまるもの」のチップが出る',
-      (await ev(`return ['A','B'].every(p=>{const b=document.querySelector('.ichips[data-p="'+p+'"][data-g="g1"]'); return b && b.offsetParent!==null && b.querySelectorAll('input').length===9;});`)) === true);
-    for (const [label, id] of [['給与収入', 'A_salary'], ['配偶者の給与収入', 'B_salary']])
-      check(`所得のページ：${label}（${id}）は最初から見えている`, (await vis(id)) === '表示', await vis(id));
+    const chipBox = (p) => ev(`const b=document.querySelector('.ichips[data-p="${p}"][data-g="g1"]'); return !!b && b.offsetParent!==null && b.querySelectorAll('input').length===9;`);
+    check('所得のページ：1人目（生計維持者A）だけを出し、「あてはまるもの」のチップが出る',
+      (await chipBox('A')) && !(await chipBox('B')) && (await ev(`return TaxWizard.sub();`)) === 0);
+    check('所得のページ：給与（A_salary）は最初から見えている', (await vis('A_salary')) === '表示', await vis('A_salary'));
+    const nextLabel = await ev(`return document.getElementById('wizNext').textContent;`);
+    check('所得のページ：［次へ］に次の人の名前が出る', /次へ：/.test(nextLabel), nextLabel);
+    await ev(`TaxWizard.next(); return 1;`); await sleep(300);
+    check('所得のページ：［次へ］で2人目（生計維持者B）に進む（ページはそのまま）',
+      (await chipBox('B')) && !(await chipBox('A')) && (await ev(`return TaxWizard.page();`)) === 4 && (await vis('B_salary')) === '表示', await vis('B_salary'));
+    await ev(`TaxWizard.back(); return 1;`); await sleep(300);
+    check('所得のページ：［戻る］で1人目に戻る', (await chipBox('A')) && (await ev(`return TaxWizard.page();`)) === 4);
     for (const [label, id] of [['公的年金等', 'A_pension'], ['不動産所得', 'A_realEstate'], ['配当', 'A_dividendGeneral']])
       check(`所得のページ：${label}（${id}）は選ぶまで出ない`, (await vis(id)) === '非表示', await vis(id));
     check('所得のページ：控除の欄はまだ出ない', (await vis('A_social')) === '非表示', await vis('A_social'));
@@ -794,8 +801,12 @@ const check = (label, cond, detail) => {
       check(`${label}のページ：「ある」のあとに「誰ですか」を世帯の全員から選べる（まだ誰も選んでいない）`,
         who.length >= 3 && who.every(w => /:false$/.test(w)) && (await vis(id)) === '非表示', who.join(' '));
       await ev(`document.querySelector('.wizq[data-q="${key}"] input[data-who="A"]').click(); return 1;`); await sleep(300);
-      check(`${label}のページ：選んだ人のカードだけ出る`,
-        (await ev(`return document.getElementById('step4').offsetParent!==null && document.getElementById('step5').offsetParent===null;`)) === true);
+      check(`${label}のページ：人を選んでも、［次へ］を押すまでは質問のまま`,
+        (await ev(`return document.getElementById('step4').offsetParent===null;`)) === true);
+      await ev(`TaxWizard.next(); return 1;`); await sleep(300);
+      check(`${label}のページ：［次へ］で選んだ人のカードだけ出る（質問は隠れる）`,
+        (await ev(`return document.getElementById('step4').offsetParent!==null && document.getElementById('step5').offsetParent===null
+          && document.querySelector('.wizq[data-q="${key}"]').offsetParent===null && TaxWizard.page()===${n};`)) === true);
       if (item) {
         check(`${label}のページ：種類は選ぶまで出ない`, (await vis(id)) === '非表示', await vis(id));
         await ev(`${chip('A', item)}.click(); return 1;`); await sleep(300);
@@ -816,6 +827,7 @@ const check = (label, cond, detail) => {
       await go(6);
       await ev(`document.querySelector('.wizq[data-q="g4"] input[value="yes"]').click(); return 1;`); await sleep(300);
       await ev(`document.querySelector('.wizq[data-q="g4"] input[data-who="${mid}"]').click(); return 1;`); await sleep(500);
+      await ev(`TaxWizard.next(); return 1;`); await sleep(300);
       const after = await ev(`const f=document.getElementById('md${num}_stockTransfer');
         return {made: !!f, shown: !!f && f.closest('.detailperson').offsetParent!==null};`);
       check('詳しく計算していない家族を選ぶと、その人の入力欄ができて出る', !before && after.made && after.shown, JSON.stringify(after));
@@ -1407,8 +1419,13 @@ const check = (label, cond, detail) => {
       for(let n=1;n<=TaxWizard.LAST;n++){
         TaxWizard.go(n); await wait(120);
         const yes=document.querySelector('.wizq:not(.wiz-off) input[value="yes"]');
-        if(yes){ yes.click(); await wait(150); }
-        document.querySelectorAll('main details').forEach(d=>d.open=true); await wait(80);
+        if(yes){ yes.click(); await wait(150);
+          for(const w of [...document.querySelectorAll('.wizq:not(.wiz-off) input[data-who]:not(:checked)')]){ w.click(); await wait(120); } }
+        // 1人ずつ進むページは、全員分を順に開いて測る（ページが変わったら次のページへ）
+        for(let k=0;k<8;k++){
+        document.querySelectorAll('main details').forEach(d=>d.open=true);
+        document.querySelectorAll('main .ichips[data-g] input:not(:checked)').forEach(c=>{ if(c.closest('.ichips').offsetParent) c.click(); });
+        await wait(120);
         const ow=document.documentElement.scrollWidth-document.documentElement.clientWidth;
         if(ow>1) out.push(n+'ページ：横に'+ow+'px');
         document.querySelectorAll('main .field, main .mgrid').forEach(function(f){
@@ -1420,6 +1437,10 @@ const check = (label, cond, detail) => {
               out.push(n+'ページ：重なり '+((f.querySelector('span')||{}).textContent||'').slice(0,12));
           }
         });
+        if(n===TaxWizard.LAST) break;
+        TaxWizard.next(); await wait(120);
+        if(TaxWizard.page()!==n){ TaxWizard.go(n); break; }
+        }
       }
       done(out.slice(0,5));
     });`);

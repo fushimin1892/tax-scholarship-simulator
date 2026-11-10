@@ -1775,7 +1775,7 @@
       desc: '入力を変えると自動で計算し直します。戻って直すこともできます。' }
   ];
   var LAST = PAGES.length;
-  var page = 1, visited = { 1: true }, answer = {};
+  var page = 0, visited = {}, answer = {};
   var ALL_PARTS = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7', 'step8', 'stepResult', 'tab-guide', 'tab-sources'];
 
   function pageOn(n) { var pg = PAGES[n - 1]; return !!pg && !(pg.skip && pg.skip()); }
@@ -1836,21 +1836,29 @@
       }).join('') + '</div>' +
       '<p class="hint">選んだ人の入力欄が下に出ます。家族構成で「詳しく計算する」にしていない家族を選ぶと、その人の税金も詳しく計算します。</p>';
   }
-  /* 6〜8 で「ある」のときは、選んだ人の入力カードだけを見せる。ほかのページでは全員分を見せる */
-  function applyWho(pg, ans) {
-    var g = pg.q && /^g\d$/.test(pg.q) ? pg.q : null;
-    var people = householdPeople();
-    var anyDetail = false;
-    people.forEach(function (x) {
+  /* ---------- 人ごとに1人ずつ進む（2026年11月、利用者の希望） ----------
+   * 4所得・5所得控除は、生計維持者A → B → 詳しく計算する家族の順に、1人ずつ見せる。
+   * 6〜8 は、まず「ある／ない」と「誰ですか」を聞き（sub = -1）、そのあと選んだ人を同じ順に1人ずつ見せる。
+   * sub はそのページの中で、いま何人目か（0 から）。 */
+  var sub = 0;
+  function pagePeople(pg, ans) {
+    if (!pg || !pg.g) return [];
+    var list = householdPeople().filter(function (x) { return !!personBox(x); });
+    if (pg.q) list = ans === 'yes' ? list.filter(function (x) { return whoOn(pg.q, x); }) : [];
+    return list;
+  }
+  function personName(x) { return x.box ? shortLabel(x.key) : x.title; }
+  function applyPerson(pg, ans, people) {
+    var cur = sub >= 0 ? people[sub] : null;
+    householdPeople().forEach(function (x) {
       var box = personBox(x);
-      if (!box) return;
-      var on = !g || (ans === 'yes' && whoOn(g, x));
-      box.classList.toggle('who-off', !on);
-      if (on && x.m) anyDetail = true;
+      if (box) box.classList.toggle('who-off', !!pg.g && !(cur && cur.key === x.key));
     });
-    $('step6').classList.toggle('who-off', !!g && !anyDetail);
+    $('step6').classList.toggle('who-off', !!pg.g && !(cur && cur.m));
+    var g = pg.q && /^g\d$/.test(pg.q) ? pg.q : null;
     var area = g && document.querySelector('.wizq[data-q="' + g + '"] .who');
     if (area) { area.classList.toggle('wiz-off', ans !== 'yes'); if (ans === 'yes') renderWho(g); }
+    return cur;
   }
 
   function buildStepNav() {
@@ -1865,47 +1873,90 @@
     if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
 
+  /* 表紙（ページ 0）：サイトの説明だけを見せ、入力はまだ出さない。
+   * ［入力をはじめる］で 1 へ進む（表紙の下に入力が出ていると、押しても何も変わらず意味がないため） */
+  function showCover(opt) {
+    page = 0;
+    document.body.dataset.page = '0';
+    document.body.dataset.groups = '';
+    ALL_PARTS.forEach(function (id) { var el = $(id); if (el) el.classList.add('wiz-off'); });
+    document.querySelectorAll('.wizq').forEach(function (c) { c.classList.add('wiz-off'); });
+    ['wizHead', 'runBar'].forEach(function (id) { $(id).classList.add('wiz-off'); });
+    buildStepNav();
+    if (!(opt && opt.noScroll)) window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  /* opt.sub … 'first'（既定）／'last'（前のページから戻ってきたとき）／'keep'／数値 */
   function wizGo(n, opt) {
+    opt = opt || {};
+    if (n === 0) return showCover(opt);
+    ['wizHead', 'runBar'].forEach(function (id) { $(id).classList.remove('wiz-off'); });
     if (!pageOn(n)) n = nextPage(n, n > page ? 1 : -1);
     page = n; visited[n] = true;
     var pg = PAGES[n - 1];
     document.body.dataset.page = String(n);
     document.body.dataset.groups = (pg.g || []).join(' ');
     var ans = pg.q ? answerOf(pg.q) : null;
-    var showParts = !pg.q || ans === 'yes';
+    var people = pagePeople(pg, ans);
+    var minSub = pg.q && pg.g ? -1 : 0, maxSub = Math.max(minSub, people.length - 1);
+    if (typeof opt.sub === 'number') sub = opt.sub;
+    else if (opt.sub === 'last') sub = maxSub;
+    else if (opt.sub !== 'keep') sub = minSub;
+    sub = Math.min(maxSub, Math.max(minSub, sub));
+    // 家族の入力カードのページ（pg.g）では、質問を聞いている間はカードを出さない
+    var showParts = pg.g ? sub >= 0 : (!pg.q || ans === 'yes');
     ALL_PARTS.forEach(function (id) {
       var el = $(id);
       if (el) el.classList.toggle('wiz-off', !(showParts && pg.parts.indexOf(id) >= 0));
     });
     document.querySelectorAll('.wizq').forEach(function (c) {
-      var on = c.dataset.q === pg.q;
+      var on = c.dataset.q === pg.q && !(pg.g && sub >= 0);
       c.classList.toggle('wiz-off', !on);
-      if (on) c.querySelectorAll('input').forEach(function (r) { r.checked = r.value === ans; });
+      if (on) c.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = r.value === ans; });
     });
+    applyItems();
+    var cur = applyPerson(pg, ans, people);
     // ページの番号は、飛ばしたページを数えない（奨学金を調べない人は 10 ページになる）
     var shown = 0, total = 0;
     PAGES.forEach(function (x, i) { if (pageOn(i + 1)) { total++; if (i + 1 <= n) shown++; } });
     $('wizHead').innerHTML = '<div class="wizbar"><span style="width:' + Math.round(shown / total * 100) + '%"></span></div>' +
       '<p class="wizno">' + shown + ' / ' + total + '</p><h2 class="wiztitle">' + pg.title + '</h2>' +
-      (pg.desc ? '<p class="hint wizdesc">' + pg.desc + '</p>' : '');
-    $('wizBack').disabled = n === 1;
+      (cur ? '<p class="wizperson"><b>' + esc(cur.title) + '</b><span>' + (sub + 1) + ' / ' + people.length + ' 人目</span></p>'
+           : pg.desc ? '<p class="hint wizdesc">' + pg.desc + '</p>' : '');
+    $('wizBack').disabled = false;   // 1 で戻ると表紙へ
     $('wizNext').classList.toggle('wiz-off', n === LAST);
-    $('wizNext').textContent = nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
+    var nextPerson = sub < people.length - 1 ? people[sub + 1] : null;
+    $('wizNext').textContent = nextPerson ? '次へ：' + personName(nextPerson) + ' →'
+      : nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
     $('calcBtn').classList.toggle('wiz-off', n === LAST);
-    applyItems();
-    applyWho(pg, ans);
     buildStepNav();
     if (n === LAST) run({ quiet: true });
-    if (!(opt && opt.noScroll)) {
+    if (!opt.noScroll) {
       // ナビ（と、その下に出る1行の要約）の高さぶん下げて、ページの見出しが隠れないようにする
       var nav = document.querySelector('.stepnav');
       var top = $('wizHead').getBoundingClientRect().top + window.pageYOffset - (nav ? nav.offsetHeight : 0) - 56;
-      if (n === 1) top = 0;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
     }
   }
+  function wizNext() {
+    var pg = PAGES[page - 1];
+    if (page === 0) return wizGo(1);
+    var people = pagePeople(pg, pg.q ? answerOf(pg.q) : null);
+    if (pg.g && sub < people.length - 1) return wizGo(page, { sub: sub + 1 });
+    wizGo(nextPage(page, 1));
+  }
+  function wizBack() {
+    var pg = PAGES[page - 1];
+    if (page <= 1) return wizGo(0);
+    var minSub = pg.q && pg.g ? -1 : 0;
+    if (pg.g && sub > minSub) return wizGo(page, { sub: sub - 1 });
+    wizGo(nextPage(page, -1), { sub: 'last' });
+  }
   /* テストから今のページを確かめたり移動したりするための口（画面の外からは使わない） */
-  window.TaxWizard = { go: function (n) { wizGo(n); }, page: function () { return page; }, LAST: LAST };
+  window.TaxWizard = {
+    go: function (n) { wizGo(n); }, next: wizNext, back: wizBack,
+    page: function () { return page; }, sub: function () { return sub; }, LAST: LAST
+  };
   function addMember(rel, detail) {
     seq++;
     roster.push({ id: seq, rel: rel, age: rel === 'child' ? 19 : rel === 'parent' ? 75 : 30,
@@ -1958,8 +2009,8 @@
      * 操作の受け口（イベント）は同期で登録しておくので、組み立ての途中で
      * 押されても取りこぼさない。 */
     updateYearNote();
-    // 最初のページだけを見せる（ほかのページは組み立ての途中でも見えない）
-    wizGo(1, { noScroll: true });
+    // 最初は表紙だけを見せる（入力のページは組み立ての途中でも見えない）
+    wizGo(0, { noScroll: true });
 
     $('sourceList').innerHTML = D.SOURCES.map(function (s) {
       return '<div class="sourceline"><span class="cat">' + s.c + '</span>' + esc(s.t) +
@@ -2105,8 +2156,8 @@
       e.preventDefault();
       wizGo(Number(a.dataset.go));
     });
-    $('wizBack').addEventListener('click', function () { wizGo(nextPage(page, -1)); });
-    $('wizNext').addEventListener('click', function () { wizGo(nextPage(page, 1)); });
+    $('wizBack').addEventListener('click', wizBack);
+    $('wizNext').addEventListener('click', wizNext);
     // 立場を選んだら、そのまま次のページへ（キーボードでの選択では動かさない）
     document.querySelectorAll('#modeChoices .choice').forEach(function (l) {
       l.addEventListener('click', function () {
@@ -2114,7 +2165,7 @@
       });
     });
     // 奨学金を調べるかどうかで、奨学金のページを出し入れする
-    $('useJasso').addEventListener('change', function () { buildStepNav(); wizGo(page, { noScroll: true }); });
+    $('useJasso').addEventListener('change', function () { buildStepNav(); if (page) wizGo(page, { noScroll: true, sub: 'keep' }); });
     /* 「あてはまるもの」と「誰ですか」のチップ。
      * チェックボックスを押すと input → change の順に起き、どちらでも document の処理が refreshAll を呼んで
      * チップを「いまの状態」に描き直す。その前に選んだ結果を覚えるよう、capture で先に受ける。
@@ -2143,7 +2194,7 @@
           });
         }
         refreshAll();
-        wizGo(page, { noScroll: true });
+        wizGo(page, { noScroll: true, sub: 'keep' });
         e.stopPropagation();
       }
     };
@@ -2158,7 +2209,7 @@
           if (/^g\d$/.test(key) && groupHasInput(key)) clearGroup(key);
           wizGo(nextPage(page, 1));
         } else {
-          wizGo(page, { noScroll: true });
+          wizGo(page, { noScroll: true, sub: 'keep' });
         }
       });
     });
