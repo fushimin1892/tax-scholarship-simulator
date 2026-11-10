@@ -74,7 +74,7 @@ const H = `const s=(id,v)=>{const e=document.getElementById(id); if(!e) return f
       e.dispatchEvent(new Event('input',{bubbles:true}));}
     e.dispatchEvent(new Event('change',{bubbles:true})); return true;};
   const locked=(id)=>{const e=document.getElementById(id); return !!(e&&e.disabled);};
-  const snap=()=>{document.getElementById('calcBtn').click();
+  const snap=()=>{TaxWizard.go(TaxWizard.LAST);
     return document.getElementById('results').textContent.replace(/\\s+/g,' ');};
   const clearAll=()=>{
     document.querySelectorAll('#formA input').forEach(e=>{

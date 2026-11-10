@@ -110,7 +110,7 @@ const check = (label, cond, detail) => {
   console.log('=== 初期表示 ===');
   console.log('  都道府県:', await ev("return document.getElementById('pref').options.length"), '件');
   console.log('  収録市区町村:', await ev("return document.getElementById('cityCount').textContent"));
-  console.log('  STEPナビ:', await ev("return [...document.querySelectorAll('#stepNav a')].map(a=>a.textContent).join(' / ')"));
+  console.log('  STEPナビ:', await ev("return [...document.querySelectorAll('#stepNav a, #stepNav .todo')].map(a=>a.textContent).join(' / ')"));
   check('初期状態で世帯員が1人（学生）登録されている', (await ev("return memberIds().length")) === 1);
   await shot('01-input');
 
@@ -239,7 +239,7 @@ const check = (label, cond, detail) => {
     check('株の利益で扶養控除は外れ、特定親族特別控除の対象になる', /特定親族特別控除/.test(note), note);
 
     // 判定を実行して本人のカードが出るか
-    await ev(`document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     const heads = await ev("return [...document.querySelectorAll('#results .card > h2')].map(h=>h.textContent).join(' / ');");
     console.log('  結果カード:', heads);
@@ -402,7 +402,7 @@ const check = (label, cond, detail) => {
     check('世帯主が未加入なら被保険者数は2人になる', gisei.split('|')[0] === '2', gisei.split('|')[0]);
     check('世帯主の所得は軽減判定に含める旨が出る', /本人の所得を軽減判定に含めます/.test(gisei), '');
 
-    await ev(`document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     const steps = await ev("return [...document.querySelectorAll('#results table.detail caption')].map(c=>c.textContent).join(' / ');");
     console.log('  結果の表:', steps);
@@ -448,7 +448,7 @@ const check = (label, cond, detail) => {
       .map(b=>b.querySelector('.sv').textContent)[0];`);
     check('国保の軽減判定所得は繰越控除「後」（35万円）', judge === '350,000円', judge);
 
-    await ev(`document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(800);
     const res = await ev(`const c=[...document.querySelectorAll('#results .card')]
       .find(x=>/国民健康保険/.test(x.textContent));
@@ -458,7 +458,7 @@ const check = (label, cond, detail) => {
     check('計算過程に繰越控除後の35万円が出る', /世帯の軽減判定所得\s*350,000円/.test(res.replace(/\s+/g, ' ')));
 
     // 繰越控除を外すと判定所得が285万円になり、軽減なしに変わること（対照実験）
-    await ev(`set('${dp}_coStockLoss','0'); document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`set('${dp}_coStockLoss','0'); TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(800);
     const res2 = await ev(`const c=[...document.querySelectorAll('#results .card')]
       .find(x=>/国民健康保険/.test(x.textContent));
@@ -529,7 +529,7 @@ const check = (label, cond, detail) => {
     check('75歳以上には「チェックを入れて」とは言わない', !/この世帯には国保の加入者がいます/.test(old));
 
     // 軽減の基準額が人数で動くことを、実際の計算で確かめる
-    await ev(`document.getElementById('calcBtn').click(); return 1;`); await sleep(600);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`); await sleep(600);
     const t5two = await ev(`return TaxCalc.calcKokuho(
       {income:{},kokuho:{insured:2,tokutei:0,salaryEarners:1,otherMembersIncome:0}},
       {souShotokuTou:0,retirementIncome:0,pensionIncome:0}).t5;`);
@@ -589,7 +589,7 @@ const check = (label, cond, detail) => {
       /「国保」のページ/.test(reason) && /外して/.test(reason), reason);   // 2026-11：画面の呼び方を STEP 7 からページ名に変えた
 
     // 手動の値が実際に計算に使われること
-    await ev(`set('k_insured','5'); document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`set('k_insured','5'); TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(600);
     const used = await ev(`return txt('#results');`);
     check('手動で入れた5人が軽減の基準額に反映される', /5人/.test(used), used.slice(0, 0) || '（結果に5人の記載あり）');
@@ -623,7 +623,7 @@ const check = (label, cond, detail) => {
       set('A_salary','5000000'); set('A_social','750000');
       set('B_salary','0'); set('B_social','0');
       set('A_kokuho',false); set('B_kokuho',false);
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     console.log('  ', await kpis());
     check('結果が表示される', (await ev("return document.querySelectorAll('#results .card').length")) > 3);
@@ -633,7 +633,7 @@ const check = (label, cond, detail) => {
 
     // ケース2：住民税所得割が非課税 → 第Ⅰ区分
     await ev(`set('A_salary','1500000'); set('A_social','200000');
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     const k2 = await kpis();
     console.log('  ', k2);
@@ -642,7 +642,7 @@ const check = (label, cond, detail) => {
 
     // ケース3：ひとりモード
     await ev(`mode('single'); set('A_salary','1100000'); set('A_social','0'); set('A_kokuho',true);
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     const k3 = await kpis();
     console.log('  ', k3);
@@ -673,7 +673,7 @@ const check = (label, cond, detail) => {
 
     // 2) 画面に undefined / NaN / [object Object] が出ていないか
     await ev(`mode('student'); set('A_salary','4000000'); set('B_salary','1000000');
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(800);
     for (const bad of ['undefined', 'NaN', '[object Object]', 'Infinity', '円円', '％％']) {
       const where = await ev(`
@@ -741,7 +741,7 @@ const check = (label, cond, detail) => {
     const go = (n) => ev(`TaxWizard.go(${n}); return TaxWizard.page();`);
     await ev(`mode('student'); set('useJasso',true); return 1;`); await sleep(300);
 
-    const nav = await ev(`return [...document.querySelectorAll('#stepNav a')].map(a=>a.textContent.replace(/^\\d+/,'')).join(' / ');`);
+    const nav = await ev(`return [...document.querySelectorAll('#stepNav a, #stepNav .todo')].map(a=>a.textContent.replace(/^\\d+/,'')).join(' / ');`);
     check('ナビにページが順に並んでいる（奨学金を調べるとき11ページ）',
       nav === '立場 / お住まい / 家族構成 / 所得 / 所得控除 / 分離課税 / 繰越控除 / 税額控除 / 国保 / 奨学金 / 結果', nav);
 
@@ -864,20 +864,30 @@ const check = (label, cond, detail) => {
 
     // 10：奨学金。調べないときはページごと飛ばす
     await ev(`set('useJasso',false); return 1;`); await sleep(300);
-    const navNo = await ev(`return [...document.querySelectorAll('#stepNav a')].length;`);
+    const navNo = await ev(`return [...document.querySelectorAll('#stepNav a, #stepNav .todo')].length;`);
     await go(9);
     await ev(`document.getElementById('wizNext').click(); return 1;`); await sleep(300);
     check('奨学金を調べないときは、奨学金のページを飛ばして結果へ進む',
       navNo === 10 && (await ev(`return TaxWizard.page();`)) === 11, navNo + 'ページ / 次へ→' + (await ev(`return TaxWizard.page();`)));
     await ev(`set('useJasso',true); return 1;`); await sleep(300);
 
-    // どのページからでも結果へ。戻るボタン
-    await go(3);
-    await ev(`document.getElementById('calcBtn').click(); return 1;`); await sleep(500);
-    check('どのページからでも［判定結果を見る］で結果のページへ',
-      (await ev(`return TaxWizard.page()===TaxWizard.LAST && document.getElementById('stepResult').offsetParent!==null;`)) === true);
+    /* 結果へ行けるのは、最後の入力ページの［次へ］からだけ（2026-11、利用者の希望で［判定結果を見る］ボタンを消した）。
+     * ナビも、まだ通っていないページへは飛べない。 */
+    check('［判定結果を見る］のボタンはない', (await ev(`return !document.getElementById('calcBtn') && ![...document.querySelectorAll('[data-go]')].some(a=>/判定結果/.test(a.textContent) && a.closest('.site-header'));`)) === true);
+    const navTodo = await ev(`location.reload(); return 1;`).catch(() => 1);
+    await waitReady();
+    const fresh = await ev(`TaxWizard.go(1);
+      const links=[...document.querySelectorAll('#stepNav a[data-go]')].map(a=>a.dataset.go);
+      const todo=[...document.querySelectorAll('#stepNav .todo')].length;
+      return {links, todo};`);
+    check('読み込み直後は、ナビから結果や先のページへ飛べない（1ページ目だけが押せる）',
+      fresh.links.join(',') === '1' && fresh.todo >= 9, JSON.stringify(fresh));
+    await ev(`TaxWizard.next(); TaxWizard.next(); return 1;`); await sleep(300);
+    const after = await ev(`return [...document.querySelectorAll('#stepNav a[data-go]')].map(a=>a.dataset.go).join(',');`);
+    check('通ったページには、ナビから戻れる', after === '1,2,3', after);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`); await sleep(500);
     await ev(`document.getElementById('wizBack').click(); return 1;`); await sleep(300);
-    check('［戻る］で前のページへ', (await ev(`return TaxWizard.page();`)) === 10);
+    { const pg = await ev(`return TaxWizard.page() + ':' + document.getElementById('useJasso').checked;`); check('［戻る］で前のページへ', pg === '10:true', pg); }
   }
 
   console.log('\n=== 自動計算とナビ下の要約 ===');
@@ -970,7 +980,7 @@ const check = (label, cond, detail) => {
       (await ev(`return Object.keys(localStorage).length;`)) === 1, await ev(`return Object.keys(localStorage).join(',');`));
 
     /* ダークでも結果画面が読めること */
-    await ev(`document.getElementById('calcBtn').click(); return 1;`); await sleep(600);
+    await ev(`TaxWizard.go(TaxWizard.LAST); return 1;`); await sleep(600);
     const unreadable = await ev(`
       const bad=[];
       document.querySelectorAll('#results .kpi .value, #results .verdict h3, #results table.detail td').forEach(function(e){
@@ -997,7 +1007,7 @@ const check = (label, cond, detail) => {
     /* 折りたたみは開いた状態でも測る。閉じたままだと中身のレイアウトが
      * 画面幅を変える前の値のまま残り、実際の表示と違う値を拾ってしまう。 */
     await ev(`document.querySelectorAll('details').forEach(d=>d.open=true);
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(700);
     await ev(`void document.body.offsetHeight; return 1;`);
 
@@ -1094,7 +1104,7 @@ const check = (label, cond, detail) => {
         return 1;`);
       await sleep(600);
       await ev(`set('md${id.replace('m','')}_salary','1000000');
-        document.getElementById('calcBtn').click(); return 1;`);
+        TaxWizard.go(TaxWizard.LAST); return 1;`);
       await sleep(900);
       /* 数字だけを取り出して比べる（呼び名は違って当然なので文字は見ない）。
        * 畳んだ明細の中の数字も比べるため、表示中の文字（innerText）ではなく textContent を使う。 */
@@ -1141,7 +1151,7 @@ const check = (label, cond, detail) => {
       return 1;`);
     await sleep(600);
     const dp2 = 'md' + mid2.replace('m', '');
-    await ev(`set('${dp2}_salary','1600000'); document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`set('${dp2}_salary','1600000'); TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(900);
 
     const rows = await ev(`
@@ -1193,7 +1203,7 @@ const check = (label, cond, detail) => {
       (await ev(`return document.getElementById('results').textContent;`)).indexOf('JASSOの支援区分と「住民税非課税世帯」は別の基準です') >= 0);
 
     // 学生本人の基準額が合計に入っていること（本人に所得割が出るケース）
-    await ev(`set('${dp2}_salary','4000000'); document.getElementById('calcBtn').click(); return 1;`);
+    await ev(`set('${dp2}_salary','4000000'); TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(900);
     /* 計算は人ごとの小さな表（.jperson）に分かれている。
      * 各人の最終行（tr.sum）が支給額算定基準額、その下の .jsum が全員の合計。 */
@@ -1221,7 +1231,7 @@ const check = (label, cond, detail) => {
      * 品質で効くのは「読めるか」「操作できるか」「構造が正しいか」。
      * ここを機械で測る。 */
     await ev(`window.TaxTheme.set('light'); document.querySelectorAll('details').forEach(d=>d.open=true);
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(800);
 
     check('html に lang="ja" がある', (await ev(`return document.documentElement.lang;`)) === 'ja');
@@ -1259,7 +1269,7 @@ const check = (label, cond, detail) => {
 
     // フォーカスリングが見えるか（outline を消していないか）
     const focusOk = await ev(`
-      const b=document.getElementById('calcBtn'); b.focus();
+      const b=document.getElementById('wizNext'); b.focus();
       const s=getComputedStyle(b, ':focus-visible');
       return getComputedStyle(document.documentElement).getPropertyValue('--brand').trim().length > 0;`);
     check('フォーカス表示のスタイルが定義されている', focusOk === true);
@@ -1363,7 +1373,7 @@ const check = (label, cond, detail) => {
     await waitReady();
     await ev(`set('A_salary','4500000'); set('A_social','650000');
       set('B_salary','1200000'); set('B_social','80000');
-      document.getElementById('calcBtn').click(); return 1;`);
+      TaxWizard.go(TaxWizard.LAST); return 1;`);
     await sleep(900);
     const r = await ev(`const over=[];
       document.querySelectorAll('#results .tablewrap').forEach(function (t) {
@@ -1487,7 +1497,7 @@ const check = (label, cond, detail) => {
 
   console.log('\n=== 印刷（PDF出力） ===');
   await ev(`mode('student'); set('A_salary','5000000'); set('A_social','750000');
-    document.getElementById('calcBtn').click(); return 1;`);
+    TaxWizard.go(TaxWizard.LAST); return 1;`);
   await sleep(700);
   /* 実際の印刷（ボタン・Ctrl+P）では beforeprint が起きて、畳んだ結果がすべて開く。
    * printToPDF ではこのイベントが起きないので、ここで同じイベントを起こす。 */

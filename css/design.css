@@ -135,12 +135,12 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 .stepnav .wrap::-webkit-scrollbar { display: none; }
 /* 未選択のステップも読めるようにする（WCAG AA 4.5:1）。
    薄いグレーの丸に白文字だと1.3:1しかなく、番号が事実上見えなかった。 */
-.stepnav a {
+.stepnav a, .stepnav .todo {
   padding: 12px 14px; font-size: .84rem; font-weight: 700; color: var(--ink-2);
   border-bottom: 3px solid transparent; white-space: nowrap; text-decoration: none;
   display: flex; align-items: center; gap: 6px; transition: color .15s, background .15s;
 }
-.stepnav a b {
+.stepnav a b, .stepnav .todo b {
   display: inline-flex; align-items: center; justify-content: center;
   width: 19px; height: 19px; border-radius: 50%;
   background: var(--surface-2); border: 1px solid var(--line);
@@ -817,3 +817,22 @@ body:not([data-page="0"]) .site-header h1 .h1-accent { display: inline; font-siz
 body:not([data-page="0"]):not([data-page="11"]) .site-header #freshness { display: none; }
 /* ナビ下の1行要約：入力の途中（4〜10）だけで出す。結果のページでは本体と同じなので出さない */
 body:is([data-page="0"], [data-page="1"], [data-page="2"], [data-page="3"], [data-page="11"]) .quickbar { display: none; }
+
+/* ---------- 形の崩れの手直し（2026年11月） ---------- */
+/* 結果の表を縦に積んだとき、「所得税」などの項目名は左、金額は右に置く（項目名まで右に寄っていた） */
+@media screen {
+  table.compare > tbody > tr > td.num::before, table.detail > tbody > tr > td.num::before { text-align: left; }
+  /* 説明の中の表（国保の加入の目安など）は、白い箱を重ねず、説明の背景のまま区切り線だけで並べる */
+  .note table.compare > tbody > tr { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; margin: 0; padding: 10px 2px; }
+  .note .tablewrap { background: none; }
+}
+/* 家族構成：続柄の横の「（生計維持者B）」は次の行に回し、［削除］が1行に取り残されないようにする */
+.mhead b.muted { order: 3; flex-basis: 100%; margin-top: -4px; }
+.mhead .del { order: 2; }
+/* チェック欄の説明文は、見出しの下に段を変えて出す（見出しのすぐ後ろに流れ込んでいた） */
+.checkline > span > small.hint, .checkline .ctext > small.hint { display: block; margin-top: 3px; font-weight: 400; }
+/* 折りたたみの ▶ は、見出しが2行になっても1行目の高さにそろえる */
+details.sub > summary { align-items: flex-start; }
+details.sub > summary::before { margin-top: .45em; }
+/* ナビの、まだ通っていないページ（押せない）。並び方は押せる項目と同じにして、色だけ薄くする */
+.stepnav .todo { color: var(--ink-3); opacity: .6; cursor: default; }

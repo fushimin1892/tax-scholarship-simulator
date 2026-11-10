@@ -43,7 +43,9 @@
   .kpi .value { font-size: 1.2rem; }
   .sgrid { grid-template-columns: 1fr 1fr; }
   .steps { flex-direction: column; }
-  .stepnav a { padding: 11px 11px; font-size: .8rem; }
+  /* 縦に並べるときは、横並び用の幅（120px）が高さとして効いて箱が間延びするので、伸び縮みさせない */
+  .steps .step2 { flex: none; }
+  .stepnav a, .stepnav .todo { padding: 11px 11px; font-size: .8rem; }
   .stepnav .wrap { min-height: 48px; }
 
   fieldset.group { padding: 12px 12px 14px; }

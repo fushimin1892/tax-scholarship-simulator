@@ -1507,7 +1507,8 @@
       var it = x.res.incomeTax, rt = x.res.resident;
       var both = rt.kintouExempt && rt.shotokuExempt;
       h += '<tr' + (x.key === (studentMember ? 'm' + studentMember.id : '') ? ' class="hl"' : '') + '>' +
-        '<th class="who"><b>' + esc(x.title) + '</b><span class="role">' + esc(x.sub) + '</span></th>' +
+        // 「お父さん（生計維持者A）」のように名前に役割が入っているときは、同じ役割を二度出さない
+        '<th class="who"><b>' + esc(x.title) + '</b>' + (x.title.indexOf(x.sub) >= 0 ? '' : '<span class="role">' + esc(x.sub) + '</span>') + '</th>' +
         '<td class="num">' + cell(!it.isTaxable, it.total, '課税なし') + '</td>' +
         '<td class="num total">' + (both ? '<span class="badge ok">非課税</span>' : '<b>' + yen(rt.total) + '</b>') + '</td>' +
         '<td class="num">' + cell(rt.kintouExempt, rt.kintouTotal) + '</td>' +
@@ -1894,7 +1895,9 @@
     $('stepNav').innerHTML = PAGES.map(function (pg, i) {
       if (!pageOn(i + 1)) return '';
       n++;
-      return '<a href="#" data-go="' + (i + 1) + '"' + (i + 1 === page ? ' class="on" aria-current="step"' : visited[i + 1] ? ' class="done"' : '') +
+      // まだ通っていないページへは飛べない（入力の前に結果へ行けてしまうため）。通ったページには戻れる
+      if (i + 1 !== page && i !== 0 && !visited[i + 1]) return '<span class="todo" aria-disabled="true"><b>' + n + '</b>' + pg.label + '</span>';
+      return '<a href="#" data-go="' + (i + 1) + '"' + (i + 1 === page ? ' class="on" aria-current="step"' : ' class="done"') +
         '><b>' + n + '</b>' + pg.label + '</a>';
     }).join('');
     var cur = $('stepNav').querySelector('a.on');
@@ -1956,7 +1959,6 @@
     var nextPerson = sub < people.length - 1 ? people[sub + 1] : null;
     $('wizNext').textContent = nextPerson ? '次へ：' + personName(nextPerson) + ' →'
       : nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
-    $('calcBtn').classList.toggle('wiz-off', n === LAST);
     // リセットは結果のページでだけ出す（毎ページあると押し間違えやすい）
     $('resetBtn').classList.toggle('wiz-off', n !== LAST);
     buildStepNav();
@@ -2098,8 +2100,6 @@
       roster = roster.filter(function (m) { return String(m.id) !== d.dataset.del; });
       renderRoster(); refreshAll();
     });
-    // どのページからでも結果のページへ（結果のページに入ると計算し直す）
-    $('calcBtn').addEventListener('click', function () { wizGo(LAST); });
     /* 畳んだ結果カードは、見出し（h2）を押しても開け閉めできるようにする */
     $('results').addEventListener('click', function (e) {
       var h = e.target.closest && e.target.closest('.foldcard > h2');

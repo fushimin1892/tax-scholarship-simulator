@@ -78,7 +78,7 @@ const memberIds=()=>[...document.querySelectorAll('.member:not(.fixed)')].map(e=
   await clip('#step1', 'z1-mode');
   await clip('#step3', 'z2-roster');
   await clip('#step6', 'z3-detail-person');
-  await ev('document.getElementById("calcBtn").click(); return 1;'); await sleep(900);
+  await ev('TaxWizard.go(TaxWizard.LAST); return 1;'); await sleep(900);
   await clip('#results > .card', 'z4-kokuho-result', 2);
   await clip('#step7', 'z8-kokuho-input');
   // Bを削除したとき（ひとり親）の表示
@@ -89,7 +89,7 @@ const memberIds=()=>[...document.querySelectorAll('.member:not(.fixed)')].map(e=
   await ev(`set('A_salary','8000000'); return 1;`);
   await sleep(300);
   await clip('#formA fieldset.group', 'z6-locks', 2);
-  await ev(`set('A_salary','3800000'); document.getElementById('calcBtn').click(); return 1;`);
+  await ev(`set('A_salary','3800000'); TaxWizard.go(TaxWizard.LAST); return 1;`);
   await sleep(900);
   await clip('#results > .card', 'z7-summary', 0);
 
