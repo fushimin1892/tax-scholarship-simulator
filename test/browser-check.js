@@ -727,62 +727,92 @@ const check = (label, cond, detail) => {
     await shot('10-dom-audit');
   }
 
-  console.log('\n=== 入力欄の折りたたみ（よく使う欄は開いたまま、ほかは畳む） ===');
+  console.log('\n=== 1ページずつの入力（ウィザード） ===');
   {
-    /* 2026年11月の画面改善で、該当する人が少ない欄を畳むことにした（利用者の了承済み）。
-     *   畳む：①のうち給与・年金・事業所得以外（不動産・雑所得・利子・配当・一時所得・総合譲渡）、
-     *         ④分離課税・⑤繰越控除・⑥税額控除
-     * それまでの「すべて最初から開いている」方針の代わりに、
-     * 「探さないと見つからない欄」にならないよう次を確かめる。
-     *   ・給与・年金・事業所得、②③と国保の欄は、最初から開いていて見える
-     *   ・畳んだ欄は、中身を書いた開閉ボタン（summary）が最初から見える
-     *   ・開けば入力欄が見え、何か入れると閉じていても「入力あり」の印が出る
-     * 閉じた <details> の中にある入力欄は offsetParent が null になる。 */
-    await ev(`mode('student'); return 1;`); await sleep(300);
-    const shown = [
-      ['生命保険料控除', 'A_lifeNewGeneral'], ['地震保険料控除', 'A_quake'],
-      ['給与収入', 'A_salary'], ['公的年金等', 'A_pension'], ['事業所得', 'A_business'],
-      ['社会保険料控除', 'A_social'],
-      ['国保の軽減判定所得の調整', 'k_landSpecial']
-    ];
-    for (const [group, id] of shown) {
-      const st = await ev(`const e=document.getElementById('${id}');
-        if(!e) return 'ない';
-        if(e.closest('details:not([open])')) return '閉じた折りたたみの中';
-        return e.offsetParent===null ? '非表示' : '表示';`);
-      check(`${group}：${id} が最初から見えている`, st === '表示', st);
-    }
-    const legends = await ev(`return [...document.querySelectorAll('#step4 fieldset.group > legend')]
-      .map(l=>l.textContent.trim()).join(' / ');`);
-    check('収入・控除が①〜⑥の通し番号で並んでいる',
-      /①/.test(legends) && /④/.test(legends) && /⑤/.test(legends) && /⑥/.test(legends), legends);
-    const folded = [
-      ['①不動産所得', 'A_realEstate', /不動産/], ['①雑所得', 'A_otherIncome', /雑所得/],
-      ['①配当', 'A_dividendGeneral', /配当/], ['①一時所得', 'A_temporaryRevenue', /一時所得/],
-      ['④分離課税', 'A_stockTransfer', /株.*退職金/], ['④分離課税', 'A_retirementRevenue', /退職金/],
-      ['⑤繰越控除', 'A_coStockLoss', /損失/], ['⑥税額控除', 'A_taxCredit', /住宅ローン控除/]
-    ];
-    for (const [group, id, re] of folded) {
+    /* 2026年11月、利用者の希望で「1ページずつ進む」形にした。
+     *   1 立場 → 2 お住まい → 3 家族構成 → 4 所得 → 5 所得控除 → 6 分離課税 → 7 繰越控除 → 8 税額控除
+     *   → 9 国保 → 10 奨学金 → 11 結果
+     * 6〜10 は「ある／ない」の質問で、「ある」のときだけ入力欄を出す。6〜8 で「ない」を選ぶと、その欄は0円に戻る。
+     * それまでの「すべて最初から開いている」方針の代わりに、「探さないと見つからない欄」にならないよう次を確かめる。
+     * 閉じた <details> や見えないページの入力欄は offsetParent が null になる。 */
+    const vis = (id) => ev(`const e=document.getElementById('${id}');
+      if(!e) return 'ない'; if(e.closest('details:not([open])')) return '閉じた折りたたみの中';
+      return e.offsetParent===null ? '非表示' : '表示';`);
+    const go = (n) => ev(`TaxWizard.go(${n}); return TaxWizard.page();`);
+    await ev(`mode('student'); set('useJasso',true); return 1;`); await sleep(300);
+
+    const nav = await ev(`return [...document.querySelectorAll('#stepNav a')].map(a=>a.textContent.replace(/^\\d+/,'')).join(' / ');`);
+    check('ナビにページが順に並んでいる（奨学金を調べるとき11ページ）',
+      nav === '立場 / お住まい / 家族構成 / 所得 / 所得控除 / 分離課税 / 繰越控除 / 税額控除 / 国保 / 奨学金 / 結果', nav);
+
+    // 1：立場を選ぶと自動で次のページへ
+    await go(1);
+    await ev(`document.querySelector('#modeChoices .choice').click(); return 1;`); await sleep(500);
+    check('立場を選ぶと、自動で「お住まい」のページへ進む', (await ev(`return TaxWizard.page();`)) === 2);
+    check('見えているのは今のページだけ（1ページ目の選択肢は隠れる）',
+      (await ev(`return document.getElementById('step1').offsetParent===null && document.getElementById('step2').offsetParent!==null;`)) === true);
+
+    // 4：所得。給与・年金・事業所得は開いていて、ほかの所得は中身を書いたボタンの下に畳む
+    await go(4);
+    for (const [label, id] of [['給与収入', 'A_salary'], ['公的年金等', 'A_pension'], ['事業所得', 'A_business'], ['配偶者の給与収入', 'B_salary']])
+      check(`所得のページ：${label}（${id}）が見えている`, (await vis(id)) === '表示', await vis(id));
+    check('所得のページ：控除の欄はまだ出ない', (await vis('A_social')) === '非表示', await vis('A_social'));
+    for (const [label, id, re] of [['不動産所得', 'A_realEstate', /不動産/], ['雑所得', 'A_otherIncome', /雑所得/],
+      ['配当', 'A_dividendGeneral', /配当/], ['一時所得', 'A_temporaryRevenue', /一時所得/]]) {
       const r = await ev(`const e=document.getElementById('${id}'), d=e && e.closest('details.fold');
-        if(!d) return {fold:false};
-        const s=d.querySelector('summary');
+        if(!d) return {fold:false}; const s=d.querySelector('summary');
         return {fold:true, open:d.open, sum:s.textContent.trim(), sumShown:s.offsetParent!==null};`);
-      check(`${group}：${id} は中身を書いた見出しの下に畳まれている`,
-        r.fold && !r.open && r.sumShown && re.test(r.sum), JSON.stringify(r));
+      check(`所得のページ：${label}は中身を書いたボタンの下に畳まれている`, r.fold && !r.open && r.sumShown && re.test(r.sum), JSON.stringify(r));
     }
-    // 畳まれているのは①の一部と④⑤⑥だけ（②③の欄が誤って畳まれていない）
-    const wrongFold = await ev(`return [...document.querySelectorAll('#step4 details:not([open]) input')]
-      .map(e=>e.closest('fieldset.group').querySelector('legend').textContent.trim().charAt(0))
-      .filter(c=>!'①④⑤⑥'.includes(c)).length;`);
-    check('STEP 4 で畳まれているのは①の一部と④⑤⑥の欄だけ', wrongFold === 0, wrongFold + '件');
-    // 開けば見え、入れた値は閉じても見出しに「入力あり」と出る
-    const badge = await ev(`const e=document.getElementById('A_taxCredit'), d=e.closest('details.fold');
-      d.open=true; const vis=e.offsetParent!==null;
-      set('A_taxCredit','12000'); d.open=false;
+    const badge = await ev(`const e=document.getElementById('A_realEstate'), d=e.closest('details.fold');
+      d.open=true; const v=e.offsetParent!==null; set('A_realEstate','120000'); d.open=false;
       return new Promise(r=>setTimeout(()=>{ const b=d.querySelector('summary').getAttribute('data-badge')||'';
-        set('A_taxCredit','0'); r({vis:vis, badge:b}); }, 600));`);
-    check('畳んだ欄も開けば入力でき、入力があると閉じていても印が出る',
-      badge.vis && /入力あり/.test(badge.badge), JSON.stringify(badge));
+        set('A_realEstate','0'); r({vis:v, badge:b}); }, 600));`);
+    check('畳んだ所得も開けば入力でき、入力があると閉じていても印が出る', badge.vis && /入力あり/.test(badge.badge), JSON.stringify(badge));
+
+    // 5：所得控除と本人の状況
+    await go(5);
+    for (const [label, id] of [['社会保険料控除', 'A_social'], ['生命保険料控除', 'A_lifeNewGeneral'], ['地震保険料控除', 'A_quake'],
+      ['ふるさと納税', 'A_donationFurusato'], ['勤労学生控除', 'A_student']])
+      check(`所得控除のページ：${label}（${id}）が見えている`, (await vis(id)) === '表示', await vis(id));
+    check('所得控除のページ：所得の欄は隠れる', (await vis('A_salary')) === '非表示', await vis('A_salary'));
+
+    // 6〜8：ある／ない
+    for (const [n, key, id, label] of [[6, 'g4', 'A_stockTransfer', '分離課税'], [7, 'g5', 'A_coStockLoss', '繰越控除'], [8, 'g6', 'A_taxCredit', '税額控除']]) {
+      await go(n);
+      const q0 = await ev(`const c=document.querySelector('.wizq[data-q="${key}"]'); return {shown:c.offsetParent!==null, h:c.querySelector('h2').textContent};`);
+      check(`${label}のページ：まず「ある／ない」を聞く`, q0.shown && (await vis(id)) === '非表示', q0.h);
+      await ev(`document.querySelector('.wizq[data-q="${key}"] input[value="yes"]').click(); return 1;`); await sleep(300);
+      check(`${label}のページ：「ある」を選ぶと入力欄が出て、ページはそのまま`,
+        (await vis(id)) === '表示' && (await ev(`return TaxWizard.page();`)) === n, await vis(id));
+      await ev(`set('${id}','50000'); return 1;`); await sleep(300);
+      await ev(`document.querySelector('.wizq[data-q="${key}"] input[value="no"]').click(); return 1;`); await sleep(400);
+      const after = await ev(`return {page:TaxWizard.page(), v:document.getElementById('${id}').value};`);
+      check(`${label}のページ：「ない」を選ぶと入れた金額は0円に戻り、次のページへ進む`, after.page === n + 1 && after.v === '0', JSON.stringify(after));
+    }
+
+    // 9：国保。「ある」のときだけ細かい設定を出す
+    await go(9);
+    check('国保のページ：最初は細かい設定を出さない', (await vis('k_landSpecial')) === '非表示', await vis('k_landSpecial'));
+    await ev(`document.querySelector('.wizq[data-q="kokuho"] input[value="yes"]').click(); return 1;`); await sleep(300);
+    check('国保のページ：「ある」を選ぶと細かい設定が出る', (await vis('k_landSpecial')) === '表示', await vis('k_landSpecial'));
+
+    // 10：奨学金。調べないときはページごと飛ばす
+    await ev(`set('useJasso',false); return 1;`); await sleep(300);
+    const navNo = await ev(`return [...document.querySelectorAll('#stepNav a')].length;`);
+    await go(9);
+    await ev(`document.getElementById('wizNext').click(); return 1;`); await sleep(300);
+    check('奨学金を調べないときは、奨学金のページを飛ばして結果へ進む',
+      navNo === 10 && (await ev(`return TaxWizard.page();`)) === 11, navNo + 'ページ / 次へ→' + (await ev(`return TaxWizard.page();`)));
+    await ev(`set('useJasso',true); return 1;`); await sleep(300);
+
+    // どのページからでも結果へ。戻るボタン
+    await go(3);
+    await ev(`document.getElementById('calcBtn').click(); return 1;`); await sleep(500);
+    check('どのページからでも［判定結果を見る］で結果のページへ',
+      (await ev(`return TaxWizard.page()===TaxWizard.LAST && document.getElementById('stepResult').offsetParent!==null;`)) === true);
+    await ev(`document.getElementById('wizBack').click(); return 1;`); await sleep(300);
+    check('［戻る］で前のページへ', (await ev(`return TaxWizard.page();`)) === 10);
   }
 
   console.log('\n=== 自動計算とナビ下の要約 ===');
@@ -790,7 +820,7 @@ const check = (label, cond, detail) => {
     /* 入力すると、ボタンを押さなくてもナビ下の要約と下の結果が更新されること。
      * 要約の判定が、下の詳しい結果と同じであること（別に計算していないこと）。
      * 2026年11月、ヒーロー右の「いまの判定」パネルは利用者の希望で外した。 */
-    await ev(`set('A_salary','9000000'); return 1;`); await sleep(900);
+    await ev(`TaxWizard.go(TaxWizard.LAST); set('A_salary','9000000'); return 1;`); await sleep(900);
     const q = await ev(`return {
       chips: [...document.querySelectorAll('#quickBarBody .qchip')].map(c=>c.textContent.replace(/^[^：]*：/,'')),
       res: document.querySelector('#results .kpis') ? [...document.querySelectorAll('#results .kpi')].map(k=>k.querySelector('.value').textContent) : [],
@@ -821,12 +851,16 @@ const check = (label, cond, detail) => {
       rf.open.some(t => /国民健康保険/.test(t)), rf.open.join(' / '));
     check('明細は見出しを押すと開く', rf.openedByHead === true);
     check('開いた明細は、入力して作り直されても開いたまま', rf.kept === true);
-    const notes = await ev(`return [...document.querySelectorAll('#step1 details.notefold, #step2 details.notefold')]
-      .map(d=>({open:d.open, sum:d.querySelector('summary').offsetParent!==null}));`);
+    const notes = [];
+    for (const [n, sel] of [[1, '#step1'], [2, '#step2']]) {
+      notes.push(await ev(`TaxWizard.go(${n}); const d=document.querySelector('${sel} details.notefold');
+        return d ? {open:d.open, sum:d.querySelector('summary').offsetParent!==null} : null;`));
+    }
     check('STEP 1・2 の読みものの説明は畳んであり、見出しは見えている',
-      notes.length === 2 && notes.every(n => !n.open && n.sum), JSON.stringify(notes));
-    await ev(`set('A_salary','0'); return 1;`); await sleep(600);
+      notes.every(n => n && !n.open && n.sum), JSON.stringify(notes));
+    await ev(`set('A_salary','0'); TaxWizard.go(1); return 1;`); await sleep(600);
   }
+
 
   console.log('\n=== 配色の切替（端末に合わせる／ライト／ダーク） ===');
   {
@@ -1325,6 +1359,37 @@ const check = (label, cond, detail) => {
       });
       return bad;`);
     check(`${w}px：文字が重なっていない`, bad.length === 0, bad.slice(0, 3).join(' / '));
+  }
+
+  /* 1ページずつの画面では、読み込み直後に見えるのは1ページ目だけなので、
+   * はみ出しや文字の重なりは、全ページを順に開いて確かめる（「ある」を選んで入力欄も出す）。 */
+  console.log('\n=== スマホ幅で全ページを開く ===');
+  for (const w of [375, 320]) {
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: 812, deviceScaleFactor: 1, mobile: true });
+    await send('Page.navigate', { url: pageUrl });
+    await waitReady();
+    const bad = await ev(`return new Promise(async function(done){
+      const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out=[];
+      for(let n=1;n<=TaxWizard.LAST;n++){
+        TaxWizard.go(n); await wait(120);
+        const yes=document.querySelector('.wizq:not(.wiz-off) input[value="yes"]');
+        if(yes){ yes.click(); await wait(150); }
+        document.querySelectorAll('main details').forEach(d=>d.open=true); await wait(80);
+        const ow=document.documentElement.scrollWidth-document.documentElement.clientWidth;
+        if(ow>1) out.push(n+'ページ：横に'+ow+'px');
+        document.querySelectorAll('main .field, main .mgrid').forEach(function(f){
+          if(f.offsetParent===null) return;
+          const kids=[...f.children].filter(e=>e.getBoundingClientRect().height>0);
+          for(let i=0;i<kids.length;i++) for(let j=i+1;j<kids.length;j++){
+            const a=kids[i].getBoundingClientRect(), b=kids[j].getBoundingClientRect();
+            if(Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2 && Math.min(a.right,b.right)-Math.max(a.left,b.left)>2)
+              out.push(n+'ページ：重なり '+((f.querySelector('span')||{}).textContent||'').slice(0,12));
+          }
+        });
+      }
+      done(out.slice(0,5));
+    });`);
+    check(`${w}px：全ページで横にはみ出さず、文字が重ならない`, bad.length === 0, bad.join(' / '));
   }
 
   console.log('\n=== 読み込み中のガタつき（予約した高さと実際の高さ） ===');

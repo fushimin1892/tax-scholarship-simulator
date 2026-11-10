@@ -92,8 +92,8 @@
           結果はそのままPDFに保存できます。
         </p>
         <p class="hero-cta no-print">
-          <a class="pill primary" href="#step1">入力をはじめる →</a>
-          <a class="pill ghost" href="#stepResult">詳しい判定結果を見る</a>
+          <a class="pill primary" href="#step1" data-go="1">入力をはじめる →</a>
+          <a class="pill ghost" href="#stepResult" data-go="11">判定結果を見る</a>
         </p>
       </div>
     </div>
@@ -120,6 +120,9 @@
 </nav>
 
 <main class="wrap">
+
+<!-- いまのページの番号・見出し・説明（app.js の wizGo が入れる） -->
+<div class="wizhead no-print" id="wizHead" aria-live="polite"></div>
 
 <!-- ===================== STEP 1 ===================== -->
 <section class="card step" id="step1">
@@ -179,12 +182,6 @@
       1人分だけを計算します。奨学金の判定も既定で外れます。
     </p>
   </div></details>
-  <label class="field checkline big jassotoggle">
-    <input type="checkbox" id="useJasso" checked>
-    <span>JASSO奨学金の支援区分も判定する
-      <small class="hint">外すと STEP 8（奨学金）が消え、税金と国保だけの結果になります。夫婦だけの世帯・単身の方は外してお使いください。</small>
-    </span>
-  </label>
 </section>
 
 <!-- ===================== STEP 2 ===================== -->
@@ -273,6 +270,12 @@
     ここに登録した人から、<b>扶養親族の人数・住民税の非課税限度額の判定人数・国保の被保険者数</b>を自動で数えます。
     人数を自分で数える必要はありません。
   </p>
+  <label class="field checkline big jassotoggle">
+    <input type="checkbox" id="useJasso" checked>
+    <span>JASSO奨学金の支援区分も判定する
+      <small class="hint">外すと奨学金のページが消え、税金と国保だけの結果になります。夫婦だけの世帯・単身の方は外してお使いください。</small>
+    </span>
+  </label>
   <div id="roster"></div>
   <div class="rosteradd no-print">
     <button type="button" class="ghost small" data-add="child">＋ 子どもを追加</button>
@@ -280,6 +283,48 @@
     <button type="button" class="ghost small" data-add="other">＋ その他の親族を追加</button>
   </div>
   <div id="rosterSummary"></div>
+</section>
+
+<!-- ===================== ある／ない の質問（ページ 6〜10） ===================== -->
+<section class="card wizq no-print" data-q="g4">
+  <h2>分離課税の所得がある人はいますか</h2>
+  <p class="hint">株式・投資信託の売却益や配当（申告分離を選んだもの）、FX・先物、土地建物の売却、退職金、山林の所得です。源泉徴収ありの特定口座で<b>申告しない</b>ものだけなら「ない」で大丈夫です。「ない」を選ぶと、この欄に入れた金額は0円に戻ります。</p>
+  <div class="yesno" role="radiogroup" aria-label="分離課税の所得がある人はいますか">
+    <label class="yn"><input type="radio" name="wq_g4" value="yes"><span>ある</span></label>
+    <label class="yn"><input type="radio" name="wq_g4" value="no"><span>ない</span></label>
+  </div>
+</section>
+<section class="card wizq no-print" data-q="g5">
+  <h2>前の年から繰り越した損失がある人はいますか</h2>
+  <p class="hint">株の譲渡損失・青色申告の事業の赤字（純損失）・災害や盗難の損失（雑損失）を、確定申告で繰り越している場合です。「ない」を選ぶと、この欄に入れた金額は0円に戻ります。</p>
+  <div class="yesno" role="radiogroup" aria-label="前の年から繰り越した損失がある人はいますか">
+    <label class="yn"><input type="radio" name="wq_g5" value="yes"><span>ある</span></label>
+    <label class="yn"><input type="radio" name="wq_g5" value="no"><span>ない</span></label>
+  </div>
+</section>
+<section class="card wizq no-print" data-q="g6">
+  <h2>住宅ローン控除などの税額控除を受ける人はいますか</h2>
+  <p class="hint">住宅借入金等特別控除（住宅ローン控除）や配当控除など、<b>税額から直接引く</b>控除です。ふるさと納税は「所得控除」のページで入れます。「ない」を選ぶと、この欄に入れた金額は0円に戻ります。</p>
+  <div class="yesno" role="radiogroup" aria-label="住宅ローン控除などの税額控除を受ける人はいますか">
+    <label class="yn"><input type="radio" name="wq_g6" value="yes"><span>ある</span></label>
+    <label class="yn"><input type="radio" name="wq_g6" value="no"><span>ない</span></label>
+  </div>
+</section>
+<section class="card wizq no-print" data-q="kokuho">
+  <h2>国民健康保険の細かい設定をしますか</h2>
+  <p class="hint">ふつうは「ない」で大丈夫です。被保険者の人数などは「家族構成」の加入チェックから自動で数えます。世帯主の変更・特定同一世帯所属者・土地建物の売却の特別控除・人数の手動入力などをするときは「ある」を選んでください。</p>
+  <div class="yesno" role="radiogroup" aria-label="国民健康保険の細かい設定をしますか">
+    <label class="yn"><input type="radio" name="wq_kokuho" value="yes"><span>ある</span></label>
+    <label class="yn"><input type="radio" name="wq_kokuho" value="no"><span>ない</span></label>
+  </div>
+</section>
+<section class="card wizq no-print" data-q="jasso">
+  <h2>奨学金の条件を入力しますか</h2>
+  <p class="hint">「ない」なら、大学・国公立・自宅から通学、多子世帯・私立理工農系の特例なしとして判定します。学校の種類や通学のしかた、多子世帯などを指定するときは「ある」を選んでください。</p>
+  <div class="yesno" role="radiogroup" aria-label="奨学金の条件を入力しますか">
+    <label class="yn"><input type="radio" name="wq_jasso" value="yes"><span>ある</span></label>
+    <label class="yn"><input type="radio" name="wq_jasso" value="no"><span>ない</span></label>
+  </div>
 </section>
 
 <!-- ===================== STEP 4 ===================== -->
@@ -462,8 +507,10 @@
 
 <!-- ===================== 判定 ===================== -->
 <div class="actions no-print" id="runBar">
-  <button id="calcBtn" class="primary big">判定結果を見る ↓</button>
-  <span class="hint autonote">結果は入力に合わせて自動で計算し直しています。ボタンは結果の位置へ移動するだけです。</span>
+  <button type="button" id="wizBack" class="ghost">← 戻る</button>
+  <button type="button" id="wizNext" class="primary big">次へ →</button>
+  <button id="calcBtn" class="ghost">判定結果を見る</button>
+  <span class="hint autonote">結果は入力に合わせて自動で計算し直しています。どのページからでも結果を見られます。</span>
   <button id="resetBtn" class="ghost">入力をリセット</button>
 </div>
 

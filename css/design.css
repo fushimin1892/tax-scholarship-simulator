@@ -720,3 +720,79 @@ details.fold > summary[data-badge]::after {
 @media (prefers-reduced-motion: reduce) {
   .eyebrow::before { animation: none; }
 }
+
+/* ---------- 1ページずつ進む画面（ウィザード） ----------
+ * どのページで何を見せるかは app.js の PAGES と wizGo が決める。
+ * ここでは「見せない部品」を消すことと、ページの見た目だけを書く。 */
+.wiz-off { display: none !important; }
+
+/* 家族の入力カード（STEP 4〜6）は、そのページの入力グループだけを見せる */
+body[data-page="4"] :is(#step4, #step5, #step6) fieldset.group:not(.g1),
+body[data-page="5"] :is(#step4, #step5, #step6) fieldset.group:not(.g2):not(.g3),
+body[data-page="6"] :is(#step4, #step5, #step6) fieldset.group:not(.g4),
+body[data-page="7"] :is(#step4, #step5, #step6) fieldset.group:not(.g5),
+body[data-page="8"] :is(#step4, #step5, #step6) fieldset.group:not(.g6) { display: none; }
+/* 家族のカードの説明文は「所得」のページだけで出す（同じ説明を毎ページ繰り返さない） */
+body:not([data-page="4"]) :is(#leadA, #leadB) { display: none; }
+
+/* 番号はページの見出し（wizhead）に出すので、カードの丸い番号は出さない */
+.step > h2 .stepno { display: none; }
+/* 1ページに1枚だけのカードは、ページの見出しと同じことを言うので、カードの見出しは出さない */
+:is(#step1, #step2, #step3, #step7, #step8) > h2 { display: none; }
+
+/* 2ページ目からは、ヘッダーを小さくして入力に集中できるようにする */
+body:not([data-page="1"]) .site-header { padding-bottom: 14px; }
+body:not([data-page="1"]) .site-header .headtop { margin-bottom: 10px; }
+body:not([data-page="1"]) .site-header :is(.eyebrow, .lead, .hero-cta, .version) { display: none; }
+body:not([data-page="1"]) .site-header h1 { font-size: 1.05rem; margin-bottom: 10px; }
+body:not([data-page="1"]) .site-header h1 .h1-accent { display: inline; font-size: 1em; }
+
+/* いまのページの見出し */
+.wizhead { margin: 26px 0 16px; }
+.wizbar { height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.wizbar > span {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--brand) 55%, transparent), var(--brand));
+  transition: width .35s ease-out;
+}
+.wizno { margin: 12px 0 0; font-size: .8rem; font-weight: 800; color: var(--ink-3); letter-spacing: .06em; }
+.wiztitle { margin: 2px 0 4px; font-size: clamp(1.3rem, 1.05rem + 1vw, 1.75rem); line-height: 1.35; color: var(--ink); }
+.wizdesc { margin: 0; font-size: .86rem; }
+
+/* 「ある／ない」の質問 */
+.wizq > h2 { font-size: 1.12rem; }
+.yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.yn { position: relative; cursor: pointer; }
+.yn input { position: absolute; opacity: 0; pointer-events: none; }
+.yn span {
+  display: flex; align-items: center; justify-content: center; min-height: 64px;
+  border: 2px solid var(--line); border-radius: var(--r-md); background: var(--surface-2);
+  font-size: 1.15rem; font-weight: 800; color: var(--ink-2);
+  transition: border-color .15s, background .15s, color .15s, transform .08s;
+}
+.yn:hover span { border-color: var(--brand); }
+.yn input:focus-visible + span { outline: 3px solid var(--brand); outline-offset: 2px; }
+.yn input:checked + span { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
+.yn:active span { transform: translateY(1px); }
+
+/* ページの移動ボタン（画面の下にくっつけておく） */
+#runBar {
+  position: sticky; bottom: 0; z-index: 20;
+  margin: 20px -12px 0; padding: 12px; border-radius: var(--r-md) var(--r-md) 0 0;
+  background: var(--nav-bg); border-top: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
+}
+#runBar #wizNext { margin-left: auto; }
+#runBar .autonote { display: none; }
+#runBar button:disabled { opacity: .45; cursor: default; }
+
+/* ナビ：終わったページと、いまのページ */
+.stepnav a.done b { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 40%, transparent); color: var(--good); }
+
+@media (max-width: 640px) {
+  .wizhead { margin: 18px 0 12px; }
+  #runBar { margin: 16px -13px 0; flex-direction: row; flex-wrap: wrap; }
+  #runBar button { width: auto; flex: 1 1 40%; }
+  #runBar #wizNext { flex: 1 1 55%; }
+  #runBar #calcBtn, #runBar #resetBtn { flex: 1 1 40%; min-height: 44px; font-size: .86rem; }
+}

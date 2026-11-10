@@ -102,7 +102,7 @@
    * 300ミリ秒近くかかって操作を受け付けなくなるため。init のコメント参照）。 */
   function personFormGroups(p) {
     return [
-    '<fieldset class="group"><legend>① 総合課税の収入・所得</legend><div class="grid rows">' +
+    '<fieldset class="group g1"><legend>① 総合課税の収入・所得</legend><div class="grid rows">' +
       fld(p + '_salary', '給与収入（円）', '源泉徴収票の「支払金額」。複数ある場合は合計。') +
       fld(p + '_pension', '公的年金等の収入（円）', '国民年金・厚生年金・企業年金など') +
       fld(p + '_business', '事業所得の金額（円）', '収入金額 − 必要経費（青色申告特別控除後）') +
@@ -143,7 +143,7 @@
     '</div></div></details>' +
     '<p class="derived" id="' + p + '_incomeNote"></p></fieldset>',
 
-    '<fieldset class="group"><legend>② 所得控除</legend><div class="grid rows">' +
+    '<fieldset class="group g2"><legend>② 所得控除</legend><div class="grid rows">' +
       fld(p + '_social', '社会保険料控除（円）', '国民健康保険料・国民年金・厚生年金・健康保険・介護保険等の支払額') +
       fld(p + '_kyosai', '小規模企業共済等掛金控除（円）', 'iDeCo（個人型確定拠出年金）、小規模企業共済など') +
       fld(p + '_medical', '医療費の支払額（円）', '') +
@@ -176,7 +176,7 @@
       fld(p + '_longOld', '旧長期損害保険料（円）', '平成18年末までに契約した満期返戻金のあるもの') +
     '</div></div></fieldset>',
 
-    '<fieldset class="group"><legend>③ 本人の状況（所得の条件を満たさないものは自動でロックされます）</legend>' +
+    '<fieldset class="group g3"><legend>③ 本人の状況（所得の条件を満たさないものは自動でロックされます）</legend>' +
     '<div class="grid rows">' +
       cb(p + '_student', '勤労学生控除を受ける', '働きながら学校に通っている場合') +
       cb(p + '_widow', '寡婦控除を受ける', '夫と死別・離別して再婚していない女性') +
@@ -188,8 +188,7 @@
       cb(p + '_welfare', '生活保護法の生活扶助を受けている') +
     '</div></fieldset>',
 
-    '<fieldset class="group foldgroup"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' +
-    '<details class="fold"><summary>株・投資信託の売却益や配当（申告分離）、FX・先物、土地建物の売却、退職金、山林があるときに開く</summary>' +
+    '<fieldset class="group g4"><legend>④ 分離課税の所得（株式の譲渡・配当、不動産の譲渡、先物、退職金、山林）</legend>' +
     '<p class="hint">確定申告で申告分離課税を選んだ所得を入力してください。源泉徴収ありの特定口座で<b>申告しない</b>ものは入力不要です。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
@@ -207,25 +206,23 @@
       cb(p + '_retirementShort', '一般社員で勤続5年以下（短期退職手当等）') +
       cb(p + '_retirementDisability', '障害者となったことによる退職（控除額に100万円加算）') +
     '</div>' +
-    '<p class="hint">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></details></fieldset>',
+    '<p class="hint">退職所得の住民税は退職時に分離課税で徴収済みのため、<b>翌年度の住民税・非課税判定・奨学金判定には影響しません</b>。</p></fieldset>',
 
-    '<fieldset class="group foldgroup"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' +
-    '<details class="fold"><summary>前の年までの株の損失・事業の赤字・災害や盗難の損失を繰り越しているときに開く</summary>' +
+    '<fieldset class="group g5"><legend>⑤ 前年から繰り越した損失（繰越控除）</legend>' +
     '<p class="hint">繰越控除は<b>所得割</b>には効きますが、<b>均等割の非課税判定・扶養判定に使う「合計所得金額」は繰越控除前</b>で見ます。' +
     '該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_coStockLoss', '上場株式等に係る譲渡損失の繰越額（円）', '翌年以後3年間繰越可') +
       fld(p + '_coNetLoss', '純損失の繰越控除額（円）', '青色申告の事業所得等の損失。3年間繰越可') +
       fld(p + '_coCasualtyLoss', '雑損失の繰越控除額（円）', '災害・盗難等による損失。3年間繰越可') +
-    '</div></details></fieldset>',
+    '</div></fieldset>',
 
-    '<fieldset class="group foldgroup"><legend>⑥ 税額控除（住宅ローン控除など）</legend>' +
-    '<details class="fold"><summary>住宅ローン控除・配当控除など、税額から直接引く控除があるときに開く</summary>' +
+    '<fieldset class="group g6"><legend>⑥ 税額控除（住宅ローン控除など）</legend>' +
     '<p class="hint">所得ではなく<b>税額から直接引く</b>控除です。該当がなければ空欄のままで大丈夫です。</p>' +
     '<div class="grid rows">' +
       fld(p + '_taxCredit', '所得税の税額控除の額（円）', '住宅借入金等特別控除、配当控除など') +
       fld(p + '_residentCredit', '住民税の税額控除の額（円）', '調整控除を除く。ふるさと納税には未対応。') +
-    '</div></details></fieldset>'
+    '</div></fieldset>'
     ];
   }
 
@@ -1676,17 +1673,110 @@
   /* ============================================================
    * 9. 初期化
    * ==========================================================*/
-  function buildStepNav() {
-    var items = [];
-    document.querySelectorAll('.step').forEach(function (s) {
-      var h2 = s.querySelector('h2');
-      var no = s.querySelector('.stepno');
-      var title = h2 ? h2.textContent.replace(/^\d+/, '').trim() : '判定結果';
-      items.push('<a href="#' + s.id + '" data-target="' + s.id + '">' +
-        (no ? '<b>' + no.textContent + '</b>' : '<b>★</b>') + title + '</a>');
+  /* ============================================================
+   * 1ページずつ進む画面（ウィザード）
+   *
+   * 入力欄は今までどおり全部ページの中にあり、「いまのページに要る部品」だけを見せる。
+   * 入力欄を作り直さないので、計算への配線（readPerson など）は何も変わらない。
+   *   parts … そのページで見せる section の id
+   *   g     … 家族の入力カード（STEP 4〜6）の中で見せる入力グループ（①=g1 … ⑥=g6）
+   *   q     … 「ある／ない」の質問。「ある」を選んだときだけ parts を見せる
+   * ==========================================================*/
+  var PERSONS = ['step4', 'step5', 'step6'];
+  var PAGES = [
+    { label: '立場', title: 'だれの立場で入力しますか', parts: ['step1'],
+      desc: '選ぶと次のページへ進みます。入力欄の呼び名が切り替わるだけで、学生本人と夫婦の計算は同じです。' },
+    { label: 'お住まい', title: 'お住まいと対象の年分', parts: ['step2'],
+      desc: '市区町村を選ぶと、級地と住民税の税率が自動で入ります。' },
+    { label: '家族構成', title: '同じ世帯にいる人を登録する', parts: ['step3'] },
+    { label: '所得', title: '所得の金額', parts: PERSONS, g: ['g1'],
+      desc: '給与・年金・事業所得を入れてください。不動産・副業・配当などがある人は「開く」から入れます。' },
+    { label: '所得控除', title: '所得控除と本人の状況', parts: PERSONS, g: ['g2', 'g3'],
+      desc: '社会保険料・iDeCo・医療費・生命保険料・ふるさと納税など。該当がなければ0円のままで大丈夫です。' },
+    { label: '分離課税', title: '分離課税の所得', parts: PERSONS, g: ['g4'], q: 'g4' },
+    { label: '繰越控除', title: '前年から繰り越した損失', parts: PERSONS, g: ['g5'], q: 'g5' },
+    { label: '税額控除', title: '税額控除（住宅ローン控除など）', parts: PERSONS, g: ['g6'], q: 'g6' },
+    { label: '国保', title: '国民健康保険', parts: ['step7'], q: 'kokuho' },
+    { label: '奨学金', title: 'JASSO奨学金の条件', parts: ['step8'], q: 'jasso', skip: function () { return !useJasso(); } },
+    { label: '結果', title: '判定結果', parts: ['stepResult', 'tab-guide', 'tab-sources'],
+      desc: '入力を変えると自動で計算し直します。戻って直すこともできます。' }
+  ];
+  var LAST = PAGES.length;
+  var page = 1, visited = { 1: true }, answer = {};
+  var ALL_PARTS = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7', 'step8', 'stepResult', 'tab-guide', 'tab-sources'];
+
+  function pageOn(n) { var pg = PAGES[n - 1]; return !!pg && !(pg.skip && pg.skip()); }
+  function nextPage(n, dir) { do { n += dir; } while (n >= 1 && n <= LAST && !pageOn(n)); return Math.min(LAST, Math.max(1, n)); }
+
+  /* 質問の欄に、いま何か入っているか（入っていれば最初から「ある」にしておく） */
+  function groupHasInput(key) {
+    return [].some.call(document.querySelectorAll('fieldset.' + key + ' input'), function (e) {
+      return e.type === 'checkbox' ? e.checked : Number(String(e.value).replace(/,/g, '')) > 0;
     });
-    $('stepNav').innerHTML = items.join('');
   }
+  /* 「ない」を選んだら、その欄の入力を空に戻す。見えない所に数字が残って結果が変わらないようにする */
+  function clearGroup(key) {
+    document.querySelectorAll('fieldset.' + key + ' input').forEach(function (e) {
+      if (e.type === 'checkbox') e.checked = false; else e.value = '0';
+    });
+    refreshAll();
+  }
+  function answerOf(key) {
+    if (answer[key] === undefined && /^g\d$/.test(key) && groupHasInput(key)) answer[key] = 'yes';
+    return answer[key];
+  }
+
+  function buildStepNav() {
+    var n = 0;
+    $('stepNav').innerHTML = PAGES.map(function (pg, i) {
+      if (!pageOn(i + 1)) return '';
+      n++;
+      return '<a href="#" data-go="' + (i + 1) + '"' + (i + 1 === page ? ' class="on" aria-current="step"' : visited[i + 1] ? ' class="done"' : '') +
+        '><b>' + n + '</b>' + pg.label + '</a>';
+    }).join('');
+    var cur = $('stepNav').querySelector('a.on');
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  function wizGo(n, opt) {
+    if (!pageOn(n)) n = nextPage(n, n > page ? 1 : -1);
+    page = n; visited[n] = true;
+    var pg = PAGES[n - 1];
+    document.body.dataset.page = String(n);
+    document.body.dataset.groups = (pg.g || []).join(' ');
+    var ans = pg.q ? answerOf(pg.q) : null;
+    var showParts = !pg.q || ans === 'yes';
+    ALL_PARTS.forEach(function (id) {
+      var el = $(id);
+      if (el) el.classList.toggle('wiz-off', !(showParts && pg.parts.indexOf(id) >= 0));
+    });
+    document.querySelectorAll('.wizq').forEach(function (c) {
+      var on = c.dataset.q === pg.q;
+      c.classList.toggle('wiz-off', !on);
+      if (on) c.querySelectorAll('input').forEach(function (r) { r.checked = r.value === ans; });
+    });
+    // ページの番号は、飛ばしたページを数えない（奨学金を調べない人は 10 ページになる）
+    var shown = 0, total = 0;
+    PAGES.forEach(function (x, i) { if (pageOn(i + 1)) { total++; if (i + 1 <= n) shown++; } });
+    $('wizHead').innerHTML = '<div class="wizbar"><span style="width:' + Math.round(shown / total * 100) + '%"></span></div>' +
+      '<p class="wizno">' + shown + ' / ' + total + '</p><h2 class="wiztitle">' + pg.title + '</h2>' +
+      (pg.desc ? '<p class="hint wizdesc">' + pg.desc + '</p>' : '');
+    $('wizBack').disabled = n === 1;
+    $('wizNext').classList.toggle('wiz-off', n === LAST);
+    $('wizNext').textContent = nextPage(n, 1) === LAST ? '判定結果を見る →' : '次へ →';
+    $('calcBtn').classList.toggle('wiz-off', n === LAST);
+    buildStepNav();
+    if (n === LAST) run({ quiet: true });
+    if (!(opt && opt.noScroll)) {
+      // ナビ（と、その下に出る1行の要約）の高さぶん下げて、ページの見出しが隠れないようにする
+      var nav = document.querySelector('.stepnav');
+      var top = $('wizHead').getBoundingClientRect().top + window.pageYOffset - (nav ? nav.offsetHeight : 0) - 56;
+      if (n === 1) top = 0;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+    }
+  }
+  /* テストから今のページを確かめたり移動したりするための口（画面の外からは使わない） */
+  window.TaxWizard = { go: function (n) { wizGo(n); }, page: function () { return page; }, LAST: LAST };
   function addMember(rel, detail) {
     seq++;
     roster.push({ id: seq, rel: rel, age: rel === 'child' ? 19 : rel === 'parent' ? 75 : 30,
@@ -1739,6 +1829,8 @@
      * 操作の受け口（イベント）は同期で登録しておくので、組み立ての途中で
      * 押されても取りこぼさない。 */
     updateYearNote();
+    // 最初のページだけを見せる（ほかのページは組み立ての途中でも見えない）
+    wizGo(1, { noScroll: true });
 
     $('sourceList').innerHTML = D.SOURCES.map(function (s) {
       return '<div class="sourceline"><span class="cat">' + s.c + '</span>' + esc(s.t) +
@@ -1796,7 +1888,8 @@
       roster = roster.filter(function (m) { return String(m.id) !== d.dataset.del; });
       renderRoster(); refreshAll();
     });
-    $('calcBtn').addEventListener('click', run);
+    // どのページからでも結果のページへ（結果のページに入ると計算し直す）
+    $('calcBtn').addEventListener('click', function () { wizGo(LAST); });
     /* 畳んだ結果カードは、見出し（h2）を押しても開け閉めできるようにする */
     $('results').addEventListener('click', function (e) {
       var h = e.target.closest && e.target.closest('.foldcard > h2');
@@ -1876,16 +1969,36 @@
       if (isMoney(e.target)) { if (e.target.value === '') e.target.value = '0'; else commafy(e.target); }
       else if (e.target.type === 'number' && e.target.value === '') e.target.value = '0';
     });
-    // ステップナビの現在地
-    var obs = new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        document.querySelectorAll('#stepNav a').forEach(function (a) {
-          a.classList.toggle('on', a.dataset.target === en.target.id);
-        });
+    /* ---------- ページの移動 ---------- */
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('[data-go]');
+      if (!a) return;
+      e.preventDefault();
+      wizGo(Number(a.dataset.go));
+    });
+    $('wizBack').addEventListener('click', function () { wizGo(nextPage(page, -1)); });
+    $('wizNext').addEventListener('click', function () { wizGo(nextPage(page, 1)); });
+    // 立場を選んだら、そのまま次のページへ（キーボードでの選択では動かさない）
+    document.querySelectorAll('#modeChoices .choice').forEach(function (l) {
+      l.addEventListener('click', function () {
+        setTimeout(function () { if (page === 1) wizGo(nextPage(1, 1)); }, 260);
       });
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    document.querySelectorAll('.step').forEach(function (s) { obs.observe(s); });
+    });
+    // 奨学金を調べるかどうかで、奨学金のページを出し入れする
+    $('useJasso').addEventListener('change', function () { buildStepNav(); wizGo(page, { noScroll: true }); });
+    // 「ある／ない」の質問
+    document.querySelectorAll('.wizq input[type=radio]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        var key = r.closest('.wizq').dataset.q;
+        answer[key] = r.value;
+        if (r.value === 'no') {
+          if (/^g\d$/.test(key) && groupHasInput(key)) clearGroup(key);
+          wizGo(nextPage(page, 1));
+        } else {
+          wizGo(page, { noScroll: true });
+        }
+      });
+    });
 
     /* ヘッダー（最初の画面）が画面から消えたら、ナビの下に1行の要約を出す */
     var hero = document.querySelector('.site-header');
@@ -1909,7 +2022,6 @@
     chunks.push(function () { fillPref(); fillCity(); });
     // 初期の世帯構成：学生本人モードなので、学生1人を「詳しく計算する」状態で置く
     chunks.push(function () { addMember('child', true); });
-    chunks.push(function () { buildStepNav(); });
     // 制度の解説にある表（HTMLに直接書いてあるもの）にも列の見出しを持たせる。
     // 狭い画面ではこれを使って縦に積み直すため。
     chunks.push(function () { labelTableCells(document); });
