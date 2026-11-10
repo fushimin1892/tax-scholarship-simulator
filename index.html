@@ -231,22 +231,23 @@
       <select id="city"></select>
       <small id="cityNote" class="hint"></small>
     </label>
-    <label class="field">
-      <span>級地区分（自動判定・変更可）</span>
-      <select id="kyuchi">
-        <option value="1">1級地</option>
-        <option value="2">2級地</option>
-        <option value="3">3級地</option>
-      </select>
-      <small id="kyuchiNote" class="hint"></small>
-    </label>
   </div>
 
   <label class="field checkline hidden" id="reducedKinRow"><input type="checkbox" id="reducedKin"><span>均等割の軽減に該当する（均等割を納める同一生計配偶者・扶養親族、またはその人を2人以上扶養している納税者。市民税均等割が1,500円になり、横浜みどり税はかかりません。複数人で計算すると全員に適用されるので、該当する人だけ別に計算してください）</span></label>
 
   <details class="sub">
-    <summary>税率・均等割額を手動で調整する（自動で入るので、ふつうは開かなくて大丈夫です）</summary>
+    <summary>級地・税率・均等割額を手動で調整する（市区町村を選ぶと自動で入るので、ふつうは開かなくて大丈夫です）</summary>
     <div class="grid rows">
+      <!-- 級地は市区町村を選ぶと自動で決まる。普段は見せず、直したい人だけがここで変える -->
+      <label class="field">
+        <span>級地区分</span>
+        <select id="kyuchi">
+          <option value="1">1級地</option>
+          <option value="2">2級地</option>
+          <option value="3">3級地</option>
+        </select>
+        <small id="kyuchiNote" class="hint"></small>
+      </label>
       <label class="field"><span>市町村民税 均等割（円）</span>
         <input type="text" class="money" inputmode="numeric" autocomplete="off" id="cityKin"></label>
       <label class="field"><span>道府県民税 均等割（円）</span>

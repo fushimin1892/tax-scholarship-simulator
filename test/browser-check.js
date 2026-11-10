@@ -230,9 +230,9 @@ const check = (label, cond, detail) => {
     // アルバイト100万＋株の譲渡益30万を入れる → 合計所得 35万＋30万＝65万
     await ev(`set('${pfx}_salary','1000000'); set('${pfx}_stockTransfer','300000'); return 1;`);
     await sleep(300);
-    const g = await ev(`return txt('#${ids[0]}_gokei');`);
-    console.log('  合計所得金額（自動）:', g);
-    check('株の利益が合計所得に反映される', /650,000/.test(g), g);
+    const g = await ev(`return txt('#${ids[0]}_note');`);
+    console.log('  扶養の判定（合計所得金額）:', g);
+    check('株の利益が合計所得に反映される', /合計所得金額 650,000円/.test(g), g);
     const note = await ev(`return txt('#${ids[0]}_note');`);
     console.log('  扶養の判定:', note);
     // 19歳・合計所得65万円 → 扶養控除は不可だが特定親族特別控除の対象（123万円以下）
@@ -440,8 +440,8 @@ const check = (label, cond, detail) => {
       set('${dp}_coStockLoss','2500000'); return 1;`);
     await sleep(600);
 
-    const gokei = await ev(`return document.getElementById('${mid}_gokei').textContent;`);
-    check('扶養判定に使う合計所得金額は繰越控除「前」（285万円）', gokei === '2,850,000円', gokei);
+    const gokei = await ev(`return document.getElementById('${mid}_note').textContent;`);
+    check('扶養判定に使う合計所得金額は繰越控除「前」（285万円）', /合計所得金額 2,850,000円/.test(gokei), gokei);
 
     const judge = await ev(`return [...document.querySelectorAll('#kokuhoAuto .sbox')]
       .filter(b=>/軽減判定所得/.test(b.querySelector('.st').textContent))

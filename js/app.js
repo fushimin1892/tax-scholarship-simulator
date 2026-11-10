@@ -255,8 +255,6 @@
       '<span class="ctext"><span class="lbl">この人が国民健康保険の被保険者</span>' +
       KOKUHO_HINT +
       '<small class="lockmsg" id="' + who + '_kokuho_lock"></small></span></label>' +
-      '<div class="field"><span>合計所得金額（自動）</span><div class="readout" id="' + who + '_gokei">—</div>' +
-      '<small class="hint">STEP ' + (isB ? '5' : '4') + ' の収入から自動計算</small></div>' +
       '</div><div class="mnote" id="' + who + '_note"></div></div>';
   }
 
@@ -272,8 +270,7 @@
       '<div class="mgrid">' +
       '<label class="field"><span>年齢</span><input type="number" id="' + id + '_age" min="0" max="120" value="' + m.age + '"></label>' +
       (m.detail
-        ? '<div class="field"><span>合計所得金額（自動）</span><div class="readout" id="' + id + '_gokei">—</div>' +
-          '<small class="hint">STEP 6 の収入から自動計算</small></div>'
+        ? ''
         : '<label class="field"><span>給与収入（円）</span><input type="text" class="money" inputmode="numeric" id="' + id + '_salary" value="' + m.salary.toLocaleString('ja-JP') + '"></label>' +
           '<label class="field"><span>公的年金等の収入（円）</span><input type="text" class="money" inputmode="numeric" id="' + id + '_pension" value="' + m.pension.toLocaleString('ja-JP') + '"></label>' +
           '<label class="field"><span>その他の所得（円）</span><input type="text" class="money" inputmode="numeric" id="' + id + '_other" value="' + m.other.toLocaleString('ja-JP') + '"></label>') +
@@ -666,10 +663,6 @@
       : '配偶者の収入と控除を入力してください。収入がない場合も0円のままで結構です（配偶者控除の判定に使います）。';
     $('step5').classList.toggle('hidden', mode() === 'single' || !meta.B.enabled);
     $('step8').classList.toggle('hidden', !useJasso());
-    ['A', 'B'].forEach(function (w) {
-      var g = $(w + '_gokei');
-      if (g) g.textContent = (w === 'B' && !meta.B.enabled) ? '—' : yen(personGokei(w, p));
-    });
     /* 世帯に国保加入者がいるのに、この人のチェックが外れている場合の注意書き。
      * 「親が入っていれば子どもは不要」という誤解を、その人の行で直接つぶす。
      * 勤め先の健康保険に入っている人は正しく外すので、断定せず確認をうながす形にする。 */
@@ -706,8 +699,6 @@
       var c = classify(m, p);
       el.className = 'mnote ' + (c.kind === 'over' ? 'ng' : c.kind === 'none' ? 'muted' : 'ok');
       el.innerHTML = c.text + kokuhoReminder(m.kokuho, m.age);
-      var g = $('m' + m.id + '_gokei');
-      if (g) g.textContent = yen(c.income);
     });
 
     // 世帯のまとめ
