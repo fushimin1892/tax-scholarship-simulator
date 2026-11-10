@@ -40,26 +40,27 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 
 /* ---------- ヘッダ（ヒーロー） ----------
  * ライト／ダークどちらでも、ここだけは深い色の背景にする（最初の画面の印象をそろえる）。
- * 光のにじみと細かな点の模様は CSS のグラデーションだけで描く（画像・外部素材は使わない）。
+ * 光のにじみと細いグリッドの模様は CSS のグラデーションだけで描く（画像・外部素材は使わない）。
  * グラデーションの下に不透明色を敷いておくと、効かない環境でも白文字が読め、
  * コントラストの測定も正しく行える。 */
 .site-header {
-  background-color: #0b1210;
+  background-color: #060914;
   background-image:
-    radial-gradient(60% 80% at 85% 0%, rgba(231, 194, 106, .16), transparent 60%),
-    radial-gradient(50% 70% at 0% 100%, rgba(64, 170, 130, .14), transparent 60%),
-    radial-gradient(rgba(255, 255, 255, .06) 1px, transparent 1.4px);
-  background-size: auto, auto, 22px 22px;
+    radial-gradient(55% 80% at 88% 0%, rgba(94, 230, 255, .2), transparent 62%),
+    radial-gradient(50% 75% at 0% 100%, rgba(150, 110, 255, .22), transparent 62%),
+    linear-gradient(rgba(140, 170, 255, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 170, 255, .07) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
   color: #fff; padding: 18px 0 26px;
   border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 .headtop { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 30px; }
-.brandmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: .95rem; color: #f2efe6; letter-spacing: .02em; }
+.brandmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: .95rem; color: #e9eeff; letter-spacing: .02em; }
 .brandmark::before {
   content: "¥";
   display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
-  border-radius: 9px; background: linear-gradient(140deg, #f1d38a, #c99a3c); color: #14110a; font-weight: 900;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .15), 0 6px 18px rgba(231, 194, 106, .25);
+  border-radius: 9px; background: linear-gradient(140deg, #7df3ff, #8f7bff); color: #04121c; font-weight: 900;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .18), 0 0 22px rgba(94, 230, 255, .45);
 }
 .hero { max-width: 760px; }
 .hero-main { min-width: 0; }
@@ -69,7 +70,7 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 9px; margin: 0 0 16px;
-  font-size: .8rem; font-weight: 700; color: #d8e3dd;
+  font-size: .8rem; font-weight: 700; color: #d5def5;
   padding: 5px 13px; border-radius: 999px;
   background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12);
 }
@@ -79,14 +80,14 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 }
 .site-header h1 {
   margin: 0 0 16px; font-size: clamp(1.45rem, 1.05rem + 1.6vw, 2.35rem); line-height: 1.32;
-  letter-spacing: -.005em; font-weight: 800; color: #f7f5ef;
+  letter-spacing: -.005em; font-weight: 800; color: #f3f6ff;
 }
 .site-header h1 .h1-accent {
-  display: block; font-size: 1.22em; letter-spacing: -.01em; color: #e7c26a;
-  background: linear-gradient(100deg, #f5dc9b 0%, #e7c26a 45%, #d3a44a 100%);
+  display: block; font-size: 1.22em; letter-spacing: -.01em; color: #5ee6ff;
+  background: linear-gradient(100deg, #9fefff 0%, #5ee6ff 45%, #a78bfa 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
-.site-header .lead { margin: 0 0 22px; font-size: .95rem; line-height: 1.95; color: #c9d4ce; max-width: 60ch; }
+.site-header .lead { margin: 0 0 22px; font-size: .95rem; line-height: 1.95; color: #c2cde8; max-width: 60ch; }
 .site-header .lead strong { color: #fff; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 0; }
 .pill {
@@ -95,9 +96,9 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
   font-weight: 800; font-size: .92rem; text-decoration: none; white-space: nowrap;
   transition: transform .15s, box-shadow .15s, background .15s, border-color .15s;
 }
-.pill.primary { background-color: #e7c26a; background-image: linear-gradient(140deg, #f3d68e, #e2b65a); color: #14110a; box-shadow: 0 8px 26px rgba(231, 194, 106, .28); }
-.pill.primary:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(231, 194, 106, .38); }
-.pill.ghost { color: #f2efe6; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .04); }
+.pill.primary { background-color: #5ee6ff; background-image: linear-gradient(120deg, #7df3ff, #7fa8ff 60%, #a78bfa); color: #04121c; box-shadow: 0 0 0 1px rgba(125, 243, 255, .5), 0 10px 34px rgba(94, 230, 255, .35); }
+.pill.primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(125, 243, 255, .8), 0 14px 40px rgba(94, 230, 255, .5); }
+.pill.ghost { color: #e9eeff; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .04); }
 .pill.ghost:hover { border-color: rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .08); }
 
 /* 配色の切替（端末に合わせる／ライト／ダーク） */
@@ -111,16 +112,16 @@ h1, h2, h3, h4 { line-height: 1.5; letter-spacing: .01em; }
 }
 .themeswitch button + button { border-left: 1px solid rgba(255, 255, 255, .14); }
 .themeswitch button:hover { background: rgba(255, 255, 255, .1); color: #fff; }
-.themeswitch button[aria-pressed="true"] { background: #f2efe6; color: #14110a; }
+.themeswitch button[aria-pressed="true"] { background: #e9eeff; color: #04121c; }
 .site-header .version {
-  margin: 26px 0 0; font-size: .78rem; color: #b9c6bf;
+  margin: 26px 0 0; font-size: .78rem; color: #b1bcdb;
   display: flex; gap: 10px 12px; flex-wrap: wrap; align-items: center;
 }
 .site-header .chip {
   background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .13);
-  padding: 2px 11px; border-radius: 999px; font-size: .74rem; color: #dfe7e2;
+  padding: 2px 11px; border-radius: 999px; font-size: .74rem; color: #dbe3f8;
 }
-.site-header .chip b { color: #f5dc9b; }
+.site-header .chip b { color: #9fefff; }
 
 /* ---------- ステップナビ（上から下へ進むための現在地表示） ---------- */
 .stepnav {
@@ -595,8 +596,8 @@ input:disabled, select:disabled { background: var(--surface-2); cursor: not-allo
 /* ヘッダー内の鮮度表示。背景を不透明にして、文字とのコントラストを確実にする */
 .site-header #freshness {
   margin: 12px 0 0; font-size: .8rem; line-height: 1.65;
-  background: #131d19; color: #e3ebe6;
-  padding: 9px 13px; border-radius: var(--r-sm); border-left: 3px solid #e7c26a;
+  background: #0e1426; color: #dfe6fa;
+  padding: 9px 13px; border-radius: var(--r-sm); border-left: 3px solid #5ee6ff;
 }
 /* ステップナビと同じ理由で、中身が入る前に高さを取っておく。
    狭い画面ほど折り返して背が高くなるので、幅ごとに実測値を入れている。 */
@@ -827,3 +828,58 @@ details.sub > summary::before { margin-top: .45em; }
 .kglist small { flex-basis: 100%; color: var(--ink-3); font-size: .78rem; }
 .kguide details.fold { margin-top: 10px; }
 .kguide details.fold p { font-size: .86rem; }
+
+/* ---------- 未来感のある飾り（2026年11月） ----------
+ * 色は colors.css のトークンから作る。ライト／ダークで同じ指定が効く。 */
+/* 本文の背景：薄いグリッドと、角の光 */
+body::before {
+  background:
+    radial-gradient(42% 36% at 100% 0%, color-mix(in srgb, var(--brand) 13%, transparent), transparent 70%),
+    radial-gradient(38% 32% at 0% 70%, color-mix(in srgb, var(--kin) 10%, transparent), transparent 70%),
+    linear-gradient(color-mix(in srgb, var(--brand) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--brand) 6%, transparent) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
+}
+/* カード：上辺が細く光る枠 */
+.card {
+  position: relative;
+  border-color: color-mix(in srgb, var(--brand) 22%, var(--line));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand) 22%, transparent), var(--shadow);
+}
+.card::before {
+  content: ""; position: absolute; left: 18px; right: 18px; top: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--brand), color-mix(in srgb, var(--kin) 80%, var(--brand)), transparent);
+  opacity: .75;
+}
+/* ページの見出し：シアン〜バイオレットの文字 */
+.wiztitle {
+  letter-spacing: .02em; color: var(--brand-strong);
+  background: linear-gradient(100deg, var(--brand-strong), var(--brand) 55%, var(--kin));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+/* 進み具合のバー：光るグラデーション */
+.wizbar { height: 5px; background: color-mix(in srgb, var(--brand) 12%, var(--line-soft)); overflow: visible; }
+.wizbar > span {
+  background: linear-gradient(90deg, var(--brand), var(--kin));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--brand) 70%, transparent);
+}
+/* 主ボタン：グラデーションと光 */
+button.primary {
+  background-color: var(--brand);
+  background-image: linear-gradient(120deg, var(--brand), color-mix(in srgb, var(--kin) 55%, var(--brand)));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 60%, transparent), 0 8px 26px color-mix(in srgb, var(--brand) 35%, transparent);
+}
+button.primary:hover { background-color: var(--brand); filter: brightness(1.08); }
+/* 選んだタイル・「ある／ない」：外側ににじむ光 */
+.ichip input:checked + span, .yn input:checked + span, .choice:has(input:checked) {
+  box-shadow: 0 0 0 1px var(--brand) inset, 0 0 18px color-mix(in srgb, var(--brand) 30%, transparent);
+}
+/* いまの人の表示・ナビの現在地 */
+.wizperson { box-shadow: 0 0 18px color-mix(in srgb, var(--brand) 16%, transparent); }
+.stepnav a.on b { box-shadow: 0 0 12px color-mix(in srgb, var(--brand) 70%, transparent); }
+.stepnav a.on { border-bottom-color: var(--brand); }
+/* 入力欄：フォーカスで光る */
+input:focus, select:focus { box-shadow: 0 0 0 3px var(--brand-soft), 0 0 16px color-mix(in srgb, var(--brand) 35%, transparent); }
+/* 金額はくっきりした等幅の数字で */
+.kpi .value, td.num, .jsum b, .verdict .big { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+@media print { .card::before { display: none; } .wiztitle { -webkit-text-fill-color: currentColor; background: none; } }
