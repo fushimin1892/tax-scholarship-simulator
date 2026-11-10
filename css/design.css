@@ -883,3 +883,54 @@ input:focus, select:focus { box-shadow: 0 0 0 3px var(--brand-soft), 0 0 16px co
 /* 金額はくっきりした等幅の数字で */
 .kpi .value, td.num, .jsum b, .verdict .big { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 @media print { .card::before { display: none; } .wiztitle { -webkit-text-fill-color: currentColor; background: none; } }
+
+/* ---------- 未来感のある動き（2026年11月） ----------
+ * 参考にした雰囲気（ゆっくり流れる光の文字、カードに追従する光、浮き上がる登場）を、
+ * 自分で書いた CSS と js/effects.js だけで作る。外部の素材・ライブラリは使わない。
+ * 動きを減らす設定の端末では、responsive.css の prefers-reduced-motion で止まる。 */
+
+/* ページが切り替わるたびに、いま見えているページがふわっと浮き上がる。
+ * display が切り替わると、アニメーションは最初からやり直される（wiz-off の付け外しで効く）。 */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.step:not(.wiz-off) { animation: rise .5s cubic-bezier(.2, .7, .2, 1) both; }
+.wizhead { animation: rise .4s cubic-bezier(.2, .7, .2, 1) both; }
+
+/* カードの上の光の筋（js/effects.js が --mx・--my を入れる） */
+/* 光は背景の上・文字の下に敷く（isolation で、カードの背景より前、中身より後ろに置く） */
+.card { isolation: isolate; }
+.card::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; z-index: -1;
+  background: radial-gradient(360px circle at var(--mx, -999px) var(--my, -999px),
+    color-mix(in srgb, var(--brand) 14%, transparent), transparent 60%);
+  opacity: 0; transition: opacity .35s ease;
+}
+.card.spot-on::after { opacity: 1; }
+
+/* ヒーローの見出しの光る文字：ゆっくり色が流れる */
+@keyframes flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.site-header h1 .h1-accent {
+  background-size: 200% auto;
+  animation: flow 7s linear infinite;
+}
+
+/* 主ボタンのやわらかい脈動（ふだんは静か。ホバーで光を強める） */
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 40%, transparent), 0 8px 24px color-mix(in srgb, var(--brand) 25%, transparent); }
+  50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 60%, transparent), 0 10px 34px color-mix(in srgb, var(--brand) 40%, transparent); }
+}
+.pill.primary { animation: breathe 3.2s ease-in-out infinite; }
+
+/* 結果の数字は、見えたときに少し上へ浮く（動きの量は小さく） */
+.kpi, .sbox { transition: transform .25s ease, border-color .25s ease; }
+.kpi:hover, .sbox:hover { transform: translateY(-2px); }
+
+@media print {
+  .step, .wizhead, .pill.primary, .site-header h1 .h1-accent { animation: none !important; }
+  .card::after { display: none; }
+}
