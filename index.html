@@ -81,9 +81,7 @@
         <button type="button" id="themeDark"  data-theme-set="dark"  aria-pressed="false">ダーク</button>
       </div>
     </div>
-    <!-- ヒーロー：左に説明、右に「いまの判定」（早見パネル）。
-         早見パネルは入力のたびに自動で計算し直す（app.js の renderQuick）。
-         最初の画面で答えの目安が見えるようにするためのもの。 -->
+    <!-- ヒーロー：サイトの説明と、入力・結果への入口 -->
     <div class="hero">
       <div class="hero-main">
         <p class="eyebrow">サーバー不要・入力内容は保存も送信もしません</p>
@@ -98,14 +96,6 @@
           <a class="pill ghost" href="#stepResult">詳しい判定結果を見る</a>
         </p>
       </div>
-      <aside class="quick no-print" id="quick" aria-labelledby="quickTitle">
-        <div class="qhead">
-          <h2 id="quickTitle">いまの判定</h2>
-          <span class="qlive">入力に合わせて自動更新</span>
-        </div>
-        <div id="quickBody"><p class="qwait">計算しています…</p></div>
-        <a class="qmore" href="#stepResult">計算の内訳と根拠を見る ↓</a>
-      </aside>
     </div>
     <p class="version">
       <span class="chip">令和7年分／令和8年分 所得税</span>
@@ -124,7 +114,7 @@
 
 <nav class="stepnav no-print">
   <div class="wrap" id="stepNav"></div>
-  <!-- 早見パネルが画面の外に出たら、ナビの下に1行だけ判定の要約を出す。
+  <!-- ヘッダーが画面の外に出たら、ナビの下に1行だけ判定の要約を出す。
        ナビの外に重ねて出す（position:absolute）ので、出し入れしても下の内容は動かない。 -->
   <div class="quickbar" id="quickBar" aria-hidden="true"><div class="wrap" id="quickBarBody"></div></div>
 </nav>
@@ -160,8 +150,7 @@
     </label>
   </div>
 
-  <div class="note">
-    <h3>「学生本人が使う」と「夫婦（2人）で使う」は、計算結果が同じです</h3>
+  <details class="fold notefold"><summary>「学生本人が使う」と「夫婦（2人）で使う」は、計算結果が同じです</summary><div class="note">
     <p>
       この2つは<b>入力欄の呼び名が違うだけ</b>で、税額・国保の軽減・奨学金の判定は<b>まったく同じ計算</b>をします。
       同じ内容を入れれば1円も変わりません。<b>途中で切り替えても入力内容は消えません</b>ので、
@@ -189,7 +178,7 @@
       <b>「ひとりで使う」だけは中身が違います。</b>配偶者の欄（STEP 5）がなくなり、
       1人分だけを計算します。奨学金の判定も既定で外れます。
     </p>
-  </div>
+  </div></details>
   <label class="field checkline big jassotoggle">
     <input type="checkbox" id="useJasso" checked>
     <span>JASSO奨学金の支援区分も判定する
@@ -201,8 +190,8 @@
 <!-- ===================== STEP 2 ===================== -->
 <section class="card step" id="step2">
   <h2><span class="stepno">2</span>お住まいと対象の年分</h2>
-  <div class="note" style="margin-top:0">
-    <h3>「年分」と「年度」は1年ずれます</h3>
+  <!-- 読みものの説明は普段は畳んでおく（2026年11月、利用者の希望） -->
+  <details class="fold notefold"><summary>「年分」と「年度」は1年ずれます</summary><div class="note">
     <p>
       所得は<b>年分</b>（1月〜12月の暦年）で数え、住民税・国保は<b>年度</b>で数えます。
       <b>ある年に稼いだ分の住民税は、その翌年に納めます。</b>
@@ -223,7 +212,7 @@
       今年の収入を入れて出るのは、<b>来年から納める住民税</b>になります。
       国民健康保険料とJASSOの支援区分も同じずれ方をします。
     </p>
-  </div>
+  </div></details>
   <div class="grid rows">
     <label class="field">
       <span>対象とする所得の年分</span>

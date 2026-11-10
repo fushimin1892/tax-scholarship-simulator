@@ -106,6 +106,11 @@
       fld(p + '_salary', '給与収入（円）', '源泉徴収票の「支払金額」。複数ある場合は合計。') +
       fld(p + '_pension', '公的年金等の収入（円）', '国民年金・厚生年金・企業年金など') +
       fld(p + '_business', '事業所得の金額（円）', '収入金額 − 必要経費（青色申告特別控除後）') +
+    '</div>' +
+    /* 給与・年金・事業以外の所得は該当する人が少ないので普段は畳んでおく（2026年11月、利用者の希望）。
+     * 何か入っていれば、閉じていても見出しに「入力あり」と出る（refreshFolds）。 */
+    '<details class="fold"><summary>不動産・副業などの雑所得・利子・配当・一時所得（満期保険金など）・車などの売却があるときに開く</summary>' +
+    '<div class="grid rows">' +
       fld(p + '_realEstate', '不動産所得の金額（円）', '') +
       fld(p + '_otherIncome', 'その他の所得の金額（円）', '雑所得（業務・その他）など。下に専用欄がある所得はそちらへ') +
       fld(p + '_interest', '利子所得（円）', '国外の預金利子など、確定申告するものだけ。国内の預貯金は源泉分離課税で申告不要です') +
@@ -135,7 +140,7 @@
       fld(p + '_transferShortExpense', '短期の取得費・譲渡費用（円）', '') +
       fld(p + '_transferLongRevenue', '長期（所有5年超）の収入金額（円）', '') +
       fld(p + '_transferLongExpense', '長期の取得費・譲渡費用（円）', '') +
-    '</div></div>' +
+    '</div></div></details>' +
     '<p class="derived" id="' + p + '_incomeNote"></p></fieldset>',
 
     '<fieldset class="group"><legend>② 所得控除</legend><div class="grid rows">' +
@@ -1475,7 +1480,28 @@
     return h;
   }
 
+  /* 結果のカードを「見出しだけ見えて、押すと中身が上から開く」形にする（2026年11月、利用者の希望）。
+   * 見出し（h2）はカードの直下に残すので、カードの数え方や見出しの並びは変わらない。
+   * data-key は作り直したときに開き具合を戻すための目印（run() が使う）。 */
+  function foldCard(html, sum) {
+    var head = '<div class="card">';
+    var i = html.indexOf('</h2>') + 5, j = html.lastIndexOf('</div>');
+    if (html.indexOf(head) !== 0 || i < 5 || j < i) return html;
+    var key = html.slice(head.length, i).replace(/<[^>]+>/g, '');
+    return '<div class="card foldcard">' + html.slice(head.length, i) +
+      '<details class="fold rfold" data-key="' + esc(key) + '"><summary>' + sum + '</summary>' +
+      html.slice(i, j) + '</details></div>';
+  }
+  function detailCards(title, res, input) {
+    return foldCard(renderIncomeCard(title, res), '所得の計算の内訳') +
+      foldCard(renderIncomeTaxCard(title, res, input), '所得税の計算の内訳') +
+      foldCard(renderResidentCard(title, res, input), '住民税の計算の内訳');
+  }
+
   function sourcesHtml() {
+    return foldCard(sourcesCard(), '出典の一覧（' + D.SOURCES.length + '件）');
+  }
+  function sourcesCard() {
     return '<div class="card"><h2>出典</h2>' + D.SOURCES.map(function (s) {
       return '<div class="sourceline"><span class="cat">' + s.c + '</span>' + esc(s.t) +
         '<br><a href="' + s.u + '" target="_blank" rel="noopener">' + s.u + '</a></div>';
@@ -1553,19 +1579,23 @@
         '<p class="hint">この人自身にかかる所得税・住民税です。' +
         (x.res.resident.shotokuExempt ? '<b>住民税の所得割は非課税</b>です。' : '') +
         classify(x.member, params()).text + '</p></div>' +
-        renderIncomeCard(x.title, x.res) + renderIncomeTaxCard(x.title, x.res, x.input) +
-        renderResidentCard(x.title, x.res, x.input);
+        detailCards(x.title, x.res, x.input);
     });
+
+    /* 入力のたびに作り直すので、開いていた明細は作り直したあとも開いたままにする */
+    var opened = {};
+    $('results').querySelectorAll('details[data-key]').forEach(function (d) { if (d.open) opened[d.dataset.key] = 1; });
 
     $('results').innerHTML =
       summary(people, rA, kub, inA, showJasso, jassoSum, studentMember, student) +
       (showJasso ? renderJasso(jA, jB, jS, studentMember, student, inA.region.seirei, opts, kub, jassoSum) : '') +
       renderKokuho(rA.kokuho) +
-      renderIncomeCard(labelA(), rA) + renderIncomeTaxCard(labelA(), rA, inA) + renderResidentCard(labelA(), rA, inA) +
-      (rB ? renderIncomeCard(labelB(), rB) + renderIncomeTaxCard(labelB(), rB, inB) + renderResidentCard(labelB(), rB, inB) : '') +
+      detailCards(labelA(), rA, inA) +
+      (rB ? detailCards(labelB(), rB, inB) : '') +
       detailHtml +
       sourcesHtml();
 
+    $('results').querySelectorAll('details[data-key]').forEach(function (d) { if (opened[d.dataset.key]) d.open = true; });
     labelTableCells($('results'));
 
     renderQuick({
@@ -1576,55 +1606,14 @@
     if (!quiet) $('stepResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* ---------- 早見パネル（ヒーロー右の「いまの判定」とナビ下の1行） ----------
-   * 数字はすべて run() が下の詳しい結果に使ったものをそのまま渡している。
-   * ここで計算し直すことはしない（上と下で数字が食い違わないようにするため）。 */
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function countTo(el, to) {
-    var from = Number(el.dataset.v || 0);
-    el.dataset.v = String(to);
-    if (reduceMotion || from === to || !window.requestAnimationFrame) { el.textContent = yen(to); return; }
-    var t0 = null, dur = 520;
-    (function step(t) {
-      if (el.dataset.v !== String(to)) return;          // 途中で次の値が来たら古い動きはやめる
-      if (t0 === null) t0 = t;
-      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      el.textContent = yen(k < 1 ? from + (to - from) * e : to);
-      if (k < 1) requestAnimationFrame(step);
-    })(performance.now());
-  }
+  /* ---------- ナビ下の1行要約 ----------
+   * 中身は run() が下の詳しい結果に使った判定をそのまま渡している。
+   * ここで計算し直すことはしない（上と下で食い違わないようにするため）。 */
   function renderQuick(q) {
-    var body = $('quickBody'), bar = $('quickBarBody');
-    if (!body) return;
+    var bar = $('quickBarBody');
     var hhTxt = q.hh.allExempt ? '該当' : '該当しない';
     var kTxt = q.kokuho.level ? q.kokuho.level + '割軽減' : '軽減なし';
     var jTxt = q.kub.id ? q.kub.name : q.kub.genmenOnly ? '授業料等減免のみ' : '対象外';
-    var row = function (label, value, good) {
-      return '<div class="qrow">' + label + '<span class="qv' + (good ? ' ok' : '') + '">' + value + '</span></div>';
-    };
-    /* いちばん知りたい答えを大きく出す。奨学金を調べる人は区分、それ以外は非課税世帯かどうか。 */
-    var head = q.showJasso
-      ? { label: 'JASSO 支援区分', value: jTxt, good: !!q.kub.id }
-      : { label: '住民税非課税世帯', value: hhTxt, good: q.hh.allExempt };
-    var h = '<div class="qbig' + (head.good ? ' ok' : '') + '" data-label="' + head.label + '">' + head.value + '</div>' +
-      (q.showJasso ? row('住民税非課税世帯', hhTxt, q.hh.allExempt) : '') +
-      row('国保の軽減', kTxt, !!q.kokuho.level) +
-      (q.showJasso ? row('支給額算定基準額の合計', yen(q.jassoSum), false) : '') +
-      '<div class="qcap">住民税（年額）</div>';
-    q.people.slice(0, 4).forEach(function (x) {
-      var rt = x.res.resident, both = rt.kintouExempt && rt.shotokuExempt;
-      h += '<div class="qperson">' + esc(x.title) +
-        (both ? '<span class="qamt ok">非課税</span>'
-              : '<span class="qamt" data-count="' + Math.round(rt.total) + '"></span>') + '</div>';
-    });
-    /* 前の数字を覚えておいて、そこから数え上げる */
-    var prev = {};
-    body.querySelectorAll('.qamt[data-count]').forEach(function (e, i) { prev[i] = e.dataset.v; });
-    body.innerHTML = h;
-    body.querySelectorAll('.qamt[data-count]').forEach(function (e, i) {
-      e.dataset.v = prev[i] || '0';
-      countTo(e, Number(e.dataset.count));
-    });
     if (bar) {
       bar.innerHTML = '<span class="qchip' + (q.hh.allExempt ? ' ok' : '') + '">非課税世帯：' + hhTxt + '</span>' +
         '<span class="qchip' + (q.kokuho.level ? ' ok' : '') + '">国保：' + kTxt + '</span>' +
@@ -1808,6 +1797,23 @@
       renderRoster(); refreshAll();
     });
     $('calcBtn').addEventListener('click', run);
+    /* 畳んだ結果カードは、見出し（h2）を押しても開け閉めできるようにする */
+    $('results').addEventListener('click', function (e) {
+      var h = e.target.closest && e.target.closest('.foldcard > h2');
+      if (!h) return;
+      var d = h.parentNode.querySelector('details.rfold');
+      if (d) d.open = !d.open;
+    });
+    /* 印刷・PDFでは、畳んだ結果をすべて開いて出す（終わったら元の開き具合に戻す） */
+    var printOpened = [];
+    window.addEventListener('beforeprint', function () {
+      printOpened = [].filter.call(document.querySelectorAll('#results details.fold, details.notefold'), function (d) { return !d.open; });
+      printOpened.forEach(function (d) { d.open = true; });
+    });
+    window.addEventListener('afterprint', function () {
+      printOpened.forEach(function (d) { d.open = false; });
+      printOpened = [];
+    });
     $('printBtn').addEventListener('click', function () {
       if ($('results').querySelector('.empty')) { alert('結果を計算しています。少し待ってからもう一度押してください。'); return; }
       var all = val('printScope') === 'all';
@@ -1881,12 +1887,13 @@
     }, { rootMargin: '-45% 0px -50% 0px' });
     document.querySelectorAll('.step').forEach(function (s) { obs.observe(s); });
 
-    /* 早見パネルが画面から消えたら、ナビの下に1行の要約を出す */
-    if ($('quick') && $('quickBar')) {
+    /* ヘッダー（最初の画面）が画面から消えたら、ナビの下に1行の要約を出す */
+    var hero = document.querySelector('.site-header');
+    if ($('quickBar') && hero) {
       new IntersectionObserver(function (es) {
         var away = !es[0].isIntersecting && es[0].boundingClientRect.top < 0;
         document.body.classList.toggle('show-qbar', away);
-      }).observe($('quick'));
+      }).observe(hero);
     }
 
     /* ここから先が重い組み立て。上から順に、1区切りずつ進める。

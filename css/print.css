@@ -26,12 +26,15 @@
   }
   .site-header h1 { font-size: 14pt; color: #0d3255; }
   .site-header .lead { display: none; }
-  /* ヒーローの飾り（呼び込みボタン・早見パネル・印）は紙には要らない */
-  .site-header .headtop, .site-header .eyebrow, .site-header .hero-cta, .quick, .quickbar { display: none !important; }
+  /* ヒーローの飾り（呼び込みボタン・印）とナビ下の要約は紙には要らない */
+  .site-header .headtop, .site-header .eyebrow, .site-header .hero-cta, .quickbar { display: none !important; }
   .site-header .hero { display: block; }
   .site-header { background-image: none !important; }
   .site-header h1 .h1-accent { display: inline; font-size: 1em; background: none; -webkit-text-fill-color: currentColor; color: inherit; }
   body::before { display: none; }
+  /* 畳んだ所は、印刷の直前に app.js（beforeprint）がすべて開く。紙には開け閉めのボタンは出さない */
+  details.fold > summary { display: none; }
+  details.fold > summary ~ * { animation: none; }
   .site-header .version { color: #444; }
   .site-header .chip { background: #eef2f6; border-color: #ccd; color: #333; }
   .site-header .chip b { color: #000; }
