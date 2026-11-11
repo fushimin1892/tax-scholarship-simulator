@@ -4,6 +4,15 @@
 **国民健康保険料の軽減割合**、**JASSO給付奨学金・授業料等減免の支援区分（第Ⅰ／Ⅱ／Ⅲ／Ⅳ区分）**
 を判定し、結果を **PDF に保存** できるローカルサイトです。
 
+## 開発者向けの入り口
+
+- 画面と入力処理: `index.html`、`css/`、`js/app.js`
+- 計算と参照データ: `js/calc.js`、`data/`
+- 文書の現行・過去の区別: [docs の読み方](docs/README.md)
+- 検証の実行方法: この README の「テストの実行」
+
+公開先: https://fushimin1892.github.io/tax-scholarship-simulator/
+
 ## ドキュメント
 
 どの文書が今の仕様で、どれが過去の記録かは [docs の読み方](docs/README.md) にまとめています。AI に読ませるときも、まずこれを渡してください。
